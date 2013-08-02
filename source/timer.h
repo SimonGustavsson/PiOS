@@ -1,0 +1,1 @@
+void Wait(unsigned int seconds);
