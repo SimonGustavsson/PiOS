@@ -8,6 +8,8 @@ static int caretX = 25;
 static int caretY = 25;
 #define CHAR_HEIGHT 10
 #define CHAR_WIDTH 6
+#define SCREEN_WIDTH 1366
+#define SCREEN_HEIGHT 768
 
 void DrawPixel(unsigned int x, unsigned int y, unsigned short int color)
 {
@@ -42,35 +44,22 @@ void Write(char* text)
 		
 		for(row = 0; row < CHAR_HEIGHT; row++)
 		{
-			for(col = 0; col < CHAR_HEIGHT - 2; col++)
+			unsigned int i = 0;
+			for(col = CHAR_HEIGHT - 2; col >= 0 ; col--)
 			{
 				if(row < (CHAR_HEIGHT - 1) && (teletext[ch][row] & (1 << col)))
 				{
-					DrawPixel(caretX + col, caretY + row, 0xFFFF);
+					DrawPixel(caretX + i, caretY + row, 0xFFFF);
 				}
 				else
 				{
-					DrawPixel(caretX + col, caretY + row, 0x0000);
+					DrawPixel(caretX + i, caretY + row, 0x0000);
 				}
+				i++;
 			}
 		}
 		
-		// for(row = 0; row < CHAR_HEIGHT; row++)
-		// {
-			// for(col = (CHAR_HEIGHT - 2); col >= 0; col--)
-			// {
-				// if(row < (CHAR_HEIGHT - 1) && (teletext[ch][row] & (1 << col)))
-				// {
-					// DrawPixel(caretX + col, caretY + row, 0xFFFF);
-				// }
-				// else
-				// {
-					// DrawPixel(caretX + col, caretY + row, 0x0000);
-				// }
-			// }
-		// }
-		
-		caretX += 8 + 8; // pixel H space
+		caretX += CHAR_WIDTH + 4; // pixel H space
 		
 		// TODO: CHECK FOR NEW LINE ETC
 	}	
@@ -121,14 +110,14 @@ int SetupScreen()
 	mailbuffer[c++] = 0x00048003;	// Tag id (set physical size)
 	mailbuffer[c++] = 8;		// Value buffer size (bytes)
 	mailbuffer[c++] = 8;		// Req. + value length (bytes)
-	mailbuffer[c++] = 1920;		// Horizontal resolution
-	mailbuffer[c++] = 1080;		// Vertical resolution
+	mailbuffer[c++] = SCREEN_WIDTH;	// Horizontal resolution
+	mailbuffer[c++] = SCREEN_HEIGHT;		// Vertical resolution
 
 	mailbuffer[c++] = 0x00048004;	// Tag id (set virtual size)
 	mailbuffer[c++] = 8;		// Value buffer size (bytes)
 	mailbuffer[c++] = 8;		// Req. + value length (bytes)
-	mailbuffer[c++] = 1920;		// Horizontal resolution
-	mailbuffer[c++] = 1080;		// Vertical resolution
+	mailbuffer[c++] = SCREEN_WIDTH;		// Horizontal resolution
+	mailbuffer[c++] = SCREEN_HEIGHT;		// Vertical resolution
 
 	mailbuffer[c++] = 0x00048005;	// Tag id (set depth)
 	mailbuffer[c++] = 4;		// Value buffer size (bytes)
@@ -215,7 +204,7 @@ int InitializeFramebuffer()
 {	
 	unsigned int result = 0;
 	
-	if((result =GetScreenSizeFromTags()) > 0)
+	if((result = GetScreenSizeFromTags()) > 0)
 	{
 		return result;
 	}
