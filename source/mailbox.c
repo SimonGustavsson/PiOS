@@ -1,6 +1,3 @@
-extern unsigned int GET32(unsigned int);
-extern void PUT32(unsigned int, unsigned int);
-
 #define MAILBOX_FULL 0x80000000
 #define MAILBOX_EMPTY 0x40000000
 
@@ -13,20 +10,18 @@ unsigned int Mailbox_Read(unsigned int channel)
 	unsigned int count = 0;
 	unsigned int data;
 
-	/* Loop until something is received from channel
-	 * If nothing recieved, it eventually give up and returns 0xffffffff
-	 */
+	// Loop until something is received on the channel
 	while(1)
 	{
 		while (*MAILBOX0STATUS & MAILBOX_EMPTY)
 		{
-			/* This is an arbritarily large number */
+			// Arbitrary large number for timeout
 			if(count++ >(1<<25))
 			{
 				return 0xffffffff;
 			}
 		}
-		/* Read the data */
+		
 		data = *MAILBOX0READ;
 
 		if ((data & 15) == channel)
@@ -36,9 +31,10 @@ unsigned int Mailbox_Read(unsigned int channel)
 
 void Mailbox_Write(unsigned int channel, unsigned int data)
 {
-	/* Wait for mailbox to be not full */
+	// Wait until there's space in the mailbox
 	while (*MAILBOX0STATUS & MAILBOX_FULL){
 	}
-
+	
+	// 28 MSB is data, 4 LSB = channel
 	*MAILBOX0WRITE = (data | channel);
 }

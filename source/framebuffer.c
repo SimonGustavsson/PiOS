@@ -1,15 +1,16 @@
+#define CHAR_HEIGHT 10
+#define CHAR_WIDTH 6
+#define SCREEN_WIDTH 1366
+#define SCREEN_HEIGHT 768
+
 #include "mailbox.h"
 #include "myfont.h"
 
 volatile unsigned int gPitch = 0;
 volatile unsigned int gFbAddr;
 volatile unsigned int gScreenWidth, gScreenHeight;
-static int caretX = 25;
-static int caretY = 25;
-#define CHAR_HEIGHT 10
-#define CHAR_WIDTH 6
-#define SCREEN_WIDTH 1366
-#define SCREEN_HEIGHT 768
+static int gCaretX = 5;
+static int gCaretY = 5;
 
 void DrawPixel(unsigned int x, unsigned int y, unsigned short int color)
 {
@@ -31,6 +32,13 @@ void Write(char* text)
 	{
 		text++; // Advance to the next character
 		
+		if(ch == '\n')
+		{
+			gCaretX = 5;
+			gCaretY += CHAR_HEIGHT + 4;
+			continue;
+		}
+		
 		// Make sure the char is within our table  0 - 95
 		if(ch < 32)
 			ch = 0;
@@ -49,19 +57,17 @@ void Write(char* text)
 			{
 				if(row < (CHAR_HEIGHT - 1) && (teletext[ch][row] & (1 << col)))
 				{
-					DrawPixel(caretX + i, caretY + row, 0xFFFF);
+					DrawPixel(gCaretX + i, gCaretY + row, 0xFFFF);
 				}
 				else
 				{
-					DrawPixel(caretX + i, caretY + row, 0x0000);
+					DrawPixel(gCaretX + i, gCaretY + row, 0x0000);
 				}
 				i++;
 			}
 		}
 		
-		caretX += CHAR_WIDTH + 4; // pixel H space
-		
-		// TODO: CHECK FOR NEW LINE ETC
+		gCaretX += CHAR_WIDTH + 4; // pixel H space
 	}	
 }
 // 0: Success. 1: Invalid response to property request, 2: Invalid screen size returned
@@ -70,7 +76,6 @@ int GetScreenSizeFromTags()
 	volatile unsigned int mailbuffer[256] __attribute__ ((aligned (16)));
 	unsigned int mailbufferAddr = (unsigned int)mailbuffer;
 	
-	// Step1: get the display size
 	mailbuffer[0] = 8 * 4;		// Total size
 	mailbuffer[1] = 0;			// Request
 	mailbuffer[2] = 0x40003;	// Display size
@@ -104,35 +109,34 @@ int SetupScreen()
 	
 	mailbuffer[0] = 8 * 4; // NOT SURE IF WE NEED THIS
 	
-	// Set up the screen
 	unsigned int c = 1;
-	mailbuffer[c++] = 0; // This is a request
-	mailbuffer[c++] = 0x00048003;	// Tag id (set physical size)
-	mailbuffer[c++] = 8;		// Value buffer size (bytes)
-	mailbuffer[c++] = 8;		// Req. + value length (bytes)
-	mailbuffer[c++] = SCREEN_WIDTH;	// Horizontal resolution
-	mailbuffer[c++] = SCREEN_HEIGHT;		// Vertical resolution
+	mailbuffer[c++] = 0;			 // This is a request
+	mailbuffer[c++] = 0x00048003;	 // Tag id (set physical size)
+	mailbuffer[c++] = 8;			 // Value buffer size (bytes)
+	mailbuffer[c++] = 8;			 // Req. + value length (bytes)
+	mailbuffer[c++] = SCREEN_WIDTH;  // Horizontal resolution
+	mailbuffer[c++] = SCREEN_HEIGHT; // Vertical resolution
 
-	mailbuffer[c++] = 0x00048004;	// Tag id (set virtual size)
-	mailbuffer[c++] = 8;		// Value buffer size (bytes)
-	mailbuffer[c++] = 8;		// Req. + value length (bytes)
-	mailbuffer[c++] = SCREEN_WIDTH;		// Horizontal resolution
-	mailbuffer[c++] = SCREEN_HEIGHT;		// Vertical resolution
+	mailbuffer[c++] = 0x00048004;	 // Tag id (set virtual size)
+	mailbuffer[c++] = 8;			 // Value buffer size (bytes)
+	mailbuffer[c++] = 8;			 // Req. + value length (bytes)
+	mailbuffer[c++] = SCREEN_WIDTH;	 // Horizontal resolution
+	mailbuffer[c++] = SCREEN_HEIGHT; // Vertical resolution
 
-	mailbuffer[c++] = 0x00048005;	// Tag id (set depth)
-	mailbuffer[c++] = 4;		// Value buffer size (bytes)
-	mailbuffer[c++] = 4;		// Req. + value length (bytes)
-	mailbuffer[c++] = 16;		// 16 bpp
+	mailbuffer[c++] = 0x00048005;	 // Tag id (set depth)
+	mailbuffer[c++] = 4;		     // Value buffer size (bytes)
+	mailbuffer[c++] = 4;			 // Req. + value length (bytes)
+	mailbuffer[c++] = 16;			 // 16 bpp
 
-	mailbuffer[c++] = 0x00040001;	// Tag id (allocate framebuffer)
-	mailbuffer[c++] = 8;		// Value buffer size (bytes)
-	mailbuffer[c++] = 4;		// Req. + value length (bytes)
-	mailbuffer[c++] = 16;		// Alignment = 16
-	mailbuffer[c++] = 0;		// Space for response
+	mailbuffer[c++] = 0x00040001;	 // Tag id (allocate framebuffer)
+	mailbuffer[c++] = 8;			 // Value buffer size (bytes)
+	mailbuffer[c++] = 4;			 // Req. + value length (bytes)
+	mailbuffer[c++] = 16;			 // Alignment = 16
+	mailbuffer[c++] = 0;			 // Space for response
 
-	mailbuffer[c++] = 0;		// Terminating tag
+	mailbuffer[c++] = 0;			 // Terminating tag
 
-	mailbuffer[0] = c*4;		// Buffer size
+	mailbuffer[0] = c*4;			 // Buffer size
 
 	Mailbox_Write(8, mailbufferAddr);
 	
@@ -188,9 +192,7 @@ int GetPitch()
 	// 4 bytes, plus the MSB set to indicate a response
 	if(mailbuffer[4] != 0x80000004)
 		return 1; // Invalid pitch response
-				
-	//////// --------------- ALL GOOD ABOVE :))))))) ------------------------ //////////
-	
+					
 	unsigned int pitch = mailbuffer[5];
 	if(pitch == 0)
 		return 2; // Invalid pitch response

@@ -28,7 +28,7 @@ int cmain(void)
 		while(1);
 	}
 		
-	Write("Hello, World!");
+	Write("Hello, Multiline\nWorld!");
 					
 	while(1)
 	{
