@@ -1,3 +1,3 @@
-void LedInit();
-void LedOn();
-void LedOff();
+void LedInit(void);
+void LedOn(void);
+void LedOff(void);
