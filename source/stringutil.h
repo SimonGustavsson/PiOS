@@ -68,7 +68,7 @@ const char* printf(char* text, ...)
 	// Scan all characters in 'text' and look for format specifiers
 	do
 	{
-		if(*text == '%' && *(text + 1) == 'd')
+		if(*text == '%')
 		{
 			if(*(text + 1) == 'd') // Integer (signed)
 			{				
