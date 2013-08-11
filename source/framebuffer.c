@@ -22,17 +22,10 @@ void DrawPixel(unsigned int x, unsigned int y, unsigned short int color)
 	*ptr = color;
 }
 
-void DrawCharacter(unsigned int ch)
-{	
+void DrawCharacterAt(unsigned int ch, unsigned int x, unsigned int y)
+{
 	// Ensure valid char table lookup
 	ch = ch < 32 ? 0 : ch > 127 ? 0 : ch - 32;
-		
-	if(ch == '\n')
-	{
-		gCaretX = 5;
-		gCaretY += CHAR_HEIGHT + 4;
-		return;
-	}	
 	
 	int col;
 	unsigned int row;
@@ -43,17 +36,15 @@ void DrawCharacter(unsigned int ch)
 		{
 			if(row < (CHAR_HEIGHT - 1) && (teletext[ch][row] & (1 << col)))
 			{
-				DrawPixel(gCaretX + i, gCaretY + row, 0xFFFF);
+				DrawPixel(x + i, y + row, 0xFFFF);
 			}
 			else
 			{
-				DrawPixel(gCaretX + i, gCaretY + row, 0x0000);
+				DrawPixel(x + i, y + row, 0x0000);
 			}
 			i++;
 		}
 	}
-	
-	gCaretX += CHAR_WIDTH + 4; // pixel H space
 }
 
 void Write(char* text)
@@ -64,9 +55,19 @@ void Write(char* text)
 	{
 		text++; // Advance to the next character
 		
-		DrawCharacter(ch);
+		if(ch == '\n')
+		{
+			gCaretX = 5;
+			gCaretY += CHAR_HEIGHT + 4;
+			return;
+		}	
+		
+		DrawCharacterAt(ch, gCaretX, gCaretY);
+		
+		gCaretX += CHAR_WIDTH + 4; // pixel H space
 	}	
 }
+
 // 0: Success. 1: Invalid response to property request, 2: Invalid screen size returned
 int GetScreenSizeFromTags()
 {

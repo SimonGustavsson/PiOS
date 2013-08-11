@@ -28,7 +28,7 @@ int cmain(void)
 		while(1);
 	}
 
-	DrawCharacter('H');
+	Write("Hello, World!");
 					
 	while(1)
 	{
