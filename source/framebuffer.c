@@ -22,52 +22,49 @@ void DrawPixel(unsigned int x, unsigned int y, unsigned short int color)
 	*ptr = color;
 }
 
+void DrawCharacter(unsigned int ch)
+{	
+	// Ensure valid char table lookup
+	ch = ch < 32 ? 0 : ch > 127 ? 0 : ch - 32;
+		
+	if(ch == '\n')
+	{
+		gCaretX = 5;
+		gCaretY += CHAR_HEIGHT + 4;
+		return;
+	}	
+	
+	int col;
+	unsigned int row;
+	for(row = 0; row < CHAR_HEIGHT; row++)
+	{
+		unsigned int i = 0;
+		for(col = CHAR_HEIGHT - 2; col >= 0 ; col--)
+		{
+			if(row < (CHAR_HEIGHT - 1) && (teletext[ch][row] & (1 << col)))
+			{
+				DrawPixel(gCaretX + i, gCaretY + row, 0xFFFF);
+			}
+			else
+			{
+				DrawPixel(gCaretX + i, gCaretY + row, 0x0000);
+			}
+			i++;
+		}
+	}
+	
+	gCaretX += CHAR_WIDTH + 4; // pixel H space
+}
+
 void Write(char* text)
 {
-	unsigned int row;
-	int col;
 	unsigned char ch;
 	
 	while((ch = (unsigned char)*text))
 	{
 		text++; // Advance to the next character
 		
-		if(ch == '\n')
-		{
-			gCaretX = 5;
-			gCaretY += CHAR_HEIGHT + 4;
-			continue;
-		}
-		
-		// Make sure the char is within our table  0 - 95
-		if(ch < 32)
-			ch = 0;
-		else
-		{
-			if(ch > 127)
-				ch = 0;
-			else
-				ch -= 32;
-		}
-		
-		for(row = 0; row < CHAR_HEIGHT; row++)
-		{
-			unsigned int i = 0;
-			for(col = CHAR_HEIGHT - 2; col >= 0 ; col--)
-			{
-				if(row < (CHAR_HEIGHT - 1) && (teletext[ch][row] & (1 << col)))
-				{
-					DrawPixel(gCaretX + i, gCaretY + row, 0xFFFF);
-				}
-				else
-				{
-					DrawPixel(gCaretX + i, gCaretY + row, 0x0000);
-				}
-				i++;
-			}
-		}
-		
-		gCaretX += CHAR_WIDTH + 4; // pixel H space
+		DrawCharacter(ch);
 	}	
 }
 // 0: Success. 1: Invalid response to property request, 2: Invalid screen size returned

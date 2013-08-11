@@ -27,8 +27,8 @@ int cmain(void)
 		OnCriticalError(); // Critical error: Failed to initialize framebuffer :-(
 		while(1);
 	}
-		
-	Write("Hello, Multiline\nWorld!");
+
+	DrawCharacter('H');
 					
 	while(1)
 	{
