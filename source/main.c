@@ -2,6 +2,8 @@
 #include "myfont.h"
 #include "timer.h"
 #include "framebuffer.h"
+// TODO: Finish terminal.c and use instead of framebuffer in main
+#include "terminal.h"
 
 void OnCriticalError(void)
 {
@@ -25,11 +27,10 @@ int cmain(void)
 	if(InitializeFramebuffer() != 0)
 	{
 		OnCriticalError(); // Critical error: Failed to initialize framebuffer :-(
-		while(1);
 	}
-
+	
 	Write("Hello, World!");
-					
+
 	while(1)
 	{
 	}
