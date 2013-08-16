@@ -1,4 +1,4 @@
-static unsigned char teletext[][9] = {
+static const unsigned char teletext[][9] = {
 	{ 0,0,0,0,0,0,0,0,0 },		// space
 	{ 4,4,4,4,4,0,4,0,0 },		// !
 	{ 10,10,10,0,0,0,0,0,0 },	// "
