@@ -30,21 +30,9 @@ int cmain(void)
 		OnCriticalError(); // Critical error: Failed to initialize framebuffer :-(
 	}
 
-										
-	char* greeting = "Hello, Terminal World! This is your terminal speaking. Please remember to termina all commands with the enter-key, and smile whilst doing so. Failure to comply will result in termination.";
-	unsigned int maxLength = strlen(greeting);
-	
-	unsigned int counter = 0;
-	while(1)
-	{
-		print(greeting, counter);
-		print("\n", 1);
+	char buffer[10];	
+	printf("&buffer=%d", (int)&buffer);
 		
-		if(counter < maxLength)
-			counter++;
-		else
-			counter = 0;
-		
-		Wait(1); // Wait for quarter of a second
-	}
+	print("\nHalting...\n", 12); 
+	while(1);
 }
