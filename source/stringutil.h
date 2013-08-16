@@ -1,4 +1,4 @@
-#include <cstdarg.h> // Needed for varying argument length
+#include <stdarg.h> // Needed for varying argument length
 
 int strlen(char* str)
 {
@@ -13,14 +13,15 @@ char* strcpy(const char* src, char* dst)
 {
 	char *ptr;
 	ptr = dst;
-	while(*dst++ = *src++);
+	while((*dst++ = *src++));
 
 	return ptr;
 }
 
-const char* itoa(int number)
+// TODO: Rewrite this to take in the pointer to a buffer where the result will be stored
+void itoa(int number, char* buf)
 {
-	char* result = new char;
+	char* result;
 	
 	// We populate the string backwards, increment to make room for \0
 	result++;
@@ -52,40 +53,41 @@ const char* itoa(int number)
 
 	if(negative)
 		*--result = '-';
-
-	return result;
-}
-
-const char* printf(char* text, ...)
-{
-	// Set up variable argument list
-	va_list ap;
-	va_start(ap, text);
-
-	char res[256];
-	char* result = res;
-	
-	// Scan all characters in 'text' and look for format specifiers
-	do
-	{
-		if(*text == '%')
-		{
-			if(*(text + 1) == 'd') // Integer (signed)
-			{				
-				char* intStr = strcpy(itoa(va_arg(ap, int)), result);
-				
-				result += strlen(intStr);
-				
-				// Make sure we skip the type specifier
-				text++;
-				
-				continue;
-			}
-		}
 		
-		// If we got thus far, it's probably just a normal character
-		*result++ = *text;
-	}while(*text++ != '\0');
-	
-	return res;
+	// Done!
 }
+
+// TODO: Rewrite this to take in the pointer to a buffer where the result will be stored
+// const char* printf(char* text, ...)
+// {
+	// // Set up variable argument list
+	// va_list ap;
+	// va_start(ap, text);
+
+	// char res[256];
+	// char* result = res;
+	
+	// // Scan all characters in 'text' and look for format specifiers
+	// do
+	// {
+		// if(*text == '%')
+		// {
+			// if(*(text + 1) == 'd') // Integer (signed)
+			// {				
+				// char* intStr = strcpy(itoa(va_arg(ap, int)), result);
+				
+				// result += strlen(intStr);
+				
+				// // Make sure we skip the type specifier
+				// text++;
+				
+				// continue;
+			// }
+		// }
+		
+		// // If we got thus far, it's probably just a normal character
+		// *result++ = *text;
+	// }while(*text++ != '\0');
+	
+	// return res;
+// }

@@ -6,8 +6,8 @@ all: bin/kernel.img
 bin/kernel.img: bin/kernel.elf
 	$(TOOL)-objcopy bin/kernel.elf -O binary bin/kernel.img
 
-bin/kernel.elf: bin/start.o bin/gpio.o bin/mailbox.o bin/framebuffer.o bin/timer.o bin/main.o
-	$(TOOL)-ld bin/start.o bin/gpio.o bin/timer.o bin/mailbox.o bin/framebuffer.o bin/main.o -T memorymap -o bin/kernel.elf
+bin/kernel.elf: bin/start.o bin/gpio.o bin/mailbox.o bin/framebuffer.o bin/terminal.o bin/timer.o bin/main.o
+	$(TOOL)-ld bin/start.o bin/gpio.o bin/timer.o bin/mailbox.o bin/framebuffer.o bin/terminal.o bin/main.o -T memorymap -o bin/kernel.elf
 
 # The C Files (Not happy about this but dependencies makes my brain hurt and I'm tired)
 bin/gpio.o: source/gpio.c
@@ -15,6 +15,8 @@ bin/gpio.o: source/gpio.c
 bin/mailbox.o: source/mailbox.c
 	$(TOOL)-gcc -c -o $@ $< $(CFLAGS)
 bin/framebuffer.o: source/framebuffer.c
+	$(TOOL)-gcc -c -o $@ $< $(CFLAGS)
+bin/terminal.o: source/terminal.c
 	$(TOOL)-gcc -c -o $@ $< $(CFLAGS)
 bin/timer.o: source/timer.c
 	$(TOOL)-gcc -c -o $@ $< $(CFLAGS)	

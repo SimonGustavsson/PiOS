@@ -1,16 +1,13 @@
 #define CHAR_HEIGHT 10
 #define CHAR_WIDTH 6
-#define SCREEN_WIDTH 1366
-#define SCREEN_HEIGHT 768
 
+#include "framebuffer.h"
 #include "mailbox.h"
 #include "myfont.h"
 
 volatile unsigned int gPitch = 0;
 volatile unsigned int gFbAddr;
 volatile unsigned int gScreenWidth, gScreenHeight;
-static int gCaretX = 5;
-static int gCaretY = 5;
 
 void DrawPixel(unsigned int x, unsigned int y, unsigned short int color)
 {
@@ -45,27 +42,6 @@ void DrawCharacterAt(unsigned int ch, unsigned int x, unsigned int y)
 			i++;
 		}
 	}
-}
-
-void Write(char* text)
-{
-	unsigned char ch;
-	
-	while((ch = (unsigned char)*text))
-	{
-		text++; // Advance to the next character
-		
-		if(ch == '\n')
-		{
-			gCaretX = 5;
-			gCaretY += CHAR_HEIGHT + 4;
-			return;
-		}	
-		
-		DrawCharacterAt(ch, gCaretX, gCaretY);
-		
-		gCaretX += CHAR_WIDTH + 4; // pixel H space
-	}	
 }
 
 // 0: Success. 1: Invalid response to property request, 2: Invalid screen size returned
