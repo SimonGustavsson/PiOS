@@ -1,13 +1,18 @@
 TOOL = arm-none-eabi
 CFLAGS = -Wall -O2 -nostdlib -nostartfiles -ffreestanding
 
+C_INCLUDE_PATH=include
+export C_INCLUDE_PATH
+
 all: bin/kernel.img
 
 bin/kernel.img: bin/kernel.elf
 	$(TOOL)-objcopy bin/kernel.elf -O binary bin/kernel.img
 
+# NOTE: I added --no-wchar-size-warning because it was giving me warnings in the driver.
+# Not sure how important this is right now, TODO: Investigate
 bin/kernel.elf: bin/start.o bin/gpio.o bin/mailbox.o bin/framebuffer.o bin/terminal.o bin/timer.o bin/main.o
-	$(TOOL)-ld bin/start.o bin/gpio.o bin/timer.o bin/mailbox.o bin/framebuffer.o bin/terminal.o bin/main.o -T memorymap -o bin/kernel.elf
+	$(TOOL)-ld --no-wchar-size-warning --no-undefined bin/start.o bin/gpio.o bin/timer.o bin/mailbox.o bin/framebuffer.o bin/terminal.o bin/main.o -L. -l csud -Map bin/mapfile.map -T memorymap -o bin/kernel.elf
 
 # The C Files (Not happy about this but dependencies makes my brain hurt and I'm tired)
 bin/gpio.o: source/gpio.c

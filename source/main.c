@@ -5,6 +5,7 @@
 // TODO: Finish terminal.c and use instead of framebuffer in main
 #include "terminal.h"
 #include "stringutil.h"
+#include "usbd/usbd.h"
 
 void OnCriticalError(void)
 {
@@ -29,6 +30,8 @@ int cmain(void)
 	{
 		OnCriticalError(); // Critical error: Failed to initialize framebuffer :-(
 	}
+	
+	UsbInitialise();
 
 	char buffer[10];	
 	printf("&buffer=%d", (int)&buffer);

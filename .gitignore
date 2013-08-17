@@ -3,7 +3,7 @@
 
 # Libraries
 *.lib
-*.a
+*.map
 
 # Shared objects (inc. Windows DLLs)
 *.dll
