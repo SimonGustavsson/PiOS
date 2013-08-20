@@ -1,5 +1,5 @@
-#define SCREEN_WIDTH 1920
-#define SCREEN_HEIGHT 1080
+#define SCREEN_WIDTH 1366
+#define SCREEN_HEIGHT 768
 
 int InitializeFramebuffer();
 void DrawPixel(unsigned int x, unsigned int y, unsigned short int color);
