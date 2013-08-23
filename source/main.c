@@ -1,25 +1,28 @@
 #include "gpio.h"
-#include "myfont.h"
 #include "timer.h"
-#include "framebuffer.h"
-// TODO: Finish terminal.c and use instead of framebuffer in main
 #include "terminal.h"
 #include "stringutil.h"
 #include "usbd/usbd.h"
+#include "stdio.h"
 
 void OnCriticalError(void)
 {
-	// At this point we can't even render text on screen, so just flash the LED
 	while(1)
 	{
 		LedOff();
 		
-		Wait(1);		
+		wait(1000);		
 		
 		LedOn();		
 		
-		Wait(1);
+		wait(1000);
 	}
+}
+
+// Log function for CSUD
+void LogPrint(char* message, unsigned int length)
+{
+	print(message, length);
 }
 
 int cmain(void)
@@ -30,12 +33,24 @@ int cmain(void)
 	{
 		OnCriticalError(); // Critical error: Failed to initialize framebuffer :-(
 	}
+
+	stdio_init();
 	
+	print("Terminal initialized", strlen("Terminal initialized"));
+	print("Initialising USB", strlen("Initialising USB"));
+
 	UsbInitialise();
 
-	char buffer[10];	
-	printf("&buffer=%d", (int)&buffer);
-		
+	print("USB Initialisation done.\n", strlen("USB Initialisation done.\n"));
+
+	print("Write something! ", strlen("Write something! "));
+
+	char inputBuf[256];
+
+	cin(inputBuf, 256);
+
+	print(inputBuf, 256);
+
 	print("\nHalting...\n", 12); 
 	while(1);
 }
