@@ -35,3 +35,7 @@ $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.c
 $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.s
 	$(TOOL)-as $< -o $@
 	
+.PHONY: clean
+
+clean:
+	del $(BUILD_DIR)\ /Q
