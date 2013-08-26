@@ -9,8 +9,6 @@
 *	is designed such that this driver's interface would be virtually the same
 *	across all systems, and in fact its implementation varies little either.
 ******************************************************************************/
-#ifndef USBD_H
-#define USBD_H
 #include <types.h>
 #include <usbd/device.h>
 #include <usbd/devicerequest.h>
@@ -98,5 +96,3 @@ struct UsbDevice *UsbGetRootHub();
 	the root hub.
 */
 void UsbCheckForChange();
-
-#endif
