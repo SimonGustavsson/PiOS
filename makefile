@@ -3,7 +3,7 @@ CFLAGS = -Wall -O2 -nostdlib -nostartfiles -ffreestanding
 LINKER_FLAGS = --no-wchar-size-warning --no-undefined
 
 # Make sure gcc searches the include folder
-C_INCLUDE_PATH=include
+C_INCLUDE_PATH=include:csud\include
 export C_INCLUDE_PATH
 
 LIBRARIES = csud
@@ -24,7 +24,7 @@ kernel: theelf
 	$(TOOL)-objcopy $(BUILD_DIR)/kernel.elf -O binary $(BUILD_DIR)/kernel.img
 
 # Link all of the objects
-theelf: $(OBJECT)
+theelf: $(OBJECT) libcsud.a
 	$(TOOL)-ld $(LINKER_FLAGS) $(OBJECT) -L. -l $(LIBRARIES) -Map $(BUILD_DIR)/kernel.map -T memorymap -o $(BUILD_DIR)/kernel.elf
 
 #build c files
@@ -34,8 +34,14 @@ $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.c
 #build s files (Assembly)
 $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.s
 	$(TOOL)-as $< -o $@
+
+# build the usb driver
+libcsud.a:
+	make -C csud driver CONFIG=DEBUG TARGET=RPI GNU=$(TOOL)- TYPE=LOWLEVEL
+	move /Y csud\libcsud.a libcsud.a
 	
 .PHONY: clean
 
 clean:
 	del $(BUILD_DIR)\ /Q
+	make -C csud clean
