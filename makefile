@@ -3,7 +3,7 @@ CFLAGS = -Wall -O2 -nostdlib -nostartfiles -ffreestanding
 LINKER_FLAGS = --no-wchar-size-warning --no-undefined
 
 # Make sure gcc searches the include folder
-C_INCLUDE_PATH=include:csud\include
+C_INCLUDE_PATH=include;csud\include
 export C_INCLUDE_PATH
 
 LIBRARIES = csud
