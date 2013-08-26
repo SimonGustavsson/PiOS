@@ -3,17 +3,17 @@ PiOS
 
 My experimental bare metal OS for the raspberry pi.
 
-What it does right now:
-Interact with GPIO - Flash LED
-Framebuffer - Drawing pixels
-Terminal - Basic character based display
-Timer - Using the system timer to wait n ms
+#### What it does right now:
+* Interact with GPIO - Flash LED
+* Framebuffer - Drawing pixels
+* Terminal - Basic character based display
+* Timer - Using the system timer to wait n ms
 
-What I'm planning to do / Working on:
-Keyboard support (input en-GB)
-Reading/writing to the SD-card
-Loading programs
-Enable MMU
+#### What I'm planning to do / Working on:
+* Keyboard support (input en-GB)
+* Reading/writing to the SD-card
+* Loading programs
+* Enable MMU
 
 Probably in that order :)
 
