@@ -35,13 +35,14 @@ $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.c
 $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.s
 	$(TOOL)-as $< -o $@
 
-# build the usb driver
-libcsud.a:
-	make -C csud driver CONFIG=DEBUG TARGET=RPI GNU=$(TOOL)- TYPE=LOWLEVEL
-	move /Y csud\libcsud.a libcsud.a
-	
-.PHONY: clean
+libcsud.a: csud/libcsud.a
+	mv -f csud\libcsud.a libcsud.a
 
+# build the usb driver
+csud/libcsud.a:
+	cd csud; make driver CONFIG=DEBUG TARGET=RPI GNU=$(TOOL)- TYPE=LOWLEVEL
+
+.PHONY: clean
 clean:
-	del $(BUILD_DIR)\ /Q
+	rm -f $(BUILD_DIR)/*
 	make -C csud clean

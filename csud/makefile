@@ -60,7 +60,7 @@ driver: $(LIBNAME)
 	
 # Rule to make the driver file.
 $(LIBNAME) : $(patsubst %/,%, $(BUILD)) $(OBJECTS)
-	del /Q $(LIBNAME)
+	rm -f $(LIBNAME)
 	$(GNU)ar rc $(LIBNAME) $(OBJECTS)
 		
 # Rule to make the c object files.
@@ -71,7 +71,7 @@ $(BUILD):
 	
 # Rule to clean files.
 clean : 
-	del /Q $(subst /,\, $(BUILD))
-	del /Q $(LIBNAME)
+	rm -f $(BUILD)*
+	rm -f $(LIBNAME)
 
 .PHONY: clean driver all
