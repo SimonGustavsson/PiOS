@@ -3,7 +3,7 @@
 #include "terminal.h"
 #include "stringutil.h"
 #include "usbd/usbd.h"
-#include "stdio.h"
+#include "keyboard.h"
 
 void OnCriticalError(void)
 {
@@ -27,30 +27,40 @@ void LogPrint(char* message, unsigned int length)
 
 int cmain(void)
 {
+	unsigned int result = 0;
+	
 	LedInit();
-		
-	if(terminal_init() != 0)
+	
+	if((result = terminal_init()) != 0)
 	{
 		OnCriticalError(); // Critical error: Failed to initialize framebuffer :-(
 	}
 
-	stdio_init();
-	
-	print("Terminal initialized", strlen("Terminal initialized"));
-	print("Initialising USB", strlen("Initialising USB"));
+	if((result = UsbInitialise()) != 0)
+		printf("Usb initialise failed, error code: %d\n", result);
+	else
+	{
+		if((result = KeyboardInitialise()) != 0)
+			printf("Keyboard initialise failed, error code: %d\n", result);
+		else
+			print("Keyboard initialise success!\n", strlen("Keyboard initialise success!\n"));
+	}
 
-	UsbInitialise();
-
-	print("USB Initialisation done.\n", strlen("USB Initialisation done.\n"));
-
-	print("Write something! ", strlen("Write something! "));
-
-	char inputBuf[256];
-
-	cin(inputBuf, 256);
-
-	print(inputBuf, 256);
-
+	if(result != 0)
+		goto halt;
+		
+	while(1)
+	{
+		KeyboardUpdate();
+		short scanCode = KeyboardGetChar();		
+		
+		if(scanCode != 0)
+			printf("%c", KeyboardScanToChar(scanCode));
+		
+		wait(10);
+	}	
+		
+halt:	
 	print("\nHalting...\n", 12); 
 	while(1);
 }

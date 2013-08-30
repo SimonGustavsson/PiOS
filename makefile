@@ -1,5 +1,5 @@
 TOOL = arm-none-eabi
-CFLAGS = -Wall -O2 -nostdlib -nostartfiles -ffreestanding
+CFLAGS = -Wall -O2 -nostdlib -nostartfiles -ffreestanding --no-common
 LINKER_FLAGS = --no-wchar-size-warning --no-undefined
 
 # Make sure gcc searches the include folder
@@ -25,7 +25,7 @@ kernel: theelf
 	$(TOOL)-objcopy $(BUILD_DIR)/kernel.elf -O binary $(BUILD_DIR)/kernel.img
 
 # Link all of the objects
-theelf: $(OBJECT) libcsud.a
+theelf: $(AOBJECT) $(COBJECT) libcsud.a
 	$(TOOL)-ld $(LINKER_FLAGS) $(AOBJECT) $(COBJECT) -L. -l $(LIBRARIES) -Map $(BUILD_DIR)/kernel.map -T memorymap -o $(BUILD_DIR)/kernel.elf
 
 #build c files

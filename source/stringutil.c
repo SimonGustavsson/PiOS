@@ -70,6 +70,10 @@ void printf(char* text, ...)
 	{
 		if(*text == '%')
 		{
+			if(*(text + 1) == 'c') // unsigned char
+			{
+				*result++ = (char)va_arg(ap, unsigned int);
+			}
 			if(*(text + 1) == 'd') // integer (signed)
 			{
 				char itoBuf[10];
@@ -77,12 +81,12 @@ void printf(char* text, ...)
 				char* intstr = strcpy(itoBuf, result);
 				
 				result += strlen(intstr);
-				
-				// make sure we skip the type specifier
-				text++;
-				
-				continue;
 			}
+			
+			// make sure we skip the type specifier
+			text++;
+			
+			continue;
 		}
 		
 		// if we got thus far, it's probably just a normal character

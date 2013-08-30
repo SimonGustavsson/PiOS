@@ -5,9 +5,9 @@
 #include "mailbox.h"
 #include "myfont.h"
 
-volatile unsigned int gPitch = 0;
-volatile unsigned int gFbAddr;
-volatile unsigned int gScreenWidth, gScreenHeight;
+unsigned int gPitch;
+unsigned int gFbAddr;
+unsigned int gScreenWidth, gScreenHeight;
 
 void DrawPixel(unsigned int x, unsigned int y, unsigned short int color)
 {
