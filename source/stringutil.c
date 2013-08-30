@@ -74,13 +74,22 @@ void printf(char* text, ...)
 			{
 				*result++ = (char)va_arg(ap, unsigned int);
 			}
-			if(*(text + 1) == 'd') // integer (signed)
+			else if(*(text + 1) == 'd') // integer (signed)
 			{
 				char itoBuf[10];
 				itoa(va_arg(ap, int), &itoBuf[0]);
+				
 				char* intstr = strcpy(itoBuf, result);
 				
 				result += strlen(intstr);
+			}
+			else if(*(text + 1) == 's') // string
+			{
+				char* arg = (char*)va_arg(ap, int);
+				
+				strcpy(arg, result);
+				
+				result += strlen(arg);
 			}
 			
 			// make sure we skip the type specifier

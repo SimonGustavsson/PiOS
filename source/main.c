@@ -50,38 +50,29 @@ int cmain(void)
 		goto halt;
 		
 		
-	printf("NUM_DEL is %d", (int)NUM_DEL);
-		
 	while(1)
 	{
 		KeyboardUpdate();
+		
 		short scanCode = KeyboardGetChar();		
 		
-		if(scanCode != 0)
+		// Nothing pressed
+		if(scanCode == 0)
 		{
-			virtualkey vk = ScanToVirtual(scanCode);
-			
-			char c = VirtualToAsci(vk);
-			if(c >0)
-				printf("%c", c);
-			else if(c == -1)
-				printf("\nsc:%d vk:%d unmapped in asci table.", (int)scanCode, (int)vk, (int)c);
-			else
-			{
-				switch(vk)
-				{
-					case VK_BSP:
-						terminal_back();
-						break;
-					case VK_ENTER:
-						print("\n", 1);
-						break;
-					default:
-						printf("\nsc:%d vk:%d ch:%d", (int)scanCode, (int)vk, (int)c);
-						break;
-				}
-			}
+			wait(10);
+			continue;
 		}
+		
+		virtualkey vk = ScanToVirtual(scanCode);
+		
+		char c = VirtualToAsci(vk);
+		
+		printf("%c", c);
+		// char name[15];
+		// char* keyname = GetKeyName(name, 15, vk);
+		
+		// printf("Scan: %d Vk: %d Name: %s\n", scanCode, (unsigned int)vk, keyname);
+		
 		wait(10);
 	}	
 		
