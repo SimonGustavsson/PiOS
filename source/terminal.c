@@ -17,7 +17,7 @@ int gBufferCaretRow; 		// The current row of the caret - where  text will be wri
 int gBufferCaretCol;		// The current column of the caret - where text will be written to
 int gFirstVisibleBufferRow; // The row in the first buffer that is currently the first row on screen
 
-void PresentBufferToScreen()
+void PresentBufferToScreen(void)
 {				
 	unsigned int row;
 	unsigned int col;
@@ -34,7 +34,7 @@ void PresentBufferToScreen()
 	}
 }
 
-void terminal_clear()
+void terminal_clear(void)
 {
 	gFirstVisibleBufferRow = 0;
 	gBufferCaretRow = 0;
@@ -65,6 +65,25 @@ int terminal_init(void)
 	terminal_clear();		
 	
 	return(0);
+}
+
+void terminal_back(void)
+{
+	if(gBufferCaretCol == 0)
+	{
+		gBufferCaretRow--;
+		gBufferCaretCol = BUFFER_WIDTH - 1;
+		
+		// We have to go back up a row
+		gBuffer[gBufferCaretRow][gBufferCaretCol] = ' ';
+	}
+	else
+	{
+		gBufferCaretCol--;
+		gBuffer[gBufferCaretRow][gBufferCaretCol] = ' ';
+	}
+	
+	PresentBufferToScreen();
 }
 
 void print(char* string, unsigned int length)

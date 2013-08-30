@@ -3,40 +3,36 @@
 #include "device/hid/keyboard.h"
 #include "terminal.h"
 #include "stringutil.h"
+#include "keyboard.h"
 
 unsigned int gKeyboardAddr;
 bool gHaveKeyboard;
 unsigned short gLastKeystate[6];
 
-char KeyboardScanToChar(unsigned short scanCode)
+char gVirtualTable[] = {
+	0, 0, 0, 0, 'a', 'b', 'c', 'd', 'e', 'f', 
+	'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',	'o', 'p',
+	'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+	'1', '2', '3', '4', '5', '6', '7', '8',	'9', '0',
+	'\n', /*esc*/0, /*Bsp*/0, '\t',	' ', '-', '=', '[', ']', '\\',
+	'#', ';', '\'', '`', ',', '.', '/', 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, '\\',	
+};
+
+virtualkey ScanToVirtual(unsigned int scanCode)
 {
-	// a-z
-	if(scanCode >= 4 && scanCode <= 97)
-		return 97 + (scanCode - 4);
+	if(scanCode < 0) return VK_UNKNOWN;
 	
-	// 0-9
-	if(scanCode >= 30 && scanCode <= 39)
-		return 48 + (scanCode - 30);
-		
-	switch(scanCode)
-	{
-		case 40: return '\n';
-		
-		case 44: return ' ';
-		case 45: return '-';
-		case 46: return '+';
-		case 47: return '[';
-		case 48: return ']';
-		
-		case 50: return '#';
-		case 51: return ';';
-		case 52: return '\'';
-		case 53: return '`';
-		case 54: return ',';
-		case 55: return '.';
-		case 56: return '/';
-		default: return 'z';
-	}
+	return (virtualkey)(scanCode - 4);
+}
+
+unsigned char VirtualToAsci(virtualkey vk)
+{
+	if(vk < 0 || vk > (sizeof(gVirtualTable) / sizeof(gVirtualTable[0]))) return -1;
+	
+	return gVirtualTable[vk + 4];
 }
 
 // Retrieves the address of the first attached keyboard

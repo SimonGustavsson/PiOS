@@ -49,14 +49,39 @@ int cmain(void)
 	if(result != 0)
 		goto halt;
 		
+		
+	printf("NUM_DEL is %d", (int)NUM_DEL);
+		
 	while(1)
 	{
 		KeyboardUpdate();
 		short scanCode = KeyboardGetChar();		
 		
 		if(scanCode != 0)
-			printf("%c", KeyboardScanToChar(scanCode));
-		
+		{
+			virtualkey vk = ScanToVirtual(scanCode);
+			
+			char c = VirtualToAsci(vk);
+			if(c >0)
+				printf("%c", c);
+			else if(c == -1)
+				printf("\nsc:%d vk:%d unmapped in asci table.", (int)scanCode, (int)vk, (int)c);
+			else
+			{
+				switch(vk)
+				{
+					case VK_BSP:
+						terminal_back();
+						break;
+					case VK_ENTER:
+						print("\n", 1);
+						break;
+					default:
+						printf("\nsc:%d vk:%d ch:%d", (int)scanCode, (int)vk, (int)c);
+						break;
+				}
+			}
+		}
 		wait(10);
 	}	
 		
