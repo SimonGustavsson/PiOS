@@ -13,9 +13,10 @@ SOURCE_DIR = source
 CSOURCE := $(wildcard $(SOURCE_DIR)/*.c)
 ASOURCE := $(wildcard $(SOURCE_DIR)/*.s)
 
-_OBJECT := $(patsubst %.c,%.o, $(CSOURCE))
-_OBJECT += $(patsubst %.s,%.o, $(ASOURCE))
-OBJECT = $(addprefix $(BUILD_DIR)/, $(notdir $(_OBJECT)))
+_COBJECT := $(patsubst %.c,%.o, $(CSOURCE))
+_AOBJECT := $(patsubst %.s,%.o, $(ASOURCE))
+AOBJECT = $(addprefix $(BUILD_DIR)/, $(notdir $(_AOBJECT)))
+COBJECT = $(addprefix $(BUILD_DIR)/, $(notdir $(_COBJECT)))
 
 all: kernel
 
@@ -25,7 +26,7 @@ kernel: theelf
 
 # Link all of the objects
 theelf: $(OBJECT) libcsud.a
-	$(TOOL)-ld $(LINKER_FLAGS) $(OBJECT) -L. -l $(LIBRARIES) -Map $(BUILD_DIR)/kernel.map -T memorymap -o $(BUILD_DIR)/kernel.elf
+	$(TOOL)-ld $(LINKER_FLAGS) $(AOBJECT) $(COBJECT) -L. -l $(LIBRARIES) -Map $(BUILD_DIR)/kernel.map -T memorymap -o $(BUILD_DIR)/kernel.elf
 
 #build c files
 $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.c
@@ -36,7 +37,7 @@ $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.s
 	$(TOOL)-as $< -o $@
 
 libcsud.a: csud/libcsud.a
-	mv -f csud\libcsud.a libcsud.a
+	mv -f csud/libcsud.a libcsud.a
 
 # build the usb driver
 csud/libcsud.a:
