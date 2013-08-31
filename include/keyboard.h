@@ -1,5 +1,6 @@
 #ifndef PIOS_KEYBOARD_C
 #define PIOS_KEYBOARD_C
+#include "types.h"
 
 typedef enum 
 {
@@ -108,7 +109,9 @@ void KeyboardUpdate(void);
 unsigned short KeyboardGetChar(void);
 bool EnsureKeyboard(void);
 virtualkey ScanToVirtual(unsigned int scanCode);
-unsigned char VirtualToAsci(virtualkey vk);
+unsigned char VirtualToAsci(virtualkey vk, bool shiftDown);
 char* GetKeyName(char* buf, unsigned int bufLen, virtualkey vk);
+bool KeyboardShiftDown(void);
+bool KeyboardCtrlDown(void);
 
 #endif

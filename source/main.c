@@ -65,9 +65,10 @@ int cmain(void)
 		
 		virtualkey vk = ScanToVirtual(scanCode);
 		
-		char c = VirtualToAsci(vk);
+		char c = VirtualToAsci(vk, KeyboardShiftDown());
 		
 		printf("%c", c);
+		
 		// char name[15];
 		// char* keyname = GetKeyName(name, 15, vk);
 		

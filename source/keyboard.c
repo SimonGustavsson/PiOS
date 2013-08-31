@@ -107,6 +107,111 @@ char* gKeynames[] =
 	"rmenu"
 }; 
 
+const char gVirtualTable_shifted[] =
+{
+	0, 
+	0, 
+	0, 
+	0, 
+	'A', 
+	'B', 
+	'C', 
+	'D', 
+	'E', 
+	'F', 
+	'G',
+	'H', 
+	'I', 
+	'J',
+	'K',  // 10 
+	'L', 
+	'M',
+	'N',	
+	'O', 
+	'P',
+	'Q', 
+	'R', 
+	'S', 
+	'T', 
+	'U',  // 20
+	'V', 
+	'W', 
+	'X', 
+	'Y', 
+	'Z',
+	'!',  
+	'"', 
+	'*', 
+	'$', // 30
+	'%', 
+	'^', 
+	'&', 
+	'*',
+	'(',
+	')',
+	'\n', 
+	/*esc*/0, 
+	/*Bsp*/0, 
+	'\t',
+	' ', // 40
+	'_', 
+	'+', 
+	'{',
+	'}',
+	'|',
+	'~',  
+	':', 
+	'@', 
+	'*', 
+	'<', // 50
+	'>', 
+	'?', 
+	0, 
+	0,
+	0,
+	0, 
+	0, 
+	0, 
+	0, 
+	0, // 60
+	0, 
+	0, 
+	0, 
+	0, 
+	0,
+	0, 
+	0, 
+	0, 
+	0, 
+	0, // 70
+	0, 
+	0, 
+	0, 
+	0, 
+	0,
+	0,  
+	0, 
+	0, 
+	0, 
+	'/', // 80
+	'*', 
+	'-', 
+	'+', 
+	'\n',
+	'1',
+	'2',
+	'3',
+	'4',
+	'5',
+	'6', // 90
+	'7',
+	'8',
+	'9',
+	'0',
+	0, // Numpad delete
+	'\\'
+};
+
 const char gVirtualTable[] = 
 {
 	0, 
@@ -215,6 +320,17 @@ const char gVirtualTable[] =
 bool gHaveKeyboard;
 unsigned int gKeyboardAddr;
 unsigned short gLastKeystate[6];
+struct KeyboardModifiers gLastModifiers;
+
+bool KeyboardCtrlDown(void)
+{
+	return gLastModifiers.LeftControl || gLastModifiers.RightControl;
+}
+
+bool KeyboardShiftDown(void)
+{
+	return gLastModifiers.LeftShift || gLastModifiers.RightShift;
+}
 
 virtualkey ScanToVirtual(unsigned int scanCode)
 {
@@ -223,11 +339,14 @@ virtualkey ScanToVirtual(unsigned int scanCode)
 	return (virtualkey)(scanCode - 4);
 }
 
-unsigned char VirtualToAsci(virtualkey vk)
+unsigned char VirtualToAsci(virtualkey vk, bool shifted)
 {
 	if(vk < 0 || vk > (sizeof(gVirtualTable) / sizeof(gVirtualTable[0]))) return -1;
 	
-	return gVirtualTable[vk + 4];
+	if(shifted)
+		return gVirtualTable_shifted[vk + 4];
+	else
+		return gVirtualTable[vk + 4];
 }
 
 char* GetKeyName(char* buf, unsigned int bufLen, virtualkey vk)
@@ -313,4 +432,5 @@ void KeyboardUpdate(void)
 		gLastKeystate[i] = KeyboardGetKeyDown(gKeyboardAddr, i);
 		
 	gHaveKeyboard = KeyboardPoll(gKeyboardAddr) == 0;
+	gLastModifiers = KeyboardGetModifiers(gKeyboardAddr);
 }
