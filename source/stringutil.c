@@ -19,7 +19,6 @@ char* strcpy(const char* src, char* dst)
 	return ptr;
 }
 
-// TODO: Rewrite this to take in the pointer to a buffer where the result will be stored
 void itoa(int number, char* buf)
 {
 	// We populate the string backwards, increment to make room for \0
@@ -52,20 +51,17 @@ void itoa(int number, char* buf)
 
 	if(negative)
 		*--buf = '-';
-		
-	// Done!
 }
 
 void printf(char* text, ...)
 {
-	// set up variable argument list
 	va_list ap;
 	va_start(ap, text);
 
 	char res[256];
 	char* result = res;
 	
-	// scan all characters in 'text' and look for format specifiers
+	// scan all characters in the string and look for format specifiers
 	do
 	{
 		if(*text == '%')
@@ -98,7 +94,7 @@ void printf(char* text, ...)
 			continue;
 		}
 		
-		// if we got thus far, it's probably just a normal character
+		// if we got this far, it's probably just a normal character
 		*result++ = *text;
 	}while(*text++ != '\0');
 	
