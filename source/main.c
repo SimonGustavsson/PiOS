@@ -42,19 +42,20 @@ int cmain(void)
 	else if((result = KeyboardInitialise()) != 0)
 			printf("Keyboard initialise failed, error code: %d\n", result);
 	
-	print("Welcome to PiOS!\nPiOS->", strlen("Welcome to PiOS!\nPiOS->"));
-	
-	if(result != 0)
-		goto halt;
-				
-	while(1)
+	if(result == 0)
 	{
-		terminal_update();
+		terminal_printWelcome();
 		
-		wait(10);
+		terminal_printPrompt();
+		
+		while(1)
+		{
+			terminal_update();
+			
+			wait(10);
+		}
 	}	
 		
-halt:	
-	print("\nHalting...\n", 12); 
+	print("\n * * * System Halting * * *\n", 29); 
 	while(1);
 }

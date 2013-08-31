@@ -29,6 +29,26 @@ unsigned int gInputBufferIndex;
 char* gPrompt = "PiOS->";
 unsigned int gPromptLength = 6;
 
+void terminal_printWelcome(void)
+{
+	printf("##############################################################################\n");
+	printf("############################# Welcome to PiOS 0.1 ############################\n");
+	printf("###################### Available commands are: 'about'      ##################\n");
+	printf("##################                                              ##############\n");
+	printf("######################                                      ##################\n");
+	printf("############################# By Simon Gustavsson ############################\n");
+	printf("##############################################################################\n");
+}
+
+void terminal_printPrompt(void)
+{
+	unsigned int i;
+	for(i = 0; i < gPromptLength; i++)
+		gBuffer[gBufferCaretRow][gBufferCaretCol++] = gPrompt[i];
+		
+	PresentBufferToScreen();
+}
+
 void ExecuteCommand(char* cmd, unsigned int cmdLen)
 {
 	// TODO: Construct list of built in command + search algorithm
@@ -112,12 +132,14 @@ void terminal_update(void)
 			
 		// Remove current cursor
 		gInputBuffer[gInputBufferIndex] = 0; // Remove cursor
-		gBuffer[gBufferCaretRow][gInputBufferIndex] = 0;
+		//gBuffer[gBufferCaretRow][gInputBufferIndex] = 0;
+		gBuffer[gBufferCaretRow][gBufferCaretCol] = 0;
 		
+		gBufferCaretCol--;
 		gInputBufferIndex--;
 		
 		gInputBuffer[gInputBufferIndex] = (char)127;
-		gBuffer[gBufferCaretRow][gInputBufferIndex] = gInputBuffer[gInputBufferIndex];
+		gBuffer[gBufferCaretRow][gBufferCaretCol] = gInputBuffer[gInputBufferIndex];
 	}
 	else
 	{	
@@ -140,9 +162,6 @@ void terminal_update(void)
 		
 		// Print cursor
 		gBuffer[gBufferCaretRow][gBufferCaretCol] = gInputBuffer[gInputBufferIndex];
-
-		// Printed two characters now
-		//gBufferCaretCol += 1;
 	}
 	
 	// Flip buffer to screen
