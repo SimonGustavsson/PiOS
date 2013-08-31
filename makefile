@@ -36,14 +36,6 @@ $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.c
 $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.s
 	$(TOOL)-as $< -o $@
 
-libcsud.a: csud/libcsud.a
-	mv -f csud/libcsud.a libcsud.a
-
-# build the usb driver
-csud/libcsud.a:
-	cd csud; make driver CONFIG=FINAL TARGET=RPI GNU=$(TOOL)- TYPE=LOWLEVEL
-
 .PHONY: clean
 clean:
 	rm -f $(BUILD_DIR)/*
-	make -C csud clean

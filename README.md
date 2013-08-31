@@ -23,6 +23,4 @@ Probably in that order :)
 * Windows 7/8
 
 ###### Notes:
-I use [Chadderz lovely usb driver](https://github.com/Chadderz121/csud).
-(I have a copy of the source in my repro as I've made some small modifications to
-get it to run with my configuration).
+For Usb I'm using [Chadderz lovely usb driver](https://github.com/Chadderz121/csud).
