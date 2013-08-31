@@ -19,6 +19,23 @@ char* strcpy(const char* src, char* dst)
 	return ptr;
 }
 
+unsigned int strcmp(char* str1, char* str2)
+{
+	unsigned int len1 = strlen(str1);
+	unsigned int len2 = strlen(str2);
+	
+	if(len1 != len2)
+		return 0; // Not equal
+		
+	unsigned int i;
+	for(i = 0; i < len1; i++)
+		if(str1[i] != str2[i])
+			return 0;
+			
+	// They must be equal
+	return 1;
+}
+
 void itoa(int number, char* buf)
 {
 	// We populate the string backwards, increment to make room for \0

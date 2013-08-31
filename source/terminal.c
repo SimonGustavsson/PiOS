@@ -6,8 +6,14 @@
 #define TERMINAL_HEIGHT (SCREEN_HEIGHT / (CHAR_HEIGHT + CHAR_VSPACING)) - 1 // 76 @ 1080
 #define BUFFER_HEIGHT TERMINAL_HEIGHT
 #define BUFFER_WIDTH TERMINAL_WIDTH
+#define INPUT_BUFFER_SIZE 256
 
 #include "framebuffer.h"
+#include "keyboard.h"
+#include "stringutil.h"
+
+// Forward declare
+void PresentBufferToScreen(void);
 
 // TODO 0: Make buffer larger than display to allow for some history to get saved
 // TODO 1: Change to int buffers and embed colors in value
@@ -16,6 +22,132 @@ char gTerminal[TERMINAL_HEIGHT][TERMINAL_WIDTH];
 int gBufferCaretRow; 		// The current row of the caret - where  text will be written to
 int gBufferCaretCol;		// The current column of the caret - where text will be written to
 int gFirstVisibleBufferRow; // The row in the first buffer that is currently the first row on screen
+
+char gInputBuffer[INPUT_BUFFER_SIZE];
+unsigned int gInputBufferIndex;
+
+char* gPrompt = "PiOS->";
+unsigned int gPromptLength = 6;
+
+void ExecuteCommand(char* cmd, unsigned int cmdLen)
+{
+	// TODO: Construct list of built in command + search algorithm
+	char response[300];
+	char* res = response;
+	unsigned int resLen = 0;
+	if(strcmp(cmd, "about"))
+	{
+		char* msg = "PiOS by Simon Gustavsson 2013";
+		strcpy(msg, res);
+		resLen += strlen(msg);;
+	}
+	else
+	{
+		char* msg = "I don't understand: ";		
+		unsigned int msgLen = strlen(msg);
+		strcpy(msg, res);		
+		resLen += strlen(msg);
+		res += msgLen;
+		
+		// Append command so the user can see what they did
+		strcpy(cmd, res);		
+		resLen += cmdLen;
+	}
+	
+	// Print response
+	unsigned int i;
+	for(i = 0; i < resLen; i++)
+		gBuffer[gBufferCaretRow][i] = response[i];
+	
+	// Move to the next line
+	gBufferCaretRow++;
+	
+	// Print prompt
+	unsigned int p;
+	for(p = 0; p < gPromptLength; p++)
+		gBuffer[gBufferCaretRow][gBufferCaretCol++] = gPrompt[p];
+	
+	// Print the cursor
+	gBuffer[gBufferCaretRow][gBufferCaretCol] = (char)127;
+	
+	// (Caller will present buffer)
+}
+
+void terminal_update(void)
+{
+	KeyboardUpdate();
+		
+	short scanCode = KeyboardGetChar();		
+	
+	// Nothing pressed
+	if(scanCode == 0)
+		return;
+	
+	virtualkey vk = ScanToVirtual(scanCode);
+
+	if(vk == VK_ENTER)
+	{
+		// Remove cursor
+		gBuffer[gBufferCaretRow][gBufferCaretCol] = 0;
+		gInputBuffer[gInputBufferIndex] = '\0';
+		
+		// Give the command execution a fresh start on a new line
+		gBufferCaretRow++;
+		gBufferCaretCol = 0;
+		
+		// Execute the command
+		ExecuteCommand(gInputBuffer, gInputBufferIndex);
+		
+		// Clear the input buffer
+		unsigned int i;
+		for(i = 0; i < INPUT_BUFFER_SIZE; i++)
+			gInputBuffer[i] = 0;
+			
+		gInputBufferIndex = 0;
+	}
+	else if(vk == VK_BSP)
+	{
+		if(gInputBufferIndex == 0)
+			return; // No characters left to delete!
+			
+		// Remove current cursor
+		gInputBuffer[gInputBufferIndex] = 0; // Remove cursor
+		gBuffer[gBufferCaretRow][gInputBufferIndex] = 0;
+		
+		gInputBufferIndex--;
+		
+		gInputBuffer[gInputBufferIndex] = (char)127;
+		gBuffer[gBufferCaretRow][gInputBufferIndex] = gInputBuffer[gInputBufferIndex];
+	}
+	else
+	{	
+		char c;
+		
+		if((c = VirtualToAsci(vk, KeyboardShiftDown())) == 0 || gInputBufferIndex == INPUT_BUFFER_SIZE - 1)
+			return;
+		
+		// Set input buffer (this will replace the cursor)
+		gInputBuffer[gInputBufferIndex] = c;
+		
+		// Print the character (this will replace the cursor)
+		gBuffer[gBufferCaretRow][gBufferCaretCol] = gInputBuffer[gInputBufferIndex];
+		
+		gBufferCaretCol++;
+		gInputBufferIndex++;
+		
+		// Add cursor to input
+		gInputBuffer[gInputBufferIndex] = (char)127;
+		
+		// Print cursor
+		gBuffer[gBufferCaretRow][gBufferCaretCol] = gInputBuffer[gInputBufferIndex];
+
+		// Printed two characters now
+		//gBufferCaretCol += 1;
+	}
+	
+	// Flip buffer to screen
+	PresentBufferToScreen();
+}
 
 void PresentBufferToScreen(void)
 {				
@@ -57,14 +189,18 @@ void terminal_clear(void)
 int terminal_init(void)
 {
 	if(InitializeFramebuffer() != 0)
-	{
 		return -1;
-	}
+	
+	unsigned int i;
+	for(i = 0; i < 256; i++)
+		gInputBuffer[i] = 0;
+		
+	gInputBufferIndex = 0;
 
 	// Initial setup of buffers etc
 	terminal_clear();		
 	
-	return(0);
+	return 0;
 }
 
 void terminal_back(void)
@@ -97,6 +233,9 @@ void print(char* string, unsigned int length)
 			gBuffer[gBufferCaretRow][gBufferCaretCol] = ' ';
 			gBufferCaretRow++;
 			gBufferCaretCol = 0;
+			
+			// Print cursor
+			gBuffer[gBufferCaretRow][gBufferCaretCol] = (char)127;
 			continue;
 		}
 		

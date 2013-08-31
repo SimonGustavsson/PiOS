@@ -22,7 +22,8 @@ void OnCriticalError(void)
 // Log function for CSUD
 void LogPrint(char* message, unsigned int length)
 {
-	print(message, length);
+	// Disabled usb driver output for now, it's not interesting enough!
+	//print(message, length);
 }
 
 int cmain(void)
@@ -38,41 +39,17 @@ int cmain(void)
 
 	if((result = UsbInitialise()) != 0)
 		printf("Usb initialise failed, error code: %d\n", result);
-	else
-	{
-		if((result = KeyboardInitialise()) != 0)
+	else if((result = KeyboardInitialise()) != 0)
 			printf("Keyboard initialise failed, error code: %d\n", result);
-		else
-			print("Keyboard initialise success!\n", strlen("Keyboard initialise success!\n"));
-	}
-
+	
+	print("Welcome to PiOS!\nPiOS->", strlen("Welcome to PiOS!\nPiOS->"));
+	
 	if(result != 0)
 		goto halt;
-		
-		
+				
 	while(1)
 	{
-		KeyboardUpdate();
-		
-		short scanCode = KeyboardGetChar();		
-		
-		// Nothing pressed
-		if(scanCode == 0)
-		{
-			wait(10);
-			continue;
-		}
-		
-		virtualkey vk = ScanToVirtual(scanCode);
-		
-		char c = VirtualToAsci(vk, KeyboardShiftDown());
-		
-		printf("%c", c);
-		
-		// char name[15];
-		// char* keyname = GetKeyName(name, 15, vk);
-		
-		// printf("Scan: %d Vk: %d Name: %s\n", scanCode, (unsigned int)vk, keyname);
+		terminal_update();
 		
 		wait(10);
 	}	

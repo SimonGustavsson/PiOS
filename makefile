@@ -41,7 +41,7 @@ libcsud.a: csud/libcsud.a
 
 # build the usb driver
 csud/libcsud.a:
-	cd csud; make driver CONFIG=DEBUG TARGET=RPI GNU=$(TOOL)- TYPE=LOWLEVEL
+	cd csud; make driver CONFIG=FINAL TARGET=RPI GNU=$(TOOL)- TYPE=LOWLEVEL
 
 .PHONY: clean
 clean:
