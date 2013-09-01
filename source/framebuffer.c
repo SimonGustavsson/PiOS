@@ -21,6 +21,11 @@ void DrawPixel(unsigned int x, unsigned int y, unsigned short int color)
 
 void DrawCharacterAt(unsigned int ch, unsigned int x, unsigned int y)
 {
+	DrawColoredCharacterAt(ch, x, y, 0xFFFF);
+}
+
+void DrawColoredCharacterAt(unsigned int ch, unsigned int x, unsigned int y, unsigned short color)
+{
 	// Ensure valid char table lookup
 	ch = ch < 32 ? 0 : ch > 127 ? 0 : ch - 32;
 	
@@ -33,7 +38,7 @@ void DrawCharacterAt(unsigned int ch, unsigned int x, unsigned int y)
 		{
 			if(row < (CHAR_HEIGHT - 1) && (teletext[ch][row] & (1 << col)))
 			{
-				DrawPixel(x + i, y + row, 0xFFFF);
+				DrawPixel(x + i, y + row, color);
 			}
 			else
 			{
