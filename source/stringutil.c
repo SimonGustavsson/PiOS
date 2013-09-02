@@ -19,6 +19,24 @@ char* strcpy(const char* src, char* dst)
 	return ptr;
 }
 
+char ctolower(char c)
+{
+	if(c >= 'A' && c <= 'Z')
+		return 'a' + (c - 'A');
+	else
+		return c;
+}
+
+unsigned int strcasecmp(char* str1, char* str2)
+{
+	for(;; str1++, str2++)
+	{
+		int d = ctolower(*str1) - ctolower(*str2); 
+		if(d != 0 || !*str1)
+			return d;
+	}
+}
+
 unsigned int strcmp(char* str1, char* str2)
 {
 	unsigned int len1 = strlen(str1);

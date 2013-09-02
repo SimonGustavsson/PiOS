@@ -6,6 +6,7 @@
 int strlen(char* str);
 char* strcpy(const char* src, char* dst);
 unsigned int strcmp(char* str1, char* str2);
+unsigned int strcasecmp(char* str1, char* str2);
 void itoa(int number, char* buf);
 void printf(char* text, ...);
 
