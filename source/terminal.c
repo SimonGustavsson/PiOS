@@ -11,6 +11,7 @@
 #include "framebuffer.h"
 #include "keyboard.h"
 #include "stringutil.h"
+#include "terminal_commands.h"
 
 // Forward declare
 void PresentBufferToScreen(void);
@@ -42,9 +43,19 @@ void terminal_printWelcome(void)
 
 void terminal_printPrompt(void)
 {
+	// Make sure we print the prompt on a new row
+	if(gBufferCaretCol > 0)
+	{
+		gBufferCaretRow++;
+		gBufferCaretCol = 0;
+	}
+
 	unsigned int i;
 	for(i = 0; i < gPromptLength; i++)
 		gBuffer[gBufferCaretRow][gBufferCaretCol++] = gPrompt[i];
+	
+	// Print caret
+	gBuffer[gBufferCaretRow][gBufferCaretCol] = (char)127;
 		
 	PresentBufferToScreen();
 }
@@ -52,43 +63,12 @@ void terminal_printPrompt(void)
 void ExecuteCommand(char* cmd, unsigned int cmdLen)
 {
 	// TODO: Construct list of built in command + search algorithm
-	char response[300];
-	char* res = response;
-	unsigned int resLen = 0;
-	if(strcmp(cmd, "about"))
-	{
-		char* msg = "PiOS by Simon Gustavsson 2013";
-		strcpy(msg, res);
-		resLen += strlen(msg);;
-	}
-	else
-	{
-		char* msg = "I don't understand: ";		
-		unsigned int msgLen = strlen(msg);
-		strcpy(msg, res);		
-		resLen += strlen(msg);
-		res += msgLen;
+	unsigned int executeRes = TerminalExecuteCommand(cmd);
+	
+	if(executeRes < 0)
+		printf("Failed to execute command.\n");
 		
-		// Append command so the user can see what they did
-		strcpy(cmd, res);		
-		resLen += cmdLen;
-	}
-	
-	// Print response
-	unsigned int i;
-	for(i = 0; i < resLen; i++)
-		gBuffer[gBufferCaretRow][i] = response[i];
-	
-	// Move to the next line
-	gBufferCaretRow++;
-	
-	// Print prompt
-	unsigned int p;
-	for(p = 0; p < gPromptLength; p++)
-		gBuffer[gBufferCaretRow][gBufferCaretCol++] = gPrompt[p];
-	
-	// Print the cursor
-	gBuffer[gBufferCaretRow][gBufferCaretCol] = (char)127;
+	terminal_printPrompt();
 	
 	// (Caller will present buffer)
 }
@@ -217,7 +197,10 @@ int terminal_init(void)
 	gInputBufferIndex = 0;
 
 	// Initial setup of buffers etc
-	terminal_clear();		
+	terminal_clear();
+	
+	// Setup default built in commands
+	TerminalInitCommands();
 	
 	return 0;
 }

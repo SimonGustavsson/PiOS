@@ -9,5 +9,6 @@ typedef struct
 
 void TerminalInitCommands(void);
 TerminalCommand* TerminalGetCommand(char* name);
+unsigned int TerminalExecuteCommand(char* cmd);
 
 #endif

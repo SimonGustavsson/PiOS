@@ -11,7 +11,7 @@ TerminalCommand *TerminalGetCommand(char* name)
 {
 	unsigned int i;
 	for(i = 0; i < MAX_COMMAND_COUNT; i++)
-		if(strcasecmp(name, gCommands[i].name))
+		if(strcasecmp(name, gCommands[i].name) == 0)
 			return &gCommands[i];
 
 	return 0;
@@ -19,26 +19,25 @@ TerminalCommand *TerminalGetCommand(char* name)
 
 unsigned int Command_About_Execute(char** args, unsigned int argCount)
 {
-	printf("PiOS - by Simon Gustavsson 2013");
+	printf("PiOS - by Simon Gustavsson 2013\n");
 	
 	return 1;
 }
 
 unsigned int Command_Help_Execute(char** args, unsigned int argCount)
 {
-	printf("This is where the help goes.");
+	printf("This is where the help goes.\n");
 	
 	return 1;
 }
 
 unsigned int Command_Test_Execute(char** args, unsigned int argCount)
 {
-	printf("Executing help command\n");
-	printf("Arguments passed in:\n");
+	printf("::Test Command:: Arguments:\n");
 	
 	unsigned int i;
 	for(i = 0; i < argCount; i++)
-		printf("%d %s", i, args[i]);
+		printf("%d = %s\n", i, args[i]);
 		
 	return 1;
 }
@@ -67,33 +66,47 @@ unsigned int TerminalExecuteCommand(char* cmd)
 		if(currentChar != delimiter)
 			break;
 			
-	if(currentChar == '\0')
+	char* str = --cmdPtr;
+	
+	if(*str == '\0')
 		return 0; // Empty string
 		
-	char* str = cmdPtr; // holds the current argument
 	char* arguments[MAX_COMMAND_ARGUMENT_COUNT];
-	char** argPtr = arguments;
 	unsigned int argCount = 0;
 	
 	// Split the string by spaces
 	bool buildingString = false;
-	while((currentChar = *cmdPtr++) != '\0')
+	while((currentChar = *cmdPtr) != '\0')
 	{
 		if(currentChar == delimiter && buildingString)
 		{
-			cmdPtr[-1] = '\0';
-			*argPtr = str;
-			argPtr++;
+			*cmdPtr = '\0';
+			arguments[argCount++] = str;
 			buildingString = false;
-			argCount++;
 		}
-		else
+		else if(!buildingString && currentChar != delimiter)
+		{
 			buildingString = true;
+			str = cmdPtr; // start building new arg
+		}
+		
+		cmdPtr++;
 	}
 	
-	TerminalCommand* command = TerminalGetCommand(arguments[0]);
-	if(command == 0)
-		return -1; // Unknown command
+	if(*str != '\0')
+		arguments[argCount] = str;
 	
-	return command->execute(arguments, argCount);
+	TerminalCommand* command = TerminalGetCommand(arguments[0]);
+	
+	if(command == 0)
+	{
+		if(argCount > 0)
+			printf("command with name %s not found\n", arguments[0]);
+		else
+			printf("I can't execute nothing, dummy!\n");
+			
+		return -1; // Unknown command
+	}
+	
+	return command->execute(arguments, argCount + 1); // Index to count, add one
 }
