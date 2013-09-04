@@ -4,6 +4,7 @@
 typedef struct
 {
 	char* name;
+	char* description;
 	unsigned int (*execute)(char**, unsigned int);
 } TerminalCommand;
 

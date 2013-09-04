@@ -62,12 +62,10 @@ void terminal_printPrompt(void)
 
 void ExecuteCommand(char* cmd, unsigned int cmdLen)
 {
-	// TODO: Construct list of built in command + search algorithm
-	unsigned int executeRes = TerminalExecuteCommand(cmd);
+	TerminalExecuteCommand(cmd);
 	
-	if(executeRes < 0)
-		printf("Failed to execute command.\n");
-		
+	// TODO: Do something with the result of the command?
+	
 	terminal_printPrompt();
 	
 	// (Caller will present buffer)
@@ -241,7 +239,23 @@ void print(char* string, unsigned int length)
 			continue;
 		}
 		
-		if(gBuffer[gBufferCaretRow][gBufferCaretCol] != string[i])
+		if(string[i] == '\t')
+		{
+			// Print tabs as 4 spaces
+			unsigned int k;
+			for(k = 0; k < 4; k++)
+			{
+				gBuffer[gBufferCaretRow][gBufferCaretCol++] = ' ';
+				
+				// Make sure we move to the next row if we reach the end of the current row
+				if(gBufferCaretCol >= BUFFER_WIDTH - 1)
+				{
+					gBufferCaretCol = 0;
+					gBufferCaretRow++;
+				}
+			}
+		}
+		else if(gBuffer[gBufferCaretRow][gBufferCaretCol] != string[i])
 			gBuffer[gBufferCaretRow][gBufferCaretCol] = string[i];
 		
 		if(gBufferCaretCol < BUFFER_WIDTH - 1)

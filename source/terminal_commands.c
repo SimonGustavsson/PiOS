@@ -26,7 +26,31 @@ unsigned int Command_About_Execute(char** args, unsigned int argCount)
 
 unsigned int Command_Help_Execute(char** args, unsigned int argCount)
 {
-	printf("This is where the help goes.\n");
+	if(argCount > 1)
+	{
+		// Print command specific help
+		TerminalCommand* cmd = TerminalGetCommand(args[1]);
+		
+		if(cmd == 0)
+		{
+			printf("help: Unknown command '%s'.", args[1]);
+			return -2;
+		}
+		
+		printf("%s:\n%s", cmd->name, cmd->description);
+		
+		return 1;
+	}
+	
+	printf("For extended help on a specific command, type 'help command-name'.\n");
+	
+	unsigned int i;
+	for(i = 0; i < MAX_COMMAND_COUNT; i++)
+	{
+		// Array might contain empty slots
+		if(gCommands[i].name != 0)
+			printf("%s\t\t%s\n", gCommands[i].name, gCommands[i].description);
+	}
 	
 	return 1;
 }
@@ -45,12 +69,15 @@ unsigned int Command_Test_Execute(char** args, unsigned int argCount)
 void TerminalInitCommands(void)
 {
 	gCommands[0].name = "about";
+	gCommands[0].description = "Prints information about PiOS.";
 	gCommands[0].execute = &Command_About_Execute;
 		
 	gCommands[1].name = "help";
+	gCommands[1].description = "Prints a listing of commands.";
 	gCommands[1].execute = &Command_Help_Execute;
 	
 	gCommands[2].name = "test";
+	gCommands[2].description = "Command for testing new things.";
 	gCommands[2].execute= &Command_Test_Execute;
 }
 
