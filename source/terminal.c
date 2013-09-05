@@ -27,7 +27,7 @@ int gFirstVisibleBufferRow; // The row in the first buffer that is currently the
 char gInputBuffer[INPUT_BUFFER_SIZE];
 unsigned int gInputBufferIndex;
 
-char* gPrompt = "PiOS->";
+char gPrompt[TERMINAL_PROMPT_MAX_LENGTH] = "PiOS->";
 unsigned int gPromptLength = 6;
 
 void terminal_printWelcome(void)

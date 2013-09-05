@@ -5,6 +5,7 @@
 #include "stringutil.h"
 #include "types.h"
 
+extern char gPrompt[TERMINAL_PROMPT_MAX_LENGTH];
 TerminalCommand gCommands[MAX_COMMAND_COUNT];
 
 TerminalCommand *TerminalGetCommand(char* name)
@@ -66,6 +67,46 @@ unsigned int Command_Test_Execute(char** args, unsigned int argCount)
 	return 1;
 }
 
+unsigned int Command_Cls_Execute(char** args, unsigned int argCount)
+{
+	terminal_clear();
+	
+	return 1;
+}
+
+unsigned int Command_Echo_Execute(char** args, unsigned int argCount)
+{
+	unsigned int i;
+	for(i = 1; i < argCount; i++)
+	{
+		printf("%s ", args[i]);
+	}
+	
+	return 1;
+}
+
+unsigned int Command_Prompt_Execute(char** args, unsigned int argCount)
+{
+	if(argCount > 1)
+	{
+		unsigned int i;
+		for(i = 0; i < TERMINAL_PROMPT_MAX_LENGTH - 4; i++)
+		{
+			if(args[1][i] == '\0')
+				break;
+			
+			gPrompt[i] = args[1][i];
+		}
+		gPrompt[i] = '-';
+		gPrompt[i + 1] = '>';
+		gPrompt[i + 2] = '\0';
+	}
+	else
+		printf("Not enough arguments, please specify a new prompt text.");
+		
+	return 1;
+}
+
 void TerminalInitCommands(void)
 {
 	gCommands[0].name = "about";
@@ -79,6 +120,18 @@ void TerminalInitCommands(void)
 	gCommands[2].name = "test";
 	gCommands[2].description = "Command for testing new things.";
 	gCommands[2].execute= &Command_Test_Execute;
+	
+	gCommands[3].name = "cls";
+	gCommands[3].description = "Clears the terminal.";
+	gCommands[3].execute = &Command_Cls_Execute;
+	
+	gCommands[4].name = "echo";
+	gCommands[4].description = "Prints the given string to the terminal.";
+	gCommands[4].execute = &Command_Echo_Execute;
+	
+	gCommands[5].name = "prompt";
+	gCommands[5].description = "Changes the system prompt text.";
+	gCommands[5].execute = &Command_Prompt_Execute;
 }
 
 // 0: OK, -1: Unknown command
@@ -127,11 +180,8 @@ unsigned int TerminalExecuteCommand(char* cmd)
 	
 	if(command == 0)
 	{
-		if(argCount > 0)
-			printf("command with name %s not found\n", arguments[0]);
-		else
-			printf("I can't execute nothing, dummy!\n");
-			
+		printf("command with name %s not found\n", arguments[0]);
+		
 		return -1; // Unknown command
 	}
 	
