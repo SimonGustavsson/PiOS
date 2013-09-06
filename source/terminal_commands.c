@@ -7,6 +7,16 @@
 
 extern char gPrompt[TERMINAL_PROMPT_MAX_LENGTH];
 TerminalCommand gCommands[MAX_COMMAND_COUNT];
+unsigned int gCommandCount = 0;
+
+void TerminalRegisterCommand(char* name, char* description, unsigned int (*execute)(char**, unsigned int))
+{
+	gCommands[gCommandCount].name = name;
+	gCommands[gCommandCount].description = description;
+	gCommands[gCommandCount].execute = execute;
+	
+	gCommandCount++;
+}
 
 TerminalCommand *TerminalGetCommand(char* name)
 {
@@ -109,29 +119,12 @@ unsigned int Command_Prompt_Execute(char** args, unsigned int argCount)
 
 void TerminalInitCommands(void)
 {
-	gCommands[0].name = "about";
-	gCommands[0].description = "Prints information about PiOS.";
-	gCommands[0].execute = &Command_About_Execute;
-		
-	gCommands[1].name = "help";
-	gCommands[1].description = "Prints a listing of commands.";
-	gCommands[1].execute = &Command_Help_Execute;
-	
-	gCommands[2].name = "test";
-	gCommands[2].description = "Command for testing new things.";
-	gCommands[2].execute= &Command_Test_Execute;
-	
-	gCommands[3].name = "cls";
-	gCommands[3].description = "Clears the terminal.";
-	gCommands[3].execute = &Command_Cls_Execute;
-	
-	gCommands[4].name = "echo";
-	gCommands[4].description = "Prints the given string to the terminal.";
-	gCommands[4].execute = &Command_Echo_Execute;
-	
-	gCommands[5].name = "prompt";
-	gCommands[5].description = "Changes the system prompt text.";
-	gCommands[5].execute = &Command_Prompt_Execute;
+	TerminalRegisterCommand("about", "Prints information about PiOS.", &Command_About_Execute);
+	TerminalRegisterCommand("help", "Prints a listing of commands.", &Command_Help_Execute);
+	TerminalRegisterCommand("test", "Command for testing new things.", &Command_Test_Execute);
+	TerminalRegisterCommand("cls", "Clears the terminal.", &Command_Cls_Execute);
+	TerminalRegisterCommand("echo", "Prints the given string to the terminal.", &Command_Echo_Execute);
+	TerminalRegisterCommand("prompt", "Changes the system prompt text.", &Command_Prompt_Execute);
 }
 
 // 0: OK, -1: Unknown command
