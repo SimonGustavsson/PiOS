@@ -1,4 +1,7 @@
 
+#define MAILBOX_FULL 0x80000000
+#define MAILBOX_EMPTY 0x40000000
+
 // Device Ids for power management
 typedef enum {
 	HwId_Emmc = 0x00000000,

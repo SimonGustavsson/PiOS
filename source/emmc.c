@@ -1,5 +1,6 @@
 #include "emmc.h"
 #include "mailbox.h"
+#include "timer.h"
 
 Emmc* gEmmc;
 
@@ -31,6 +32,8 @@ unsigned int EmmcInitialise(void)
 	// 		Request card id
 	// 		Request card address
 	// 		Place card in transfer state
+	
+	return 1;
 }
 
 unsigned int EmmcPowerOn(void)
