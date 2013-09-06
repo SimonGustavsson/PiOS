@@ -39,8 +39,7 @@ void Mailbox_Write(unsigned int channel, unsigned int data)
 	*MAILBOX0WRITE = (data | channel);
 }
 
-// State: Bit 0: 0=off, 1=on  Bit 1: 0=do not wait, 1=wait Bits 2-31: reserved for future use (set to 0)
-unsigned int MailboxSetPowerState(unsigned int deviceId, unsigned int state)
+unsigned int MailboxSetPowerState(unsigned int deviceId, HardwarePowerState state)
 {
 	volatile unsigned int mailbuffer[256] __attribute__ ((aligned (16)));
 	unsigned int mailbufferAddr = (unsigned int)mailbuffer;
@@ -58,11 +57,12 @@ unsigned int MailboxSetPowerState(unsigned int deviceId, unsigned int state)
 	
 	Mailbox_Read(8);
 	
-	// Check if it was actually turned off
-	if(mailbufferAddr[6] & (1 << 1) == 1)
-		return 0; // Device does not exist
+	// Check if device was found (bit 1 == 0)
+	if((mailbufferAddr[6] & 1) == 1)
+		return 0; // Not found
 		
-	if((mailbufferAddr[6] & (1 << 0) == state & (1 << 0))
+	// Make sure that the power bit is what we expect
+	if((mailbufferAddr[6] & 2) == (state & 2))
 		return 1;
 	else
 		return 0;

@@ -1,10 +1,13 @@
 #include "emmc.h"
+#include "mailbox.h"
 
 Emmc* gEmmc;
 
 unsigned int EmmcInitialise(void)
 {
 	gEmmc = (Emmc*)EMMC_BASE;
+	
+	
 	
 	// TODO: Flesh out pseudo code
 	// Send CMD0
@@ -28,4 +31,24 @@ unsigned int EmmcInitialise(void)
 	// 		Request card id
 	// 		Request card address
 	// 		Place card in transfer state
+}
+
+unsigned int EmmcPowerOn(void)
+{
+	return MailboxSetPowerState(HwId_Emmc, HwPowerState_OnWait);
+}
+
+unsigned int EmmcPowerOff(void)
+{
+	return MailboxSetPowerState(HwId_Emmc, HwPowerState_OffWait);
+}
+
+unsigned int EmmcPowerCycle(void)
+{
+	if(EmmcPowerOff() < 0)
+		return -1;
+		
+	wait(5);
+	
+	return EmmcPowerOn();
 }
