@@ -2,6 +2,10 @@
 #define MAILBOX_FULL 0x80000000
 #define MAILBOX_EMPTY 0x40000000
 
+#define REQUEST_FLAG     0x00000000
+#define RESPONSE_SUCCESS 0x80000000
+#define RESPONSE_FAILURE 0x80000001
+
 // Device Ids for power management
 typedef enum {
 	HwId_Emmc = 0x00000000,
@@ -31,4 +35,5 @@ typedef enum {
 
 void Mailbox_Write(unsigned int channel, unsigned int data);
 unsigned int Mailbox_Read(unsigned int channel);
-unsigned int MailboxSetPowerState(unsigned int deviceId, HardwarePowerState state);
+unsigned int PowerOffDevice(unsigned int deviceId);
+unsigned int PowerOnDevice(unsigned int deviceId);

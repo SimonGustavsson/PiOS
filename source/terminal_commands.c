@@ -4,10 +4,14 @@
 #include "terminal.h"
 #include "stringutil.h"
 #include "types.h"
+#include "mailbox.h"
+#include "emmc.h"
 
 extern char gPrompt[TERMINAL_PROMPT_MAX_LENGTH];
 TerminalCommand gCommands[MAX_COMMAND_COUNT];
 unsigned int gCommandCount = 0;
+
+extern volatile Emmc* gEmmc;
 
 void TerminalRegisterCommand(char* name, char* description, unsigned int (*execute)(char**, unsigned int))
 {
@@ -117,6 +121,77 @@ unsigned int Command_Prompt_Execute(char** args, unsigned int argCount)
 	return 1;
 }
 
+unsigned int Command_DbgSd_Execute(char** args, unsigned int argCount)
+{
+	printf("gEmmc addr: %d\n", (unsigned int)gEmmc);
+	printf("Arg2 = %d\n", gEmmc->Arg2);
+	printf("BlockCountSize = %d\n", gEmmc->BlockCountSize);
+	printf("Arg1 = %d\n", gEmmc->Arg1);
+	printf("Cmdtm = %d\n", gEmmc->Cmdtm);
+	printf("Resp0 = %d\n", gEmmc->Resp0);
+	
+	printf("Resp1 = %d\n", gEmmc->Resp1);
+	printf("Resp3 = %d\n", gEmmc->Resp3);
+	printf("Data = %d\n", gEmmc->Data);
+	printf("Status = %d\n", gEmmc->Status);
+	printf("Control0 = %d\n", gEmmc->Control0);
+	
+	printf("Control1 = %d\n", gEmmc->Control1);
+	printf("Interrupt = %d\n", gEmmc->Interrupt);
+	printf("IrptMask = %d\n", gEmmc->IrptMask);
+	printf("Control2 = %d\n", gEmmc->Control2);
+	printf("ForceIrpt = %d\n", gEmmc->ForceIrpt);
+	
+	printf("BootTimeout = %d\n", gEmmc->BootTimeout);
+	printf("DbgSel = %d\n", gEmmc->DbgSel);
+	printf("ExrdfifoCfg = %d\n", gEmmc->ExrdfifoCfg);
+	printf("ExrdfifoEnable = %d\n", gEmmc->ExrdfifoEnable);
+	
+	printf("TuneStep = %d\n", gEmmc->TuneStep);
+	printf("TuneStepsStd = %d\n", gEmmc->TuneStepsStd);
+	printf("TuneStepsDdr = %d\n", gEmmc->TuneStepsDdr);
+	printf("SpiIntSpt = %d\n", gEmmc->SpiIntSpt);
+	printf("SlotisrVer = %d\n", gEmmc->SlotisrVer);
+	
+	return 0;
+}
+
+unsigned int Command_SdPower_Execute(char** args, unsigned int argCount)
+{
+	if(argCount == 1)
+	{
+		printf("Please specify power state.\n");
+		return -1;
+	}
+	
+	if(strcmp(args[1], "1") == 1)
+	{
+		printf("Turning on external mass media controller - ");
+		
+		if(PowerOnDevice(0x0) != 0)
+		{
+			printf("Failed - device not power up successfully.\n");
+			return -1;
+		}
+		
+		printf("SUCCESS!\n");
+	}
+	else
+	{
+		printf("Shutting down external mass media controller - ");
+		
+		if(PowerOffDevice(0x0) != 0)
+		{
+			printf("Failed - device not power of successfully.\n");
+			return -1;
+		}
+		
+		printf("SUCCESS!\n");
+	}
+	
+	return 0;
+}
+
 void TerminalInitCommands(void)
 {
 	TerminalRegisterCommand("about", "Prints information about PiOS.", &Command_About_Execute);
@@ -125,6 +200,9 @@ void TerminalInitCommands(void)
 	TerminalRegisterCommand("cls", "Clears the terminal.", &Command_Cls_Execute);
 	TerminalRegisterCommand("echo", "Prints the given string to the terminal.", &Command_Echo_Execute);
 	TerminalRegisterCommand("prompt", "Changes the system prompt text.", &Command_Prompt_Execute);
+	TerminalRegisterCommand("sdpower", "Changes the power state of the EMMC, 1 = on, 0 = off", &Command_SdPower_Execute);
+	
+	TerminalRegisterCommand("dbgsd", "Prints the mmc struct", &Command_DbgSd_Execute);
 }
 
 // 0: OK, -1: Unknown command
