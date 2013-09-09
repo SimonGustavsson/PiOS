@@ -4,6 +4,7 @@
 #include "stringutil.h"
 #include "usbd/usbd.h"
 #include "keyboard.h"
+#include "emmc.h"
 
 void OnCriticalError(void)
 {
@@ -42,9 +43,14 @@ int cmain(void)
 	else if((result = KeyboardInitialise()) != 0)
 			printf("Keyboard initialise failed, error code: %d\n", result);
 	
+	// Note we don't save result for Emmc as it isn't essential (yet)
+	if(EmmcInitialise() != 0)
+		printf("Failed to intialize emmc.\n");
+		
 	if(result == 0)
 	{
 		terminal_printWelcome();
+		
 		
 		terminal_printPrompt();
 		

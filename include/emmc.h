@@ -1,4 +1,4 @@
-#define EMMC_BASE 0x7E300000
+#define EMMC_BASE 0x20300000
 
 // SD Clock Frequencies (in Hz)
 typedef enum {
@@ -10,33 +10,33 @@ typedef enum {
 } SdClockSpeed;
 
 typedef struct { // Placed at EMMC_BASE
-	unsigned int Arg2;
-	unsigned int BlockCountSize;
-	unsigned int Arg1;
-	unsigned int Cmdtm;
-	unsigned int Resp0;
-	unsigned int Resp1;
-	unsigned int Resp3;
-	unsigned int Data;
-	unsigned int Status;
-	unsigned int Control0;
-	unsigned int Control1;
-	unsigned int Interrupt;
-	unsigned int IrptMask;
-	unsigned int Control2;
-	unsigned int ForceIrpt;
-	unsigned int BootTimeout;
-	unsigned int DbgSel;
-	unsigned int ExrdfifoCfg;
-	unsigned int ExrdfifoEnable;
-	unsigned int TuneStep;
-	unsigned int TuneStepsStd;
-	unsigned int TuneStepsDdr;
-	unsigned int SpiIntSpt;
-	unsigned int SlotisrVer;
+	volatile unsigned int Arg2;
+	volatile unsigned int BlockCountSize;
+	volatile unsigned int Arg1;
+	volatile unsigned int Cmdtm;
+	volatile unsigned int Resp0;
+	volatile unsigned int Resp1;
+	volatile unsigned int Resp3;
+	volatile unsigned int Data;
+	volatile unsigned int Status;
+	volatile unsigned int Control0;
+	volatile unsigned int Control1;
+	volatile unsigned int Interrupt;
+	volatile unsigned int IrptMask;
+	volatile unsigned int Control2;
+	volatile unsigned int ForceIrpt;
+	volatile unsigned int BootTimeout;
+	volatile unsigned int DbgSel;
+	volatile unsigned int ExrdfifoCfg;
+	volatile unsigned int ExrdfifoEnable;
+	volatile unsigned int TuneStep;
+	volatile unsigned int TuneStepsStd;
+	volatile unsigned int TuneStepsDdr;
+	volatile unsigned int SpiIntSpt;
+	volatile unsigned int SlotisrVer;
 } Emmc;
 
-typedef enum {
+typedef enum {	
 	GoIdleState          = 0,	// Resets SD card
 	SendOpCond           = 1,	// Sends host capacity support information and kick off card initialization
 	AllSendCid           = 2,	// Broadcast to all commands to send cid
