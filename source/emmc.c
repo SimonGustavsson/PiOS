@@ -83,12 +83,12 @@ unsigned int EmmcInitialise(void)
 
 unsigned int EmmcPowerOn(void)
 {
-	return PowerOnDevice(0x0);
+	return Mailbox_SetDevicePowerState(0x0, 1);
 }
 
 unsigned int EmmcPowerOff(void)
 {
-	return PowerOffDevice(0x0);
+	return Mailbox_SetDevicePowerState(0x0, 0);
 }
 
 unsigned int EmmcPowerCycle(void)

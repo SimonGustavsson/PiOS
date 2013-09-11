@@ -40,6 +40,33 @@ void Mailbox_Write(unsigned int channel, unsigned int data)
 	*gMailbox0Write = (data | channel);
 }
 
+unsigned int Mailbox_GetPowerState(unsigned int deviceId)
+{
+	volatile unsigned int mailbuffer[256] __attribute__ ((aligned (16)));
+	
+	unsigned int bufSize = 1;
+	mailbuffer[bufSize++] = 0;          // 1. Request indicator
+	mailbuffer[bufSize++] = 0x00020001; // 2. Tag - Get power state
+	mailbuffer[bufSize++] = 0x8;        // 3. Value buffer size (in bytes)
+	mailbuffer[bufSize++] = 0x4;        // 4. Value size (in bytes)
+	mailbuffer[bufSize++] = deviceId;   // 5. Value - Device Id
+	mailbuffer[bufSize++] = 0;          // 6. Response - State of device
+	mailbuffer[bufSize++] = 0;          // 7. End of message tag
+	mailbuffer[0] = bufSize * 4;        // 0. Size of entire buffer (in bytes)
+	
+	Mailbox_Write(8, (unsigned int)mailbuffer);
+	
+	Mailbox_Read(8);
+	
+	if(mailbuffer[1] != RESPONSE_SUCCESS)
+	{
+		printf("Failed to get power state, invalid mailbox response");
+		return -1;
+	}
+	
+	return mailbuffer[6];
+}
+
 unsigned int Mailbox_SetDevicePowerState(unsigned int deviceId, unsigned int powerState)
 {
 	volatile unsigned int mailbuffer[256] __attribute__ ((aligned (16)));

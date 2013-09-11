@@ -181,6 +181,29 @@ unsigned int Command_SetPower_Execute(char** args, unsigned int argCount)
 	return Mailbox_SetDevicePowerState(deviceId, powerState);	
 }
 
+unsigned int Command_GetPower_Execute(char** args, unsigned int argCount)
+{
+	if(argCount != 2)
+	{
+		printf("Unexpected amount of arguments, type 'help getpower' for help.\n");
+		return -1;
+	}
+	
+	unsigned int deviceId = *args[1] - '0';
+	
+	unsigned int powerState = Mailbox_GetPowerState(deviceId);
+	
+	if(powerState == -1)
+	{
+		printf("Failed to retrieve power state.\n");
+		return -1;
+	}
+	
+	printf("The power state of '%d' is '%d'", deviceId, powerState);
+	
+	return 0;
+}
+
 void TerminalInitCommands(void)
 {
 	TerminalRegisterCommand("about", "Prints information about PiOS.", &Command_About_Execute);
@@ -190,6 +213,7 @@ void TerminalInitCommands(void)
 	TerminalRegisterCommand("echo", "Prints the given string to the terminal.", &Command_Echo_Execute);
 	TerminalRegisterCommand("prompt", "Changes the system prompt text.", &Command_Prompt_Execute);
 	TerminalRegisterCommand("setpower", "Changes the power state(1 or 0) of the given device(0-8).", &Command_SetPower_Execute);
+	TerminalRegisterCommand("getpower", "Retrieves the power state of the given device (0-8).", &Command_GetPower_Execute);
 	
 	TerminalRegisterCommand("dbgsd", "Prints the mmc struct", &Command_DbgSd_Execute);
 }
