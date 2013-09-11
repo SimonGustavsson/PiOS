@@ -156,40 +156,29 @@ unsigned int Command_DbgSd_Execute(char** args, unsigned int argCount)
 	return 0;
 }
 
-unsigned int Command_SdPower_Execute(char** args, unsigned int argCount)
+unsigned int Command_SetPower_Execute(char** args, unsigned int argCount)
 {
-	if(argCount == 1)
+	if(argCount != 3)
 	{
-		printf("Please specify power state.\n");
+		printf("Unexpected amount of parameters, type 'help setpower' for help.\n");
 		return -1;
 	}
 	
-	if(strcmp(args[1], "1") == 1)
+	unsigned int deviceId = *args[1] - '0'; // Note: Just uses the first character
+	if(deviceId < 0 || deviceId > 8)
 	{
-		printf("Turning on external mass media controller - ");
-		
-		if(PowerOnDevice(0x0) != 0)
-		{
-			printf("Failed - device not power up successfully.\n");
-			return -1;
-		}
-		
-		printf("SUCCESS!\n");
-	}
-	else
-	{
-		printf("Shutting down external mass media controller - ");
-		
-		if(PowerOffDevice(0x0) != 0)
-		{
-			printf("Failed - device not power of successfully.\n");
-			return -1;
-		}
-		
-		printf("SUCCESS!\n");
+		printf("Invalid device id, expected values between 0 - 8.\n");
+		return -1;
 	}
 	
-	return 0;
+	unsigned int powerState = *args[2] - '0'; // Note: Just uses the first character
+	if(powerState < 0 || powerState > 1)
+	{
+		printf("Invalid power state, expected 0 (Off) or 1 (On).\n");
+		return -1;
+	}
+	
+	return Mailbox_SetDevicePowerState(deviceId, powerState);	
 }
 
 void TerminalInitCommands(void)
@@ -200,7 +189,7 @@ void TerminalInitCommands(void)
 	TerminalRegisterCommand("cls", "Clears the terminal.", &Command_Cls_Execute);
 	TerminalRegisterCommand("echo", "Prints the given string to the terminal.", &Command_Echo_Execute);
 	TerminalRegisterCommand("prompt", "Changes the system prompt text.", &Command_Prompt_Execute);
-	TerminalRegisterCommand("sdpower", "Changes the power state of the EMMC, 1 = on, 0 = off", &Command_SdPower_Execute);
+	TerminalRegisterCommand("setpower", "Changes the power state(1 or 0) of the given device(0-8).", &Command_SetPower_Execute);
 	
 	TerminalRegisterCommand("dbgsd", "Prints the mmc struct", &Command_DbgSd_Execute);
 }

@@ -40,7 +40,7 @@ void Mailbox_Write(unsigned int channel, unsigned int data)
 	*gMailbox0Write = (data | channel);
 }
 
-unsigned int PowerOnDevice(unsigned int deviceId)
+unsigned int Mailbox_SetDevicePowerState(unsigned int deviceId, unsigned int powerState)
 {
 	volatile unsigned int mailbuffer[256] __attribute__ ((aligned (16)));
 
@@ -50,7 +50,7 @@ unsigned int PowerOnDevice(unsigned int deviceId)
 	mailbuffer[bufSize++] = 0x8;        // 3. Value buffer size (in bytes)
 	mailbuffer[bufSize++] = 0x8;        // 4. Value size (in bytes)
 	mailbuffer[bufSize++] = deviceId;   // 5. Value - Device id
-	mailbuffer[bufSize++] = 0x1;        // 6. Value - State (On, do not wait)
+	mailbuffer[bufSize++] = powerState; // 6. Value - State (On, do not wait)
 	mailbuffer[bufSize++] = 0;          // 7. End of message tag
 	mailbuffer[0] = bufSize * 4;        // 0. Size of this buffer (in bytes)
 	
@@ -58,67 +58,30 @@ unsigned int PowerOnDevice(unsigned int deviceId)
 	
 	wait(200); // Wait for device to power on (Note we're passing in "don't wait" to power cmd)
 	
-	// Read and verify resonse
 	Mailbox_Read(8);
 	
 	if(mailbuffer[1] != RESPONSE_SUCCESS)
 	{
-		printf("Failed to power on device '%d', Invalid mailbox response.\n", deviceId);
+		printf("Failed to change power state of device '%d', Invalid mailbox response.\n", deviceId);
 		return -1;
 	}
 	
 	if(mailbuffer[5] != 0x0)
 	{
-		printf("Failed to power on device, invalid device id '%d'.\n", deviceId);
+		printf("Failed to change power state of device, invalid device id '%d'.\n", deviceId);
 		return -1;
 	}
 	
-	if((mailbuffer[6] & 0x3) != 1)
+	if((mailbuffer[6] & 0x3) != powerState)
 	{
-		printf("Failed to power on device, device did not power on successfully, state: %d.\n", mailbuffer[6]);
+		printf("Failed to change power state of device, device did not change state successfully, current state: %d.\n", mailbuffer[6]);
 		return -1;
 	}
 	
-	return 0;
-}
-
-unsigned int PowerOffDevice(unsigned int deviceId)
-{
-	volatile unsigned int mailbuffer[10] __attribute__ ((aligned (16)));
-	mailbuffer[0] = 8 * 4;
-	mailbuffer[1] = 0;          // 1. Request indicator
-	mailbuffer[2] = 0x00028001; // 2. TAG - Set Power
-	mailbuffer[3] = 0x8;        // 3. Value buffer size (in bytes)
-	mailbuffer[4] = 0x8;        // 4. Value size (in bytes)
-	mailbuffer[5] = 0x0;        // 5. Value - Device id
-	mailbuffer[6] = 0x0;        // 6. Value - State (Off, Do NOT wait)
-	mailbuffer[7] = 0;          // 7. End of message tag
-	
-	Mailbox_Write(8, (unsigned int)mailbuffer);
-	
-	wait(200); // Wait for device to power off (Note we're passing in "don't wait" to power cmd)
-	
-	// Read and verify resonse
-	Mailbox_Read(8);
-	
-	if(mailbuffer[1] != RESPONSE_SUCCESS)
-	{
-		printf("Failed to set power off device '%d', Invalid mailbox response.\n", deviceId);
-		return -1;
-	}
-	
-	if(mailbuffer[5] != 0x0)
-	{
-		printf("Failed to power off device, invalid device id '%d'.\n", deviceId);
-		return -1;
-	}
-	
-	// Bit 0 and 1 should be 0 now
-	if((mailbuffer[6] & 0x3) != 0)
-	{
-		printf("Failed to power off device, device did not power off successfully, state: %d.\n", mailbuffer[6]);
-		return -1;
-	}
-	
+	if(powerState == 0)
+		printf("'%d' is now OFF.\n", deviceId);
+	else
+		printf("'%d' is now ON.\n", deviceId);
+		
 	return 0;
 }
