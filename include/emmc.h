@@ -80,6 +80,138 @@ typedef enum {
 	GenCmd               = 56	// Used either to read or write a data block from the card for general purpose/application specific commands.
 } EmmcCommand;
 
+#define CONTROL0_ALT_BOOT_EN   (1 << 22)  // Enable alternative boot mode access
+#define CONTROL0_BOOT_EN       (1 << 21)  // Boot mode access
+#define CONTROL0_SPI_MODE      (1 << 20)  // SPI Mode enable
+#define CONTROL0_GAP_IEN       (1 << 19)  // Enable SDIO interrupt
+#define CONTROL0_READWAIT_EN   (1 << 18)  // Use DATA2 read-wait protocol
+#define CONTROL0_GAP_RESTART   (1 << 17)  // Restart a transaction that was stopped using GAP_STOP
+#define CONTROL0_GAP_STOP      (1 << 16)  // Stop the current transaction
+#define CONTROL0_HCTL_8BIT     (1 << 5)   // Use 8 Data lines
+#define CONTROL0_HCTL_HS_EN    (1 << 2)   // Select high-speed mode
+#define CONTROL0_HCTL_HS_DWITH (1 << 1)   // Use 4 data lines
+
+#define CONTROL1_SRST_DATA      (1 << 26) // Reset data handling
+#define CONTROL1_SRST_CMD       (1 << 25) // Reset command handling
+#define CONTROL1_SRST_HC        (1 << 24) // Reset host circuit
+#define CONTROL1_DATA_TOUNIT(x) (x << 19) // Data timeout unit exp
+#define CONTROL1_CLK_FREQ8(x)   (x << 15) // SD Clock base divier LSB
+#define CONTROL1_CLK_FREQ_MS2(x)(x << 7)  // SD clock base divier MSB 
+#define CONTROL1_CLK_GENSEL     (1 << 5)  // Clock gen mode
+#define CONTROL1_CLK_EN         (1 << 2)  // SD clock enable
+#define CONTROL1_CLK_STABLE     (1 << 1)  // Sd clock stable 
+#define CONTROL1_CLK_INTLEN     (1 << 0)  // Internal EMMC clock enable
+
+#define RESPONSE_R7_VOLTAGE_NOT_DEFINED  (1 << 16)
+#define RESPONSE_R7_VOLTAGE_NORMAL       (1 << 17)
+#define RESPONSE_R7_VOLTAGE_LOW_RESERVED (1 << 18)
+
+#define COMMAND_TRANSMISSION_BIT (1 << 46)
+#define COMMAND_COMMAND_INDEX(x) (x << 45)
+#define COMMAND_ARGUMENT(x) (x << 39)
+
+typedef struct {
+	unsigned char start:1,
+	unsigned char transmission:1, // direction, 1 = host, 0 = card
+	unsigned char commandIndex:6,
+	unsigned int argument:32,
+	unsigned int crc7:7,
+	unsigned int end:1
+} SdCommand;
+
+typedef struct{
+	unsigned char out_of_range : 1,
+	unsigned char address_error : 1,
+	unsigned char block_len_error: 1,
+	unsigned char erase_seq_error : 1,
+	unsigned char erase_param : 1,
+	unsigned char wp_violation : 1,	
+	unsigned char card_is_locked : 1,
+	unsigned char lock_unlocked_failed : 1,
+	unsigned char com_crc_error : 1,
+	unsigned char illegal_command : 1,
+	unsigned char card_ecc_failed : 1,
+	unsigned char cc_error : 1,
+	unsigned char error : 1,
+	unsigned char reserved1 : 1,
+	unsigned char reserved2 : 1,
+	
+	unsigned char csd_overwrite : 1,
+	unsigned char wp_erase_skip : 1,
+	unsigned char card_ecc_disabled : 1,	
+	unsigned char erase_reset : 1,
+	unsigned char current_state : 4,
+	unsigned char ready_for_data : 1,
+	unsigned char reserved3 : 1,
+	unsigned char app_cmd : 1,
+	unsigned char reserved4 : 1,
+	
+	unsigned char ake_seq_error : 1,
+	unsigned char name : 1,
+	unsigned char name : 1,
+	unsigned char name : 1,
+	unsigned char name : 1,
+	unsigned char name : 1,
+	unsigned char name : 1,
+} SdCardStatus;
+/* Card status:
+	
+*/
+typedef struct { // 48-Bit
+	unsigned char start:1,
+	unsigned char transmission:1,
+	unsigned char commandIndex:6,
+	unsigned int cardStatus:32,
+	unsigned char crc7:7,
+	unsigned char end:1
+} SdResponse1;
+
+typedef struct { // 136-bit
+	unsigned char start:1,
+	unsigned char transmission:1,
+	unsigned char reserved:6,
+	unsigned int Cid[4],
+	unsigned char end:1
+} SdResponse2;
+
+typedef struct { // 48-bit
+	unsigned char start:1,
+	unsigned char transmission:1,
+	unsigned char reserved:6,
+	unsigned int Ocr:32,
+	unsigned char reserved 8,
+	unsigned char end:1,
+} SdResponse3;
+
+typedef struct { // 48-Bit
+	unsigned char start:1,
+	unsigned char transmission:1,
+	unsigned char commandIndex:6,
+	unsigned int NewPublishedRca:16,
+	unsigned int CardStatus:16,
+	unsigned int Crc7:7,
+	unsigned int end:1
+} SdResponse6;
+
+/* R7
+// Voltage accepted  Value Definition
+// 0000b  Not Defined
+// 0001b  2.7-3.6V
+// 0010b  Reserved for Low Voltage Range
+// 0100b  Reserved
+// 1000b  Reserved
+  Others  Not Defined */
+typedef struct { // 48-Bit
+	unsigned char start:1,
+	unsigned char tranmission:1,
+	unsigned char commandIndex:6,
+	unsigned int reserved:20,
+	unsigned char voltageAccepted:4,
+	unsigned char checkPatternEcho:8,
+	unsigned char crc7:7,
+	unsigned char end:1
+} SdResponse7;
+
 unsigned int EmmcInitialise(void);
 unsigned int EmmcGetClockSpeed(void);
 unsigned int EmmcPowerOn(void);
