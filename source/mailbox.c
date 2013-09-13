@@ -104,11 +104,6 @@ unsigned int Mailbox_SetDevicePowerState(unsigned int deviceId, unsigned int pow
 		printf("Failed to change power state of device, device did not change state successfully, current state: %d.\n", mailbuffer[6]);
 		return -1;
 	}
-	
-	if(powerState == 0)
-		printf("'%d' is now OFF.\n", deviceId);
-	else
-		printf("'%d' is now ON.\n", deviceId);
 		
 	return 0;
 }

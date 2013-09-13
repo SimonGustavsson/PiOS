@@ -42,16 +42,15 @@ int cmain(void)
 		printf("Usb initialise failed, error code: %d\n", result);
 	else if((result = KeyboardInitialise()) != 0)
 			printf("Keyboard initialise failed, error code: %d\n", result);
-	
-	// Note we don't save result for Emmc as it isn't essential (yet)
-	if(EmmcInitialise() != 0)
-		printf("Failed to intialize emmc.\n");
-		
+			
 	if(result == 0)
 	{
 		terminal_printWelcome();
-		
-		
+					
+		// Note we don't save result for Emmc as it isn't essential (yet)
+		if(EmmcInitialise() != 0)
+			printf("Failed to intialize emmc.\n");
+				
 		terminal_printPrompt();
 		
 		while(1)

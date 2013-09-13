@@ -7,14 +7,18 @@ volatile Emmc* gEmmc;
 
 unsigned int EmmcInitialise(void)
 {
+	printf("ssed - Initializing external mass media controller.\n");
+	
 	gEmmc = (Emmc*)EMMC_BASE;
+	
+	EmmcPowerCycle();
 	
 	unsigned int ver = gEmmc->SlotisrVer;
 	unsigned int vendor = ver >> 24;
 	unsigned int sdversion = (ver >> 16) & 0xff;
 	unsigned int slot_status = ver & 0xff;
 	
-	printf("EMMC: vendor %d, sdversion %d, slot status %d\n", vendor, sdversion, slot_status);
+	printf("ssed - Version(%d): vendor %d sdversion %d slot status %d.\n", ver, vendor, sdversion, slot_status);
 		
 	return 0; // Code below not finished
 	
@@ -93,11 +97,21 @@ unsigned int EmmcPowerOff(void)
 
 unsigned int EmmcPowerCycle(void)
 {
-	printf("ssed - Power cycling SD-card.\n");
-	if(EmmcPowerOff() < 0)
+	printf("ssed - Power cycling: ");
+	
+	unsigned int res = 0;
+	if((res = EmmcPowerOff()) < 0)
+	{
+		printf("Failed!\n");
 		return -1;
-		
+	}	
+	
 	wait(50);
+	
+	if((res = EmmcPowerOn()) < 0)
+		printf("Failed!\n");
+	else
+		printf("Success!\n");
 	
 	return EmmcPowerOn();
 }

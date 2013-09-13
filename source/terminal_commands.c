@@ -178,7 +178,13 @@ unsigned int Command_SetPower_Execute(char** args, unsigned int argCount)
 		return -1;
 	}
 	
-	return Mailbox_SetDevicePowerState(deviceId, powerState);	
+	unsigned int res = 0;
+	if((res = Mailbox_SetDevicePowerState(deviceId, powerState)) != 0)
+		printf("Failed to set power for device '%d' to '%d'", deviceId, powerState);
+	else
+		printf("Sucess setting power of device '%d' to '%d'", deviceId, powerState);
+	
+	return res;	
 }
 
 unsigned int Command_GetPower_Execute(char** args, unsigned int argCount)
