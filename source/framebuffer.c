@@ -36,7 +36,7 @@ void DrawColoredCharacterAt(unsigned int ch, unsigned int x, unsigned int y, uns
 		unsigned int i = 0;
 		for(col = CHAR_HEIGHT - 2; col >= 0 ; col--)
 		{
-			if(row < (CHAR_HEIGHT - 1) && (teletext[ch][row] & (1 << col)))
+			if(row < (CHAR_HEIGHT - 1) && (gKernelFont[ch][row] & (1 << col)))
 			{
 				DrawPixel(x + i, y + row, color);
 			}
