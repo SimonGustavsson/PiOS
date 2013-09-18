@@ -2,6 +2,9 @@
 *.o
 # Compiled libraries
 #*.a
+*.suo
+*.sdf
+*.opensdf
 
 # Libraries
 *.lib
