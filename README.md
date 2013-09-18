@@ -9,6 +9,7 @@ My experimental bare metal OS for the raspberry pi.
 * Terminal - Basic character based display
 * Timer - Using the system timer to wait n ms
 * Keyboard(en-GB) support
+* Interrupts (only timer interrupts right now)
 
 #### What I'm planning to do / Working on:
 * Reading/writing to the SD-card
