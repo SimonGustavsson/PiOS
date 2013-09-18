@@ -13,17 +13,17 @@ typedef enum {
 typedef union{
 	unsigned int raw;
 	struct{
-		volatile unsigned int CmdInhibit : 1;
-		volatile unsigned int DatInhibit : 1;
-		volatile unsigned int DatActive : 1;
-		volatile unsigned int reserved : 5;
-		volatile unsigned int WriteTransfer : 1;
-		volatile unsigned int ReadTransfer : 1;
-		volatile unsigned int reserved2 : 10;
-		volatile unsigned int DatLevel0 : 4;
-		volatile unsigned int CmdLevel : 1;
-		volatile unsigned int DatLevel1 : 4;
-		volatile unsigned int reserved3 : 3;
+		volatile unsigned int CmdInhibit : 1;     // Command line still in use (1 = yes)
+		volatile unsigned int DatInhibit : 1;     // Data line still in use (1 = yes)
+		volatile unsigned int DatActive : 1;      // At least one data line is active (1 = yes)
+		volatile unsigned int reserved : 5;       // -
+		volatile unsigned int WriteTransfer : 1;  // New data can be written to the EMMC
+		volatile unsigned int ReadTransfer : 1;   // New data can be read from EMMC
+		volatile unsigned int reserved2 : 10;     // -
+		volatile unsigned int DatLevel0 : 4;      // Values of DAT3 to DAT0
+		volatile unsigned int CmdLevel : 1;       // Value of command line CMD
+		volatile unsigned int DatLevel1 : 4;      // Value of data lines DAT7 to DAT4
+		volatile unsigned int reserved3 : 3;      // -
 	} bits;
 } emmc_status_register;
 
@@ -81,25 +81,214 @@ typedef union {
 	} bits;
 } cmdtm_register;
 
+// control0_register
+typedef union {
+	unsigned int raw;
+	struct {
+		volatile unsigned int hctl_dwidth : 1; // Use 4 data lines (1 = enabled)
+		volatile unsigned int hctl_hs_en : 1;  // Select high speed mode (i.e. DAT and CMD lines change on the rising CLK edge) (1 = enabled)
+		volatile unsigned int reserved : 2;    // -
+		volatile unsigned int hctl_8bit : 1;   // Use 8 data lines (1 = enabled)
+		volatile unsigned int reserved2 : 11;  // -
+		volatile unsigned int gap_stop : 1;    // Stop the current transaction at the next block gap (0 = ignore, 1 = stop)
+		volatile unsigned int gap_restart : 1; // Restart a transaction which was stopped using the gap_stop bit (0 = ignore, 1 = restart)
+		volatile unsigned int readwait_en : 1; // Use DAT2 read-wait protocol for SDIO cards supporting this (1 = enabled)
+		volatile unsigned int gap_ien : 1;     // Enable SDIO interrupt at block gap (only if the hctl_dwidth bit is set) (1 = enabled)
+		volatile unsigned int spi_mode : 1;    // SPI mode enable (0 = normal, 1 = SPI)
+		volatile unsigned int boot_en : 1;     // boot mode access (0 = stop boot mode access, 1 = start boot mode access)
+		volatile unsigned int alt_boot_en : 1; // Enable alternative boot mode access (1 = enabled)
+		volatile unsigned int reserved3 : 9;   // -
+	} bits;
+} control0_register;
+
+// control1_register
+typedef union {
+	unsigned int raw;
+	struct {
+		volatile unsigned int clk_intlen : 1;  // Clock enablefor internal emmc clocks for power saving (1 = enabled)
+		volatile unsigned int clk_stable : 1;  // SD clock stable (0 = no)
+		volatile unsigned int clk_en : 1;      // SD clock enable (1 = enabled)
+		volatile unsigned int reserved : 2;    // -
+		volatile unsigned int clk_gensel : 1;  // Mode of clock generation (0 = divided, 1 = programmable)
+		volatile unsigned int clk_freq_ms2 : 2;// SD clock base divider MSBs
+		volatile unsigned int clk_freq8 : 8;   // SD clock base divider LSBs
+		volatile unsigned int data_taunit : 4; // Data timeout unit exponent (1111 = disabled)
+		volatile unsigned int reserved2 : 4;   // -
+		volatile unsigned int srst_hc : 1;     // Reset the complete host circuit (1 = enabled)
+		volatile unsigned int srst_cmd : 1;    // Reset the command handler circuit (1 = enabled)
+		volatile unsigned int srst_data : 1;   // Reset the data handling circuit (1 = enabled)
+		volatile unsigned int reserved3 : 5;   // -
+	} bits;
+} control1_register;
+
+// interrupt_register - Holds the interrupt flags, each flag can be disabled in IRPT_MASK
+typedef union {
+	unsigned int raw;
+	struct {
+		volatile unsigned int cmd_done : 1;   // Commnad has finished (1 = yes)
+		volatile unsigned int data_done : 1;  // Data transfer has finished (1 = yes)
+		volatile unsigned int block_gap : 1;  // Data transfer has stopped at block gap (1 = yes)
+		volatile unsigned int reserved : 1;   // -
+		volatile unsigned int write_rdy : 1;  // Data can be written to DATA register (1 = yes)
+		volatile unsigned int read_rdy : 1;   // Data register contains dta to be read (1 = yes)
+		volatile unsigned int reserved2 : 2;  // -
+		volatile unsigned int card : 1;       // Card made interrupt request (1 = yes)
+		volatile unsigned int reserved3 : 3;  // -
+		volatile unsigned int retune : 1;     // Clock retune request was made (1 = yes)
+		volatile unsigned int bootack : 1;    // Boot acknowledge has received (1 = yes)
+		volatile unsigned int endboot : 1;    // boot operation has terminated (1 = yes)
+		volatile unsigned int err : 1;        // An error has occured (1 = error)
+		volatile unsigned int cto_err : 1;    // Timeout on command line (1 = error)
+		volatile unsigned int ccrc_err : 1;   // Command CRC error (1 = error)
+		volatile unsigned int cend_err : 1;   // End bit on command line not 1 (1 = error)
+		volatile unsigned int cbad_err : 1;   // Incorrect command index in response (1 = error)
+		volatile unsigned int dto_err : 1;    // Timeout on data line (1 = error)
+		volatile unsigned int dcrc_err : 1;   // Data CRC error (1 = error)
+		volatile unsigned int dend_error : 1; // End bit on data line not 1 (1 = error)
+		volatile unsigned int reserved4 : 1;  // -
+		volatile unsigned int acmd_err : 1;   // Auto command error (1 = error)
+		volatile unsigned int reserved5 : 7;  // -
+	} bits;
+} interrupt_register;
+
+// This register is used to mask interrupt flags in the interrupt_register (1 = yes, 0 = no)
+typedef union {
+	unsigned int raw;
+	struct {
+		volatile unsigned int cmd_done : 1;  // Set flag if command has finished
+		volatile unsigned int data_done : 1; // Set flag if data transfer has finished
+		volatile unsigned int block_gap : 1; // Set flag if data transfer stopped at block gap
+		volatile unsigned int reserved : 1;  // -
+		volatile unsigned int write_rdy : 1; // Set flag if data can be written to DATA register
+		volatile unsigned int read_rdy : 1;  // Set flag if DATA register contains data to be read
+		volatile unsigned int reserved2 : 2; // -
+		volatile unsigned int card : 1;      // Set flag if card made interrupt request
+		volatile unsigned int reserved3 : 3; // -
+		volatile unsigned int retune : 1;    // Set  flag if clock retune request was made
+		volatile unsigned int bootack : 1;   // Set flag if boot acknowledge has been received
+		volatile unsigned int endboot : 1;   // Set flag if boot operation has terminated
+		volatile unsigned int reserved4 : 1; // -
+		volatile unsigned int cto_err : 1;   // Set flag if timeout on command line
+		volatile unsigned int ccrc_err : 1;  // Set flag if command crc error
+		volatile unsigned int cend_err : 1;  // Set flag if end bit on command line not 1
+		volatile unsigned int cbad_err : 1;  // Set flag if incorrect command index in response
+		volatile unsigned int dto_err : 1;   // Set flag if timeout on data line
+		volatile unsigned int dcrc_err : 1;  // Set flag if data CRC error
+		volatile unsigned int dend_err: 1;   // Set flag if end bit on data line not 1
+		volatile unsigned int reserved5 : 1; // -
+		volatile unsigned int acmd_err : 1;  // Set flag if auto command error
+		volatile unsigned int reserved6 : 7; // -
+	} bits;
+} irpt_mask_register;
+
+// irpt_en_register - Used to enable interrupts in interrupt_register
+typedef union {
+	volatile unsigned int raw;
+	struct {
+		volatile unsigned int cmd_done : 1;  // Create interrupt if command has finished
+		volatile unsigned int data_done : 1; // Create interrupt if data transfer has finished
+		volatile unsigned int block_gap : 1; // Create interrupt if data transfer stopped at block gap
+		volatile unsigned int reserved : 1;  // -
+		volatile unsigned int write_rdy : 1; // Create interrupt if data can be written to DATA register
+		volatile unsigned int read_rdy : 1;  // Create interrupt if DATA register contains data to be read
+		volatile unsigned int reserved2 : 2; // -
+		volatile unsigned int card : 1;      // Create interrupt if card made interrupt request
+		volatile unsigned int reserved3 : 3; // -
+		volatile unsigned int retune : 1;    // Create interrupt if clock retune request was made
+		volatile unsigned int bootack : 1;   // Create interrupt if boot acknowledge has been received
+		volatile unsigned int endboot : 1;   // Create interrupt if boot operation has terminated
+		volatile unsigned int reserved4 : 1; // -
+		volatile unsigned int cto_err : 1;   // Create interrupt if timeout on command line
+		volatile unsigned int ccrc_err : 1;  // Create interrupt if command crc error
+		volatile unsigned int cend_err : 1;  // Create interrupt if end bit on command line not 1
+		volatile unsigned int cbad_err : 1;  // Create interrupt if incorrect command index in response
+		volatile unsigned int dto_err : 1;   // Create interrupt if timeout on data line
+		volatile unsigned int dcrc_err : 1;  // Create interrupt if data CRC error
+		volatile unsigned int dend_err: 1;   // Create interrupt if end bit on data line not 1
+		volatile unsigned int reserved5 : 1; // -
+		volatile unsigned int acmd_err : 1;  // Create interrupt if auto command error
+		volatile unsigned int reserved6 : 7; // -
+	} bits;
+} irpt_en_register;
+
+typedef enum {
+	SDR12 = 0,
+	SDR25 = 1,
+	SDR50 = 2,
+	SDR104 = 3,
+	DDR50 = 4
+} uhsmode;
+
+// control2_register (1 = error, 0 = no error) - Used to enable different interrupts in interrupts_register
+typedef union {
+	unsigned int raw;
+	struct {
+		volatile unsigned int acnox_err : 1;   // Auto command not executed due to an error
+		volatile unsigned int acto_err : 1;    // Timeout occurred during auto command
+		volatile unsigned int accrc_err : 1;   // Command CRC error occurred during auto command execution
+		volatile unsigned int acend_err : 1;   // End bit is not 1 during auto command execution
+		volatile unsigned int acbad_err : 1;   // Command index error occurred during auto command execution
+		volatile unsigned int reserved : 2;    // -
+		volatile unsigned int notc12_err : 1;  // Error occurred during auto command CMD12 execution
+		volatile unsigned int reserved2 : 8;   // -
+		uhsmode uhsmode : 3;                   // Select the speed mode of the card
+		volatile unsigned int reserved3 : 3;   // -
+		volatile unsigned int tuneon : 1;      // Start tuning the SD clock (0 = not tuned/complete, 1 = tuning)
+		volatile unsigned int tuned : 1;       // Tuned clock is used for sampling data (1 = yes)
+		volatile unsigned int reserved4 : 8;    // -
+	} bits;
+} control2_register;
+
+// force_irpt_register - Used to force fake interrupts for debugging
+typedef union
+{
+	unsigned int raw;
+	struct {
+		volatile unsigned int cmd_done : 1;  // Command has finished
+		volatile unsigned int data_done : 1; // Data transfer has finished
+		volatile unsigned int block_gap : 1; // Data transfer stopped at block gap
+		volatile unsigned int reserved : 1;  // -
+		volatile unsigned int write_rdy : 1; // Data can be written to DATA register
+		volatile unsigned int read_rdy : 1;  // Data register contains data to be read
+		volatile unsigned int reserved2 : 2; // -
+		volatile unsigned int card : 1;      // Card made interrupt request
+		volatile unsigned int reserved3 : 3; // -
+		volatile unsigned int retune : 1;    // Clock retune request was made
+		volatile unsigned int bootack : 1;   // Boot acknowledge has been received
+		volatile unsigned int endboot : 1;   // Boot operation has terminated
+		volatile unsigned int reserved4 : 1; // -
+		volatile unsigned int cto_err : 1;   // Timeout on command line
+		volatile unsigned int ccrc_err : 1;  // Command crc error
+		volatile unsigned int cend_err : 1;  // End bit on command line not 1
+		volatile unsigned int cbad_err : 1;  // Incorrect command index in response
+		volatile unsigned int dto_err : 1;   // Timeout on data line
+		volatile unsigned int dcrc_err : 1;  // Data CRC error
+		volatile unsigned int dend_err: 1;   // End bit on data line not 1
+		volatile unsigned int reserved5 : 1; // -
+		volatile unsigned int acmd_err : 1;  // Auto command error
+		volatile unsigned int reserved6 : 7; // -
+	} bits;
+} force_irpt_register;
+
 // Emmc
 typedef struct { // Placed at EMMC_BASE
 	volatile unsigned int Arg2;            // ACMD23 Argument
 	blksizecnt_register BlockCountSize;    // Block size and count
 	volatile unsigned int Arg1;            // Argument
 	cmdtm_register Cmdtm;                  // Command and transfer mode
-	volatile unsigned int Resp0;           // Response bits 31 : 0
+	volatile unsigned int Resp0;           // Response bits 31 : 0 - Cast this address to one of the SdResponseX
 	volatile unsigned int Resp1;           // Response bits 63 : 32
 	volatile unsigned int Resp3;           // Response bits 95 : 64
 	volatile unsigned int Resp4;           // Response bits 127 : 96
 	volatile unsigned int Data;            // Data
 	emmc_status_register Status;           // Status
-	volatile unsigned int Control0;        // Host configuration 0
-	volatile unsigned int Control1;        // Host configuration 1
-	volatile unsigned int Interrupt;       //    Interrupt Flags
-	volatile unsigned int IrptMask;        //    Interrupt flag enable
-	volatile unsigned int IrptEn;          //    Interrupt Generation Enable
-	volatile unsigned int Control2;        // Host configuration 2
-	volatile unsigned int ForceIrpt;       // Force interupt event
+	control0_register Control0;            // Host configuration 0
+	control1_register Control1;            // Host configuration 1
+	interrupt_register Interrupt;          //    Interrupt Flags
+	irpt_mask_register IrptMask;           //    Interrupt flag enable
+	irpt_en_register IrptEn;               //    Interrupt Generation Enable
+	control2_register Control2;            // Host configuration 2
+	force_irpt_register ForceIrpt;         // Force interupt event (faking interrupts for debugging)
 	volatile unsigned int BootTimeout;     // Timeout in boot mode
 	volatile unsigned int DbgSel;          // Debug bus configuration
 	volatile unsigned int ExrdfifoCfg;     // Extension FIFO configuration
@@ -204,7 +393,7 @@ typedef struct { // 48-Bit
 	unsigned char commandIndex:6;
 	unsigned int cardStatus:32;
 	unsigned char crc7:7;
-	unsigned char end:1
+	unsigned char end:1;
 } SdResponse1;
 
 // SdResponse2 (136-Bit)
@@ -213,7 +402,7 @@ typedef struct { // 136-bit
 	unsigned char transmission:1;
 	unsigned char reserved:6;
 	unsigned int Cid[4];
-	unsigned char end:1
+	unsigned char end:1;
 } SdResponse2;
 
 // SdResponse2 (48-Bit)
@@ -234,7 +423,7 @@ typedef struct { // 48-Bit
 	unsigned int NewPublishedRca:16;
 	unsigned int CardStatus:16;
 	unsigned int Crc7:7;
-	unsigned int end:1
+	unsigned int end:1;
 } SdResponse6;
 
 /* R7
@@ -254,7 +443,7 @@ typedef struct { // 48-Bit
 	unsigned char voltageAccepted:4;
 	unsigned char checkPatternEcho:8;
 	unsigned char crc7:7;
-	unsigned char end:1
+	unsigned char end:1;
 } SdResponse7;
 
 unsigned int EmmcInitialise(void);
