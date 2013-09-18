@@ -21,78 +21,78 @@ unsigned int EmmcInitialise(void)
 	unsigned int slot_status = ver & 0xff;
 	printf("ssed - Version(%d): vendor %d sdversion %d slot status %d.\n", ver, vendor, sdversion, slot_status);
 	
-	gEmmc->CmdTm = GoIdleState;
+	gEmmc->Cmdtm = GoIdleState;
 	
 	wait(10);
 	
-	gEmmc->Arg1 = [11:8] Voltage
-	gEmmc->CmdTm = SendIfCond;
+	// gEmmc->Arg1 = [11:8] Voltage
+	// gEmmc->CmdTm = SendIfCond;
 	
-	if(returned response )
-	{
-	    // It's a Ver2.00 or later SD memory card 
-		if(is NOT valid response)
-		{
-			// Unusable card
-			return;
-		}
+	// if(returned response )
+	// {
+	    // // It's a Ver2.00 or later SD memory card 
+		// if(is NOT valid response)
+		// {
+			// // Unusable card
+			// return;
+		// }
 		
-		// Card agreed with our voltage etc
+		// // Card agreed with our voltage etc
 		
-		do
-		{
-			gEmmc->CmdTm = Acmd41;
-		}while(card returns busy);
+		// do
+		// {
+			// gEmmc->CmdTm = Acmd41;
+		// }while(card returns busy);
 		
-		if(Not card is ready)
-		{
-			// Unsable card
-			return;
-		}
+		// if(Not card is ready)
+		// {
+			// // Unsable card
+			// return;
+		// }
 		
-		if(ccs in response == 1)
-		{
-			// SD is a High capacity or extended capacity card
-		}
-		else if(ccs in response == 0)
-		{
-			// sd is a standard capacity sd card
-		}
-	}
-	else
-	{
-		// Ver2.00 or later SD memory card (voltage mismatch)
-		// or Ver1.X SD Memory Card or not SD Memory Card at all			
-		while(card is busy)
-		{
-			gEmmc->CmdTm = Acmd41; 
+		// if(ccs in response == 1)
+		// {
+			// // SD is a High capacity or extended capacity card
+		// }
+		// else if(ccs in response == 0)
+		// {
+			// // sd is a standard capacity sd card
+		// }
+	// }
+	// else
+	// {
+		// // Ver2.00 or later SD memory card (voltage mismatch)
+		// // or Ver1.X SD Memory Card or not SD Memory Card at all			
+		// while(card is busy)
+		// {
+			// gEmmc->CmdTm = Acmd41; 
 			
-			if(no response to last command )
-			{
-				// Not a SD memory card
-			}
-		}
+			// if(no response to last command )
+			// {
+				// // Not a SD memory card
+			// }
+		// }
 		
-		if(Not card is ready)
-		{
-			// Useless card
-		}	
-	}
+		// if(Not card is ready)
+		// {
+			// // Useless card
+		// }	
+	// }
 	
-	// Send CMD11 or CMD12 based on response from Acmd41
-	if(acmd41 response S18R and S18A is == 1)
-	{
-		// Switch over to 1.8Volt for no apparent reason
-		gEmmc->CmdTm = VoltageSwitch
-	}
+	// // Send CMD11 or CMD12 based on response from Acmd41
+	// if(acmd41 response S18R and S18A is == 1)
+	// {
+		// // Switch over to 1.8Volt for no apparent reason
+		// gEmmc->CmdTm = VoltageSwitch
+	// }
 	
-	// Get the CID from the card
-	gEmmc->CmdTm = AllSendCid;
+	// // Get the CID from the card
+	// gEmmc->CmdTm = AllSendCid;
 	
-	// Store CID
+	// // Store CID
 	
-	// Get the address of the card so we can address it
-	gEmmc->CmdTm = SendRelativeAddr;
+	// // Get the address of the card so we can address it
+	// gEmmc->CmdTm = SendRelativeAddr;
 	
 	
 	

@@ -111,85 +111,79 @@ typedef enum {
 #define COMMAND_ARGUMENT(x) (x << 39)
 
 typedef struct {
-	unsigned char start:1,
-	unsigned char transmission:1, // direction, 1 = host, 0 = card
-	unsigned char commandIndex:6,
-	unsigned int argument:32,
-	unsigned int crc7:7,
-	unsigned int end:1
+	unsigned char start:1;
+	unsigned char transmission:1; // direction, 1 = host, 0 = card
+	unsigned char commandIndex:6;
+	unsigned int argument:32;
+	unsigned int crc7:7;
+	unsigned int end:1;
 } SdCommand;
 
 typedef struct{
-	unsigned char out_of_range : 1,
-	unsigned char address_error : 1,
-	unsigned char block_len_error: 1,
-	unsigned char erase_seq_error : 1,
-	unsigned char erase_param : 1,
-	unsigned char wp_violation : 1,	
-	unsigned char card_is_locked : 1,
-	unsigned char lock_unlocked_failed : 1,
-	unsigned char com_crc_error : 1,
-	unsigned char illegal_command : 1,
-	unsigned char card_ecc_failed : 1,
-	unsigned char cc_error : 1,
-	unsigned char error : 1,
-	unsigned char reserved1 : 1,
-	unsigned char reserved2 : 1,
+	unsigned char out_of_range : 1;
+	unsigned char address_error : 1;
+	unsigned char block_len_error: 1;
+	unsigned char erase_seq_error : 1;
+	unsigned char erase_param : 1;
+	unsigned char wp_violation : 1;	
+	unsigned char card_is_locked : 1;
+	unsigned char lock_unlocked_failed : 1;
+	unsigned char com_crc_error : 1;
+	unsigned char illegal_command : 1;
+	unsigned char card_ecc_failed : 1;
+	unsigned char cc_error : 1;
+	unsigned char error : 1;
+	unsigned char reserved1 : 1;
+	unsigned char reserved2 : 1;
 	
-	unsigned char csd_overwrite : 1,
-	unsigned char wp_erase_skip : 1,
-	unsigned char card_ecc_disabled : 1,	
-	unsigned char erase_reset : 1,
-	unsigned char current_state : 4,
-	unsigned char ready_for_data : 1,
-	unsigned char reserved3 : 1,
-	unsigned char app_cmd : 1,
-	unsigned char reserved4 : 1,
+	unsigned char csd_overwrite : 1;
+	unsigned char wp_erase_skip : 1;
+	unsigned char card_ecc_disabled : 1;	
+	unsigned char erase_reset : 1;
+	unsigned char current_state : 4;
+	unsigned char ready_for_data : 1;
+	unsigned char reserved3 : 1;
+	unsigned char app_cmd : 1;
+	unsigned char reserved4 : 1;
 	
-	unsigned char ake_seq_error : 1,
-	unsigned char name : 1,
-	unsigned char name : 1,
-	unsigned char name : 1,
-	unsigned char name : 1,
-	unsigned char name : 1,
-	unsigned char name : 1,
+	unsigned char ake_seq_error : 1;
 } SdCardStatus;
 /* Card status:
 	
 */
 typedef struct { // 48-Bit
-	unsigned char start:1,
-	unsigned char transmission:1,
-	unsigned char commandIndex:6,
-	unsigned int cardStatus:32,
-	unsigned char crc7:7,
+	unsigned char start:1;
+	unsigned char transmission:1;
+	unsigned char commandIndex:6;
+	unsigned int cardStatus:32;
+	unsigned char crc7:7;
 	unsigned char end:1
 } SdResponse1;
 
 typedef struct { // 136-bit
-	unsigned char start:1,
-	unsigned char transmission:1,
-	unsigned char reserved:6,
-	unsigned int Cid[4],
+	unsigned char start:1;
+	unsigned char transmission:1;
+	unsigned char reserved:6;
+	unsigned int Cid[4];
 	unsigned char end:1
 } SdResponse2;
 
 typedef struct { // 48-bit
-	unsigned char start:1,
-	unsigned char transmission:1,
-	unsigned char reserved:6,
-	unsigned int Ocr:32,
-	unsigned char reserved 8,
-	unsigned char end:1,
+	unsigned char start:1;
+	unsigned char transmission:1;
+	unsigned char reserved:6;
+	unsigned int Ocr:32;
+	unsigned char reserved2: 8;
+	unsigned char end:1;
 } SdResponse3;
 
 typedef struct { // 48-Bit
-	unsigned char start:1,
-	unsigned char transmission:1,
-	unsigned char commandIndex:6,
-	unsigned int NewPublishedRca:16,
-	unsigned int CardStatus:16,
-	unsigned int Crc7:7,
+	unsigned char start:1;
+	unsigned char transmission:1;
+	unsigned char commandIndex:6;
+	unsigned int NewPublishedRca:16;
+	unsigned int CardStatus:16;
+	unsigned int Crc7:7;
 	unsigned int end:1
 } SdResponse6;
 
@@ -202,13 +196,13 @@ typedef struct { // 48-Bit
 // 1000b  Reserved
   Others  Not Defined */
 typedef struct { // 48-Bit
-	unsigned char start:1,
-	unsigned char tranmission:1,
-	unsigned char commandIndex:6,
-	unsigned int reserved:20,
-	unsigned char voltageAccepted:4,
-	unsigned char checkPatternEcho:8,
-	unsigned char crc7:7,
+	unsigned char start:1;
+	unsigned char tranmission:1;
+	unsigned char commandIndex:6;
+	unsigned int reserved:20;
+	unsigned char voltageAccepted:4;
+	unsigned char checkPatternEcho:8;
+	unsigned char crc7:7;
 	unsigned char end:1
 } SdResponse7;
 
