@@ -8,8 +8,6 @@
 #include "usbd/usbd.h"
 
 volatile unsigned int irq_counter;
-timer* gTimer = (timer*)TIMER_BASE;
-const unsigned int TIMER_INTERRUPT_INTERVAL = 0x00200000;
 
 void OnCriticalError(void)
 {
@@ -39,42 +37,51 @@ void c_irq_handler (void)
 	// TODO: Determine source of IRQ - for now this will always be the timer (?)
 	printf("IRQ no. %d\n", irq_counter);
 	
-	// Reset interval
-	timer_clearmatch(gTimer, 1);
-	timer_setinterval(gTimer, 1, TIMER_INTERRUPT_INTERVAL);
+	// Reset the system periodic timer
+	timer_sp_clearmatch();
+	timer_sp_setinterval(TIMER_INTERRUPT_INTERVAL);
 }
 
-int cmain(void)
+unsigned int system_initialize(void)
 {
 	unsigned int result = 0;
-	irq_counter = 0;
 	
+	// First and foremost: The LED so we can flash it to signal errors if FB init fails
 	LedInit();
 	
-	// Initialize terminal before enabling interrupts as the interrupt handlers currently try to write to it
+	// Initialize terminal first so we can print error messages if any (Hah, unlikely!)
 	if((result = terminal_init()) != 0)
 		OnCriticalError(); // Critical error: Failed to initialize framebuffer :-(
 
-	// Setup period irq interval before enabling interrupts
-	timer_setinterval(gTimer, 1, TIMER_INTERRUPT_INTERVAL);
-	timer_clearmatch(gTimer, 1);
+	// Note: Timer is not essential to system initialisation
+	if(timer_init() != 0)
+		printf("Failed to initialise timer.\n");
 	
+	// Note: Interrupts are not essential to system initialisation
 	if(interrupts_init() != 0)
 		printf("Failed to initialize interrupts.\n");
 	
+	// Note: Usb & Keyboard is essential to the system
 	if((result = UsbInitialise()) != 0)
 		printf("Usb initialise failed, error code: %d\n", result);
 	else if((result = KeyboardInitialise()) != 0)
 		printf("Keyboard initialise failed, error code: %d\n", result);
-			
-	// Note we don't save result for Emmc as it isn't essential (yet)
+
+	// Note: EMMC is not essential to system initialisation
 	if(EmmcInitialise() != 0)
 		printf("Failed to intialize emmc.\n");
+	
+	return result;
+}
 
-	if(result == 0)
+int cmain(void)
+{
+	irq_counter = 0;
+		
+	if(system_initialize() == 0)
 	{
 		terminal_printWelcome();
-				
+
 		terminal_printPrompt();
 		
 		while(1)

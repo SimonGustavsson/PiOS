@@ -1,45 +1,47 @@
 #include "timer.h"
 
+volatile timer* gTimer = (timer*)TIMER_BASE;
+
+// The timer has 4 channels, we use the second channel for period interrupts
+const unsigned int TIMER_PERIODIC_CHANNEL = 1;
+
 extern unsigned int GET32(unsigned int);
 
-void timer_setinterval(timer* timer, unsigned int channel, unsigned int interval)
+unsigned int timer_init(void)
 {
-	unsigned int currentCounter = timer->clo;
+	// Setup period irq interval before enabling interrupts
+	timer_sp_clearmatch();
+	timer_sp_setinterval(TIMER_INTERRUPT_INTERVAL);
 	
-	currentCounter += interval;
-	
-	if(channel == 0)
-		timer->c0 = currentCounter;
-	else if(channel == 1)
-		timer->c1 = currentCounter;
-	else if(channel == 2)
-		timer->c2 = currentCounter;
-	else if(channel == 3)
-		timer->c3 = currentCounter;
-		
+	return 0;
 }
 
-void timer_clearmatch(timer* timer, unsigned int channel)
+// Set the interval for the system period timer
+void timer_sp_setinterval(unsigned int interval)
 {
-	// Set the corresponding bit in cs to 1 to clear that channel
-	if(channel == 0)
-		timer->cs = 1;
-	else if(channel == 1)
-		timer->cs = 2;
-	else if(channel == 2)
-		timer->cs = 4;
-	else if(channel == 3)
-		timer->cs = 8;
+	unsigned int currentCounter = gTimer->clo;
+	
+	currentCounter += interval;
+
+	// Note: SP uses channel 1
+	gTimer->c1 = currentCounter;
+}
+
+void timer_sp_clearmatch(void)
+{
+	// Setting the channels bit in the status registers clears this match
+	// (Note: SP uses channel 1)
+	gTimer->cs.bits.m1 = 1;
 }
 
 // TODO: user timer* instead of GET32
 void wait(unsigned int milliSeconds)
 {
 	unsigned int ttw = 1048 * milliSeconds;
-	unsigned int start = GET32(SYSTIMER_COUNTER);
+	unsigned int start = gTimer->clo;
 	while(1)
 	{
-		if(GET32(SYSTIMER_COUNTER) - start >= ttw)
+		if(gTimer->clo - start >= ttw)
 			break;
 	}
 }
