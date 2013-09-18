@@ -29,6 +29,7 @@ unsigned int gInputBufferIndex;
 
 char gPrompt[TERMINAL_PROMPT_MAX_LENGTH] = "PiOS->";
 unsigned int gPromptLength = 6;
+unsigned int gShowingTerminalPrompt;
 
 void terminal_printWelcome(void)
 {
@@ -60,6 +61,8 @@ void terminal_printPrompt(void)
 	
 	// Print caret
 	gBuffer[gBufferCaretRow][gBufferCaretCol] = (char)127;
+		
+	gShowingTerminalPrompt = 1;
 		
 	PresentBufferToScreen();
 }
@@ -189,6 +192,8 @@ void terminal_clear(void)
 
 int terminal_init(void)
 {
+	gShowingTerminalPrompt = 0;
+	
 	if(InitializeFramebuffer() != 0)
 		return -1;
 	
@@ -226,8 +231,28 @@ void terminal_back(void)
 	PresentBufferToScreen();
 }
 
-void print(char* string, unsigned int length)
+void print_internal(char* string, unsigned int length, unsigned int important)
 {
+	// 0. If we're currently showing the prompt (and potentially user input)
+	// we overwrite this, and rewrite it again after this print
+	if(gShowingTerminalPrompt && important)
+	{
+		// Remote the prompt and input
+		// TODO: This only expects prompt and input to be on one row, fix that...
+		unsigned int i;
+		unsigned int charsToRemote = INPUT_BUFFER_SIZE + gInputBufferIndex;
+		for(i = 0; i < charsToRemote; i++)
+			gBuffer[gBufferCaretRow][i] = ' ';
+		
+		gBufferCaretCol = 0;
+	}
+	else if(!important)
+	{
+		// If this isn't an important message, but we were showing the prompt
+		// Just append the text, and flag that we are no longer showing the prompt
+		gShowingTerminalPrompt = 0;
+	}
+	
 	// 1. "Draw" everything to the buffer 
 	unsigned int i;
 	for(i = 0; i < length; i++)
@@ -280,6 +305,28 @@ void print(char* string, unsigned int length)
 		}
 	}
 	
+	// Write the prompt back again - but only if we wrote an important message.
+	// as we want multiple print() calls to be able to write to the same row
+	if(gShowingTerminalPrompt && important)
+	{
+		terminal_printPrompt();
+		
+		// Add the user input + caret
+		unsigned int j;
+		for(j = 0; j < gInputBufferIndex; j++)
+			gBuffer[gBufferCaretRow][gBufferCaretCol++] = gInputBuffer[j];
+	}
+	
 	// 2. Flip buffer to screen
 	PresentBufferToScreen();
+}
+
+void print_i(char* string, unsigned int length)
+{
+	print_internal(string, length, 1);
+}
+
+void print(char* string, unsigned int length)
+{
+	print_internal(string, length, 0);
 }

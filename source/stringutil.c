@@ -88,6 +88,54 @@ void itoa(int number, char* buf)
 		*--buf = '-';
 }
 
+void printf_i(char* text, ...)
+{
+	va_list ap;
+	va_start(ap, text);
+
+	char res[256];
+	char* result = res;
+	
+	// scan all characters in the string and look for format specifiers
+	do
+	{
+		if(*text == '%')
+		{
+			if(*(text + 1) == 'c') // unsigned char
+			{
+				*result++ = (char)va_arg(ap, unsigned int);
+			}
+			else if(*(text + 1) == 'd') // integer (signed)
+			{
+				char itoBuf[10];
+				itoa(va_arg(ap, int), &itoBuf[0]);
+				
+				char* intstr = strcpy(itoBuf, result);
+				
+				result += strlen(intstr);
+			}
+			else if(*(text + 1) == 's') // string
+			{
+				char* arg = (char*)va_arg(ap, int);
+				
+				strcpy(arg, result);
+				
+				result += strlen(arg);
+			}
+			
+			// make sure we skip the type specifier
+			text++;
+			
+			continue;
+		}
+		
+		// if we got this far, it's probably just a normal character
+		*result++ = *text;
+	}while(*text++ != '\0');
+	
+	print_i(res, strlen(res));
+}
+
 void printf(char* text, ...)
 {
 	va_list ap;

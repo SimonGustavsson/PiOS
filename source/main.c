@@ -35,7 +35,7 @@ void c_irq_handler (void)
 	irq_counter++;
 	
 	// TODO: Determine source of IRQ - for now this will always be the timer (?)
-	printf("IRQ no. %d\n", irq_counter);
+	printf_i("IRQ no. %d\n", irq_counter);
 	
 	// Reset the system periodic timer
 	timer_sp_clearmatch();
