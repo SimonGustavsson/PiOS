@@ -21,7 +21,7 @@ unsigned int EmmcInitialise(void)
 	unsigned int slot_status = ver & 0xff;
 	printf("ssed - Version(%d): vendor %d sdversion %d slot status %d.\n", ver, vendor, sdversion, slot_status);
 	
-	gEmmc->Cmdtm = GoIdleState;
+	// gEmmc->Cmdtm = GoIdleState;
 	
 	wait(10);
 	

@@ -1,6 +1,6 @@
 #define EMMC_BASE 0x20300000
 
-// SD Clock Frequencies (in Hz)
+// SdClockSpeed - SD Clock Frequencies (in Hz)
 typedef enum {
 	SdClockId       = 400000,
 	SdClockNormal   = 25000000,
@@ -9,6 +9,7 @@ typedef enum {
 	SdClock208      = 208000000
 } SdClockSpeed;
 
+// emmc_status_register
 typedef union{
 	unsigned int raw;
 	struct{
@@ -26,6 +27,7 @@ typedef union{
 	} bits;
 } emmc_status_register;
 
+// blksizecnt_register
 typedef union {
 	unsigned int raw;
 	struct {
@@ -35,6 +37,31 @@ typedef union {
 	} bits;
 } blksizecnt_register;
 
+// tm_auto_cmd_en
+typedef enum {
+	NoCommand = 0,
+	Command12 = 1,
+	Command23 = 2,
+	reserved = 3
+} tm_auto_cmd_en;
+
+// cmd_rspns_type
+typedef enum {
+	ResponseNone = 0,
+	Response136Bits = 1,
+	Response48Bits = 2,
+	Response48BitsBusy = 3
+} cmd_rspns_type;
+
+// cmd_type
+typedef enum {
+	Normal = 0,
+	Suspend = 1, // Suspend current data transfer
+	Resume = 2,  // Resume last data transfer
+	Abort = 3    // Abort the current data transfer
+} cmd_type;
+
+// cmdtm_register
 typedef union {
 	unsigned int raw;
 	struct {
@@ -54,27 +81,7 @@ typedef union {
 	} bits;
 } cmdtm_register;
 
-typedef enum {
-	ResponseNone = 0,
-	Response136Bits = 1,
-	Response48Bits = 2,
-	Response48BitsBusy = 3
-} cmd_rspns_type;
-
-typedef enum {
-	Normal = 0,
-	Suspend = 1, // Suspend current data transfer
-	Resume = 2,  // Resume last data transfer
-	Abort = 3    // Abort the current data transfer
-} cmd_type;
-
-typedef enum {
-	NoCommand = 0,
-	Command12 = 1,
-	Command23 = 2,
-	reserved = 3
-} tm_auto_cmd_en;
-
+// Emmc
 typedef struct { // Placed at EMMC_BASE
 	volatile unsigned int Arg2;            // ACMD23 Argument
 	blksizecnt_register BlockCountSize;    // Block size and count
@@ -104,6 +111,7 @@ typedef struct { // Placed at EMMC_BASE
 	volatile unsigned int SlotisrVer;      // Slot interrupt status and version
 } Emmc;
 
+// EmmcCommand
 typedef enum {	
 	GoIdleState          = 0,	// Resets SD card
 	SendOpCond           = 1,	// Sends host capacity support information and kick off card initialization
@@ -148,36 +156,7 @@ typedef enum {
 	GenCmd               = 56	// Used either to read or write a data block from the card for general purpose/application specific commands.
 } EmmcCommand;
 
-#define CONTROL0_ALT_BOOT_EN   (1 << 22)  // Enable alternative boot mode access
-#define CONTROL0_BOOT_EN       (1 << 21)  // Boot mode access
-#define CONTROL0_SPI_MODE      (1 << 20)  // SPI Mode enable
-#define CONTROL0_GAP_IEN       (1 << 19)  // Enable SDIO interrupt
-#define CONTROL0_READWAIT_EN   (1 << 18)  // Use DATA2 read-wait protocol
-#define CONTROL0_GAP_RESTART   (1 << 17)  // Restart a transaction that was stopped using GAP_STOP
-#define CONTROL0_GAP_STOP      (1 << 16)  // Stop the current transaction
-#define CONTROL0_HCTL_8BIT     (1 << 5)   // Use 8 Data lines
-#define CONTROL0_HCTL_HS_EN    (1 << 2)   // Select high-speed mode
-#define CONTROL0_HCTL_HS_DWITH (1 << 1)   // Use 4 data lines
-
-#define CONTROL1_SRST_DATA      (1 << 26) // Reset data handling
-#define CONTROL1_SRST_CMD       (1 << 25) // Reset command handling
-#define CONTROL1_SRST_HC        (1 << 24) // Reset host circuit
-#define CONTROL1_DATA_TOUNIT(x) (x << 19) // Data timeout unit exp
-#define CONTROL1_CLK_FREQ8(x)   (x << 15) // SD Clock base divier LSB
-#define CONTROL1_CLK_FREQ_MS2(x)(x << 7)  // SD clock base divier MSB 
-#define CONTROL1_CLK_GENSEL     (1 << 5)  // Clock gen mode
-#define CONTROL1_CLK_EN         (1 << 2)  // SD clock enable
-#define CONTROL1_CLK_STABLE     (1 << 1)  // Sd clock stable 
-#define CONTROL1_CLK_INTLEN     (1 << 0)  // Internal EMMC clock enable
-
-#define RESPONSE_R7_VOLTAGE_NOT_DEFINED  (1 << 16)
-#define RESPONSE_R7_VOLTAGE_NORMAL       (1 << 17)
-#define RESPONSE_R7_VOLTAGE_LOW_RESERVED (1 << 18)
-
-#define COMMAND_TRANSMISSION_BIT (1 << 46)
-#define COMMAND_COMMAND_INDEX(x) (x << 45)
-#define COMMAND_ARGUMENT(x) (x << 39)
-
+// SdCommand
 typedef struct {
 	unsigned char start:1;
 	unsigned char transmission:1; // direction, 1 = host, 0 = card
@@ -187,6 +166,7 @@ typedef struct {
 	unsigned int end:1;
 } SdCommand;
 
+// SdCardStatus
 typedef struct{
 	unsigned char out_of_range : 1;
 	unsigned char address_error : 1;
@@ -216,9 +196,8 @@ typedef struct{
 	
 	unsigned char ake_seq_error : 1;
 } SdCardStatus;
-/* Card status:
-	
-*/
+
+// SdResponse1 (48-Bit)
 typedef struct { // 48-Bit
 	unsigned char start:1;
 	unsigned char transmission:1;
@@ -228,6 +207,7 @@ typedef struct { // 48-Bit
 	unsigned char end:1
 } SdResponse1;
 
+// SdResponse2 (136-Bit)
 typedef struct { // 136-bit
 	unsigned char start:1;
 	unsigned char transmission:1;
@@ -236,6 +216,7 @@ typedef struct { // 136-bit
 	unsigned char end:1
 } SdResponse2;
 
+// SdResponse2 (48-Bit)
 typedef struct { // 48-bit
 	unsigned char start:1;
 	unsigned char transmission:1;
@@ -245,6 +226,7 @@ typedef struct { // 48-bit
 	unsigned char end:1;
 } SdResponse3;
 
+// SdResponse6 (48-Bit)
 typedef struct { // 48-Bit
 	unsigned char start:1;
 	unsigned char transmission:1;
@@ -263,6 +245,7 @@ typedef struct { // 48-Bit
 // 0100b  Reserved
 // 1000b  Reserved
   Others  Not Defined */
+// SdResponse7 (48-Bit)
 typedef struct { // 48-Bit
 	unsigned char start:1;
 	unsigned char tranmission:1;
