@@ -9,31 +9,99 @@ typedef enum {
 	SdClock208      = 208000000
 } SdClockSpeed;
 
+typedef union{
+	unsigned int raw;
+	struct{
+		volatile unsigned int CmdInhibit : 1;
+		volatile unsigned int DatInhibit : 1;
+		volatile unsigned int DatActive : 1;
+		volatile unsigned int reserved : 5;
+		volatile unsigned int WriteTransfer : 1;
+		volatile unsigned int ReadTransfer : 1;
+		volatile unsigned int reserved2 : 10;
+		volatile unsigned int DatLevel0 : 4;
+		volatile unsigned int CmdLevel : 1;
+		volatile unsigned int DatLevel1 : 4;
+		volatile unsigned int reserved3 : 3;
+	} bits;
+} emmc_status_register;
+
+typedef union {
+	unsigned int raw;
+	struct {
+		volatile unsigned int BlkSize : 10;
+		volatile unsigned int reserved : 6;
+		volatile unsigned int BlkCnt : 16;
+	} bits;
+} blksizecnt_register;
+
+typedef union {
+	unsigned int raw;
+	struct {
+		volatile unsigned int reserved : 1;
+		volatile unsigned int TmBlkCntEn : 1;   // Enable block counter for multiple block transfers (1 = eanble)
+		tm_auto_cmd_en TmAutoCmdEn : 2;         // Select command to send after completion of data transfer
+		volatile unsigned int TmDatDir : 1;     // Direction of data transfer (0 = host -> Card, 1 = card -> host)
+		volatile unsigned int TmMultiBlock : 1; // Type of transfer (0 = single, 1 = multi)
+		volatile unsigned int reserved2 : 10;   // -
+		cmd_rspns_type CmdRspnsType : 2;        // Type of the response (see cmd_rspns_type)
+		volatile unsigned int CmdCrcChkEn : 1;  // Check the responses CRC (1 = enable)
+		volatile unsigned int CmdIxchkEn : 1;   // Check index has same index as command 
+		volatile unsigned int CmdIsData : 1;    // 0 = no data transfer command
+		cmd_type CmdType : 2;                   // The type of the command to be issued
+		volatile unsigned int CmdIndex : 6;     // Index of command to be issued
+		volatile unsigned int reserved3 : 2;    // -
+	} bits;
+} cmdtm_register;
+
+typedef enum {
+	ResponseNone = 0,
+	Response136Bits = 1,
+	Response48Bits = 2,
+	Response48BitsBusy = 3
+} cmd_rspns_type;
+
+typedef enum {
+	Normal = 0,
+	Suspend = 1, // Suspend current data transfer
+	Resume = 2,  // Resume last data transfer
+	Abort = 3    // Abort the current data transfer
+} cmd_type;
+
+typedef enum {
+	NoCommand = 0,
+	Command12 = 1,
+	Command23 = 2,
+	reserved = 3
+} tm_auto_cmd_en;
+
 typedef struct { // Placed at EMMC_BASE
-	volatile unsigned int Arg2;
-	volatile unsigned int BlockCountSize;
-	volatile unsigned int Arg1;
-	volatile unsigned int Cmdtm;
-	volatile unsigned int Resp0;
-	volatile unsigned int Resp1;
-	volatile unsigned int Resp3;
-	volatile unsigned int Data;
-	volatile unsigned int Status;
-	volatile unsigned int Control0;
-	volatile unsigned int Control1;
-	volatile unsigned int Interrupt;
-	volatile unsigned int IrptMask;
-	volatile unsigned int Control2;
-	volatile unsigned int ForceIrpt;
-	volatile unsigned int BootTimeout;
-	volatile unsigned int DbgSel;
-	volatile unsigned int ExrdfifoCfg;
-	volatile unsigned int ExrdfifoEnable;
-	volatile unsigned int TuneStep;
-	volatile unsigned int TuneStepsStd;
-	volatile unsigned int TuneStepsDdr;
-	volatile unsigned int SpiIntSpt;
-	volatile unsigned int SlotisrVer;
+	volatile unsigned int Arg2;            // ACMD23 Argument
+	blksizecnt_register BlockCountSize;    // Block size and count
+	volatile unsigned int Arg1;            // Argument
+	cmdtm_register Cmdtm;                  // Command and transfer mode
+	volatile unsigned int Resp0;           // Response bits 31 : 0
+	volatile unsigned int Resp1;           // Response bits 63 : 32
+	volatile unsigned int Resp3;           // Response bits 95 : 64
+	volatile unsigned int Resp4;           // Response bits 127 : 96
+	volatile unsigned int Data;            // Data
+	emmc_status_register Status;           // Status
+	volatile unsigned int Control0;        // Host configuration 0
+	volatile unsigned int Control1;        // Host configuration 1
+	volatile unsigned int Interrupt;       //    Interrupt Flags
+	volatile unsigned int IrptMask;        //    Interrupt flag enable
+	volatile unsigned int IrptEn;          //    Interrupt Generation Enable
+	volatile unsigned int Control2;        // Host configuration 2
+	volatile unsigned int ForceIrpt;       // Force interupt event
+	volatile unsigned int BootTimeout;     // Timeout in boot mode
+	volatile unsigned int DbgSel;          // Debug bus configuration
+	volatile unsigned int ExrdfifoCfg;     // Extension FIFO configuration
+	volatile unsigned int ExrdfifoEnable;  // Extension FIFO enable
+	volatile unsigned int TuneStep;        // Delay per card clock turning step
+	volatile unsigned int TuneStepsStd;    // Card clock tuning steps for SDR
+	volatile unsigned int TuneStepsDdr;    // Card clock tuning steps for DDR
+	volatile unsigned int SpiIntSpt;       // SPI Interrupt support
+	volatile unsigned int SlotisrVer;      // Slot interrupt status and version
 } Emmc;
 
 typedef enum {	
