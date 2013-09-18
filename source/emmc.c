@@ -7,53 +7,96 @@ volatile Emmc* gEmmc;
 
 unsigned int EmmcInitialise(void)
 {
+	printf("ssed - Initializing external mass media controller.\n");
+	
 	gEmmc = (Emmc*)EMMC_BASE;
 	
+	// Power cycle to ensure initial state
+	EmmcPowerCycle();
+	
+	// Print version for debugging
 	unsigned int ver = gEmmc->SlotisrVer;
 	unsigned int vendor = ver >> 24;
 	unsigned int sdversion = (ver >> 16) & 0xff;
 	unsigned int slot_status = ver & 0xff;
+	printf("ssed - Version(%d): vendor %d sdversion %d slot status %d.\n", ver, vendor, sdversion, slot_status);
 	
-	printf("EMMC: vendor %d, sdversion %d, slot status %d\n", vendor, sdversion, slot_status);
-		
-	return 0; // Code below not finished
+	gEmmc->CmdTm = GoIdleState;
 	
+	wait(10);
 	
-	// Reset the entire circuit
-	gEmmc->Control1 |= (0x1 << 24); 
+	gEmmc->Arg1 = [11:8] Voltage
+	gEmmc->CmdTm = SendIfCond;
 	
-	printf("Control1 = '%d'", gEmmc->Control1);
-	
-	// Wait for reset
-	while((gEmmc->Control1 & (0x7 << 24)) != 0);
-	
-	printf("ssed - Control1 indicates success resetting host");
-	
-	// Set clock speed
-	gEmmc->Control1 |= 0x8001;
-	
-	// Wait for clock speed to set
-	while(!(gEmmc->Control1 & 0x2));
-	
-	// Confirm status
-	if((gEmmc->Status & (0x1 << 16)))
+	if(returned response )
 	{
-		// Success!?
-		printf("ssed - Status bit 16 is set woho!");
+	    // It's a Ver2.00 or later SD memory card 
+		if(is NOT valid response)
+		{
+			// Unusable card
+			return;
+		}
+		
+		// Card agreed with our voltage etc
+		
+		do
+		{
+			gEmmc->CmdTm = Acmd41;
+		}while(card returns busy);
+		
+		if(Not card is ready)
+		{
+			// Unsable card
+			return;
+		}
+		
+		if(ccs in response == 1)
+		{
+			// SD is a High capacity or extended capacity card
+		}
+		else if(ccs in response == 0)
+		{
+			// sd is a standard capacity sd card
+		}
+	}
+	else
+	{
+		// Ver2.00 or later SD memory card (voltage mismatch)
+		// or Ver1.X SD Memory Card or not SD Memory Card at all			
+		while(card is busy)
+		{
+			gEmmc->CmdTm = Acmd41; 
+			
+			if(no response to last command )
+			{
+				// Not a SD memory card
+			}
+		}
+		
+		if(Not card is ready)
+		{
+			// Useless card
+		}	
 	}
 	
-	return 0;
+	// Send CMD11 or CMD12 based on response from Acmd41
+	if(acmd41 response S18R and S18A is == 1)
+	{
+		// Switch over to 1.8Volt for no apparent reason
+		gEmmc->CmdTm = VoltageSwitch
+	}
 	
-	// Set IRPT_EN to 0? 
-	// Set IRT_MASK
-	// Set INTERRUPT
+	// Get the CID from the card
+	gEmmc->CmdTm = AllSendCid;
 	
-	// Send CMD0
-	// Wait for flag in Interrupt
+	// Store CID
 	
-	return 0;
+	// Get the address of the card so we can address it
+	gEmmc->CmdTm = SendRelativeAddr;
 	
 	
+	
+	return 0; // Code below not finished
 	
 	// TODO: Flesh out pseudo code
 	// Send CMD0
@@ -93,11 +136,21 @@ unsigned int EmmcPowerOff(void)
 
 unsigned int EmmcPowerCycle(void)
 {
-	printf("ssed - Power cycling SD-card.\n");
-	if(EmmcPowerOff() < 0)
+	printf("ssed - Power cycling: ");
+	
+	unsigned int res = 0;
+	if((res = EmmcPowerOff()) < 0)
+	{
+		printf("Failed!\n");
 		return -1;
-		
+	}	
+	
 	wait(50);
+	
+	if((res = EmmcPowerOn()) < 0)
+		printf("Failed!\n");
+	else
+		printf("Success!\n");
 	
 	return EmmcPowerOn();
 }
