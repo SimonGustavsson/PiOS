@@ -10,7 +10,7 @@ unsigned int EmmcInitialise(void)
 	printf("ssed - Initializing external mass media controller.\n");
 	
 	gEmmc = (Emmc*)EMMC_BASE;
-	
+
 	// Power cycle to ensure initial state
 	EmmcPowerCycle();
 
@@ -18,13 +18,11 @@ unsigned int EmmcInitialise(void)
 	gEmmc->Cmdtm.bits.CmdIndex = GoIdleState;
 
 	unsigned int checkCrc = 0xAA; // 01010101b
-	gEmmc->Arg1 = (1 << 8)
+	gEmmc->Arg1 = (1 << 8);
 	gEmmc->Cmdtm.bits.CmdRspnsType = Response48Bits;
 	gEmmc->Cmdtm.bits.CmdIndex = SendIfCond;
 
-
-
-	printf("ssed - Version: %d Vendor: %d SdVersion: %d Slot status: %d\n", 
+	printf("ssed - Version: %d Vendor: %d SdVersion: %d Slot status: %d\n",
 		gEmmc->SlotisrVer.raw, 
 		gEmmc->SlotisrVer.bits.vendor, 
 		gEmmc->SlotisrVer.bits.sdversion, 

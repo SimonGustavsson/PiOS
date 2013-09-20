@@ -307,19 +307,57 @@ typedef volatile struct { // Placed at EMMC_BASE
 	emmc_status_register Status;           // Status
 	control0_register Control0;            // Host configuration 0
 	control1_register Control1;            // Host configuration 1
-	interrupt_register Interrupt;          //    Interrupt Flags
-	irpt_mask_register IrptMask;           //    Interrupt flag enable
-	interrupt_register IrptEn;             //    Interrupt Generation Enable
-	control2_register Control2;            // Host configuration 2
+	interrupt_register Interrupt;          //   Interrupt Flags
+	irpt_mask_register IrptMask;           //   Interrupt flag enable
+	interrupt_register IrptEn;             //   Interrupt Generation Enable
+	control2_register Control2; // 60      // Host configuration 2
+	unsigned int reserved;                 // -
+	unsigned int reserved2;                // -
+	unsigned int reserved3;                // -
+	unsigned int reserved4;                // -
 	interrupt_register ForceIrpt;          // Force interrupt (faking interrupts for debugging)
+	unsigned int reserved5;                // - 
+	unsigned int reserved6;                // - 
+	unsigned int reserved7;                // -
+	unsigned int reserved8;                // -
+	unsigned int reserved9;                // -
+	unsigned int reserved10;               // -
+	unsigned int reserved11;               // -
 	unsigned int BootTimeout;              // Timeout in boot mode (number of card clock cycles after which a timeout during boot mode is flagged)
 	dbg_sel_register DbgSel;               // Debug bus configuration
-	exrdfifo_cfg_register ExrdfifoCfg;     // Extension FIFO configuration
+	unsigned int reserved12;               // -
+	unsigned int reserved13;               // - 
+	exrdfifo_cfg_register ExrdfifoCfg;     // 0x80 Extension FIFO configuration
 	exrdfifo_en_register ExrdfifoEnable;   // Extension FIFO enable
 	tune_step_register TuneStep;           // Delay per card clock turning step
 	tune_steps_std_register TuneStepsStd;  // Card clock tuning steps for SDR
 	tune_steps_ddr_register TuneStepsDdr;  // Card clock tuning steps for DDR
+	unsigned int reserved14;               // -
+	unsigned int reserved15;               // -
+	unsigned int reserved16;               // -
+	unsigned int reserved17;               // -
+	unsigned int reserved18;               // -
+	unsigned int reserved19;               // -
+	unsigned int reserved20;               // -
+	unsigned int reserved21;               // -
+	unsigned int reserved22;               // -
+	unsigned int reserved23;               // -
+	unsigned int reserved24;               // -
+	unsigned int reserved25;               // -
+	unsigned int reserved26;               // -
+	unsigned int reserved27;               // -
+	unsigned int reserved28;               // -
+	unsigned int reserved29;               // -
+	unsigned int reserved30;               // -
+	unsigned int reserved31;               // -
+	unsigned int reserved32;               // -
+	unsigned int reserved33;               // -
+	unsigned int reserved34;               // -
+	unsigned int reserved35;               // -
+	unsigned int reserved36;               // -
 	spi_int_spt_register SPIIntSpt;        // SPI Interrupt support
+	unsigned int reserved37;               // -
+	unsigned int reserved38;               // -
 	slotisr_ver_register SlotisrVer;       // Slot interrupt status and version
 } Emmc;
 
