@@ -105,7 +105,7 @@ typedef volatile union {
 typedef volatile union {
 	unsigned int raw;
 	struct {
-		unsigned int clk_intlen : 1;  // Clock enablefor internal emmc clocks for power saving (1 = enabled)
+		unsigned int clk_intlen : 1;  // Clock enable for internal emmc clocks for power saving (1 = enabled)
 		unsigned int clk_stable : 1;  // SD clock stable (0 = no)
 		unsigned int clk_en : 1;      // SD clock enable (1 = enabled)
 		unsigned int reserved : 2;    // -
@@ -311,27 +311,30 @@ typedef volatile struct { // Placed at EMMC_BASE
 	irpt_mask_register IrptMask;           //   Interrupt flag enable
 	interrupt_register IrptEn;             //   Interrupt Generation Enable
 	control2_register Control2; // 60      // Host configuration 2
+	unsigned int Capabilities0;            // - Capabilities 0 (Not listed in BCM data sheet)
+	unsigned int Capabilities1;            // - Capabilities 1 (Not listed in BCM data sheet)
 	unsigned int reserved;                 // -
-	unsigned int reserved2;                // -
-	unsigned int reserved3;                // -
-	unsigned int reserved4;                // -
+	unsigned int reserved1;                // -
 	interrupt_register ForceIrpt;          // Force interrupt (faking interrupts for debugging)
-	unsigned int reserved5;                // - 
-	unsigned int reserved6;                // - 
+	unsigned int reserved2;                // - 
+	unsigned int reserved3;                // - 
+	unsigned int reserved4;                // -
+	unsigned int reserved5;                // -
+	unsigned int reserved6;                // -
 	unsigned int reserved7;                // -
 	unsigned int reserved8;                // -
-	unsigned int reserved9;                // -
-	unsigned int reserved10;               // -
-	unsigned int reserved11;               // -
 	unsigned int BootTimeout;              // Timeout in boot mode (number of card clock cycles after which a timeout during boot mode is flagged)
 	dbg_sel_register DbgSel;               // Debug bus configuration
-	unsigned int reserved12;               // -
-	unsigned int reserved13;               // - 
+	unsigned int reserved9;                // -
+	unsigned int reserved10;               // - 
 	exrdfifo_cfg_register ExrdfifoCfg;     // 0x80 Extension FIFO configuration
 	exrdfifo_en_register ExrdfifoEnable;   // Extension FIFO enable
 	tune_step_register TuneStep;           // Delay per card clock turning step
 	tune_steps_std_register TuneStepsStd;  // Card clock tuning steps for SDR
 	tune_steps_ddr_register TuneStepsDdr;  // Card clock tuning steps for DDR
+	unsigned int reserved11;               // -
+	unsigned int reserved12;               // -
+	unsigned int reserved13;               // -
 	unsigned int reserved14;               // -
 	unsigned int reserved15;               // -
 	unsigned int reserved16;               // -
@@ -352,12 +355,9 @@ typedef volatile struct { // Placed at EMMC_BASE
 	unsigned int reserved31;               // -
 	unsigned int reserved32;               // -
 	unsigned int reserved33;               // -
+	spi_int_spt_register SPIIntSpt;        // SPI Interrupt support
 	unsigned int reserved34;               // -
 	unsigned int reserved35;               // -
-	unsigned int reserved36;               // -
-	spi_int_spt_register SPIIntSpt;        // SPI Interrupt support
-	unsigned int reserved37;               // -
-	unsigned int reserved38;               // -
 	slotisr_ver_register SlotisrVer;       // Slot interrupt status and version
 } Emmc;
 

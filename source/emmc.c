@@ -14,29 +14,36 @@ unsigned int EmmcInitialise(void)
 	// Power cycle to ensure initial state
 	EmmcPowerCycle();
 
-	gEmmc->Cmdtm.bits.CmdRspnsType = ResponseNone;
-	gEmmc->Cmdtm.bits.CmdIndex = GoIdleState;
-
-	unsigned int checkCrc = 0xAA; // 01010101b
-	gEmmc->Arg1 = (1 << 8);
-	gEmmc->Cmdtm.bits.CmdRspnsType = Response48Bits;
-	gEmmc->Cmdtm.bits.CmdIndex = SendIfCond;
-
 	printf("ssed - Version: %d Vendor: %d SdVersion: %d Slot status: %d\n",
 		gEmmc->SlotisrVer.raw, 
 		gEmmc->SlotisrVer.bits.vendor, 
 		gEmmc->SlotisrVer.bits.sdversion, 
 		gEmmc->SlotisrVer.bits.slot_status);
-	//
-	//// Print version for debugging
-	//unsigned int ver = gEmmc->SlotisrVer;
-	//unsigned int vendor = ver >> 24;
-	//unsigned int sdversion = (ver >> 16) & 0xff;
-	//unsigned int slot_status = ver & 0xff;
-	//printf("ssed - Version(%d): vendor %d sdversion %d slot status %d.\n", ver, vendor, sdversion, slot_status);
-	//
-	// gEmmc->Cmdtm = GoIdleState;
 	
+	printf("ssed - Resetting circuit... ");
+
+	// Reset the entire host circuit
+	gEmmc->Control1.bits.srst_hc = 1;
+
+	// Disable internal clock
+	gEmmc->Control1.bits.clk_intlen = 0;
+
+	// Disable SD clock
+	gEmmc->Control1.bits.clk_en = 0;
+
+	// Wait for controller to reset 
+	//WARNING: If reset fails we will hang forever, but it's K (for now) because we're showing a message
+	while(gEmmc->Control1.bits.clk_en != 0 || gEmmc->Control1.bits.srst_data != 0 || gEmmc->Control1.bits.srst_hc != 0) continue;
+	
+	printf("Done!\n");
+
+	printf("ssed - Control0: %d.\n", gEmmc->Control0);
+	printf("ssed - Control1: %d.\n", gEmmc->Control1);
+	printf("ssed - Control2: %d.\n", gEmmc->Control2);
+	
+	printf("ssed - Capabilities 0: %d.\n", gEmmc->reserved);
+	printf("ssed - Capabilities 1: %d.\n", gEmmc->reserved2);
+
 	wait(10);
 	
 	// gEmmc->Arg1 = [11:8] Voltage
