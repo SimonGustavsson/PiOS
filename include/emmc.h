@@ -181,36 +181,6 @@ typedef volatile union {
 	} bits;
 } irpt_mask_register;
 
-// irpt_en_register - Used to enable interrupts in interrupt_register
-typedef volatile union {
-	volatile unsigned int raw;
-	struct {
-		unsigned int cmd_done : 1;  // Create interrupt if command has finished
-		unsigned int data_done : 1; // Create interrupt if data transfer has finished
-		unsigned int block_gap : 1; // Create interrupt if data transfer stopped at block gap
-		unsigned int reserved : 1;  // -
-		unsigned int write_rdy : 1; // Create interrupt if data can be written to DATA register
-		unsigned int read_rdy : 1;  // Create interrupt if DATA register contains data to be read
-		unsigned int reserved2 : 2; // -
-		unsigned int card : 1;      // Create interrupt if card made interrupt request
-		unsigned int reserved3 : 3; // -
-		unsigned int retune : 1;    // Create interrupt if clock retune request was made
-		unsigned int bootack : 1;   // Create interrupt if boot acknowledge has been received
-		unsigned int endboot : 1;   // Create interrupt if boot operation has terminated
-		unsigned int reserved4 : 1; // -
-		unsigned int cto_err : 1;   // Create interrupt if timeout on command line
-		unsigned int ccrc_err : 1;  // Create interrupt if command crc error
-		unsigned int cend_err : 1;  // Create interrupt if end bit on command line not 1
-		unsigned int cbad_err : 1;  // Create interrupt if incorrect command index in response
-		unsigned int dto_err : 1;   // Create interrupt if timeout on data line
-		unsigned int dcrc_err : 1;  // Create interrupt if data CRC error
-		unsigned int dend_err: 1;   // Create interrupt if end bit on data line not 1
-		unsigned int reserved5 : 1; // -
-		unsigned int acmd_err : 1;  // Create interrupt if auto command error
-		unsigned int reserved6 : 7; // -
-	} bits;
-} irpt_en_register;
-
 typedef enum {
 	SDR12 = 0,
 	SDR25 = 1,
@@ -239,36 +209,83 @@ typedef volatile union {
 	} bits;
 } control2_register;
 
-// force_irpt_register - Used to force fake interrupts for debugging
-typedef volatile union
-{
+// exrdfifo_cfg_register
+typedef volatile union {
 	unsigned int raw;
 	struct {
-		unsigned int cmd_done : 1;  // Command has finished
-		unsigned int data_done : 1; // Data transfer has finished
-		unsigned int block_gap : 1; // Data transfer stopped at block gap
-		unsigned int reserved : 1;  // -
-		unsigned int write_rdy : 1; // Data can be written to DATA register
-		unsigned int read_rdy : 1;  // Data register contains data to be read
-		unsigned int reserved2 : 2; // -
-		unsigned int card : 1;      // Card made interrupt request
-		unsigned int reserved3 : 3; // -
-		unsigned int retune : 1;    // Clock retune request was made
-		unsigned int bootack : 1;   // Boot acknowledge has been received
-		unsigned int endboot : 1;   // Boot operation has terminated
-		unsigned int reserved4 : 1; // -
-		unsigned int cto_err : 1;   // Timeout on command line
-		unsigned int ccrc_err : 1;  // Command crc error
-		unsigned int cend_err : 1;  // End bit on command line not 1
-		unsigned int cbad_err : 1;  // Incorrect command index in response
-		unsigned int dto_err : 1;   // Timeout on data line
-		unsigned int dcrc_err : 1;  // Data CRC error
-		unsigned int dend_err: 1;   // End bit on data line not 1
-		unsigned int reserved5 : 1; // -
-		unsigned int acmd_err : 1;  // Auto command error
-		unsigned int reserved6 : 7; // -
+		unsigned int rd_thrsh : 3;  // The read threshold in 32 bits words
+		unsigned int reserved : 29; // -
 	} bits;
-} force_irpt_register;
+} exrdfifo_cfg_register;
+
+// exrdfifo_en_register
+typedef volatile union { 
+	unsigned int raw;
+	struct {
+		unsigned int enable : 1;    // Enable the extension FIFO (1 = enabled)
+		unsigned int reserved : 31; // -
+	} bits;
+} exrdfifo_en_register;
+
+
+typedef volatile union {
+	tune_step delay : 3;     // Sampling clock delay per step
+	unsigned int reserved : 29; // -
+} tune_step_register;
+
+// tune_step
+typedef enum {
+	ps200 = 0,
+	ps400 = 1,
+	ps400_2 = 2,
+	ps600 = 3,
+	ps700 = 4,
+	ps900 = 5,
+	ps900_2 = 6,
+	ps1100 = 7
+} tune_step;
+
+typedef volatile union {
+	unsigned int raw;
+	struct {
+		unsigned int steps : 6;     // Number of steps (0 to 40)
+		unsigned int reserved : 26; // -
+	} bits;
+} tune_steps_std_register;
+
+typedef volatile union {
+	unsigned int raw;
+	struct {
+		unsigned int steps : 6;     // Number of steps (0 to 40)
+		unsigned int reserved : 26; // -
+	} bits;
+} tune_steps_ddr_register;
+
+typedef volatile union {
+	unsigned int raw;
+	struct {
+		unsigned int select : 8;    // Interrupt independent of card select line (1 = yes)
+		unsigned int reserved : 24; // -
+	} bits;
+} spi_int_spt_register;
+
+typedef volatile union {
+	unsigned int raw;
+	struct {
+		unsigned int slot_status : 8;     // Logical OR of interrupt and wakeup signal for each slot
+		unsigned int reserved : 8;        // -
+		unsigned int sdversion : 8;       // Host controller specification version
+		unsigned int vendor : 8;          // Vendor version number
+	} bits;
+} slotisr_ver_register;
+
+typedef volatile union {
+	unsigned int raw;
+	struct {
+		unsigned int select : 1;    // Submodules accessed by debug bus: 0 = receiver and fifo_ctrl, 1 = others
+		unsigned int reserved : 31; // -
+	} bits;
+} dbg_sel_register;
 
 // Emmc
 typedef volatile struct { // Placed at EMMC_BASE
@@ -286,18 +303,18 @@ typedef volatile struct { // Placed at EMMC_BASE
 	control1_register Control1;            // Host configuration 1
 	interrupt_register Interrupt;          //    Interrupt Flags
 	irpt_mask_register IrptMask;           //    Interrupt flag enable
-	irpt_en_register IrptEn;               //    Interrupt Generation Enable
+	interrupt_register IrptEn;             //    Interrupt Generation Enable
 	control2_register Control2;            // Host configuration 2
-	force_irpt_register ForceIrpt;         // Force interrupt (faking interrupts for debugging)
-	unsigned int BootTimeout;              // Timeout in boot mode
-	unsigned int DbgSel;                   // Debug bus configuration
-	unsigned int ExrdfifoCfg;              // Extension FIFO configuration
-	unsigned int ExrdfifoEnable;           // Extension FIFO enable
-	unsigned int TuneStep;                 // Delay per card clock turning step
-	unsigned int TuneStepsStd;             // Card clock tuning steps for SDR
-	unsigned int TuneStepsDdr;             // Card clock tuning steps for DDR
-	unsigned int SpiIntSpt;                // SPI Interrupt support
-	unsigned int SlotisrVer;               // Slot interrupt status and version
+	interrupt_register ForceIrpt;          // Force interrupt (faking interrupts for debugging)
+	unsigned int BootTimeout;              // Timeout in boot mode (number of card clock cycles after which a timeout during boot mode is flagged)
+	dbg_sel_register DbgSel;               // Debug bus configuration
+	exrdfifo_cfg_register ExrdfifoCfg;     // Extension FIFO configuration
+	exrdfifo_en_register ExrdfifoEnable;   // Extension FIFO enable
+	tune_step_register TuneStep;           // Delay per card clock turning step
+	tune_steps_std_register TuneStepsStd;  // Card clock tuning steps for SDR
+	tune_steps_ddr_register TuneStepsDdr;  // Card clock tuning steps for DDR
+	spi_int_spt_register SPIIntSpt;        // SPI Interrupt support
+	slotisr_ver_register SlotisrVer;       // Slot interrupt status and version
 } Emmc;
 
 // EmmcCommand
