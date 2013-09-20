@@ -125,35 +125,71 @@ unsigned int Command_DbgSd_Execute(char** args, unsigned int argCount)
 {
 	printf("gEmmc addr: %d\n", (unsigned int)gEmmc);
 	printf("Arg2 = %d\n", gEmmc->Arg2);
-	printf("BlockCountSize = %d\n", gEmmc->BlockCountSize);
+	printf("BlockCountSize = %d\n", gEmmc->BlockCountSize.raw);
 	printf("Arg1 = %d\n", gEmmc->Arg1);
-	printf("Cmdtm = %d\n", gEmmc->Cmdtm);
+	printf("Cmdtm = %d\n", gEmmc->Cmdtm.raw);
 	printf("Resp0 = %d\n", gEmmc->Resp0);
 	
 	printf("Resp1 = %d\n", gEmmc->Resp1);
 	printf("Resp3 = %d\n", gEmmc->Resp3);
 	printf("Data = %d\n", gEmmc->Data);
-	printf("Status = %d\n", gEmmc->Status);
-	printf("Control0 = %d\n", gEmmc->Control0);
+	printf("Status = %d\n", gEmmc->Status.raw);
+	printf("Control0 = %d\n", gEmmc->Control0.raw);
 	
-	printf("Control1 = %d\n", gEmmc->Control1);
-	printf("Interrupt = %d\n", gEmmc->Interrupt);
-	printf("IrptMask = %d\n", gEmmc->IrptMask);
-	printf("Control2 = %d\n", gEmmc->Control2);
-	printf("ForceIrpt = %d\n", gEmmc->ForceIrpt);
+	printf("Control1 = %d\n", gEmmc->Control1.raw);
+	printf("Interrupt = %d\n", gEmmc->Interrupt.raw);
+	printf("IrptMask = %d\n", gEmmc->IrptMask.raw);
+	printf("Control2 = %d\n", gEmmc->Control2.raw);
+	printf("ForceIrpt = %d\n", gEmmc->ForceIrpt.raw);
 	
 	printf("BootTimeout = %d\n", gEmmc->BootTimeout);
-	printf("DbgSel = %d\n", gEmmc->DbgSel);
-	printf("ExrdfifoCfg = %d\n", gEmmc->ExrdfifoCfg);
-	printf("ExrdfifoEnable = %d\n", gEmmc->ExrdfifoEnable);
+	printf("DbgSel = %d\n", gEmmc->DbgSel.raw);
+	printf("ExrdfifoCfg = %d\n", gEmmc->ExrdfifoCfg.raw);
+	printf("ExrdfifoEnable = %d\n", gEmmc->ExrdfifoEnable.raw);
 	
 	printf("TuneStep = %d\n", gEmmc->TuneStep);
-	printf("TuneStepsStd = %d\n", gEmmc->TuneStepsStd);
-	printf("TuneStepsDdr = %d\n", gEmmc->TuneStepsDdr);
-	printf("SpiIntSpt = %d\n", gEmmc->SpiIntSpt);
-	printf("SlotisrVer = %d\n", gEmmc->SlotisrVer);
+	printf("TuneStepsStd = %d\n", gEmmc->TuneStepsStd.raw);
+	printf("TuneStepsDdr = %d\n", gEmmc->TuneStepsDdr.raw);
+	printf("SpiIntSpt = %d\n", gEmmc->SPIIntSpt.raw);
+	printf("SlotisrVer = %d\n", gEmmc->SlotisrVer.raw);
 	
 	return 0;
+}
+
+unsigned int Command_SdStatus_Execute(char** args, unsigned int argCount)
+{
+	printf("Can write: %s", gEmmc->Status.bits.WriteTransfer == 1 ? "True" : "False");
+	printf("Can read: %s", gEmmc->Status.bits.ReadTransfer == 1 ? "True" : "False");
+
+	return 0;
+}
+
+unsigned int Command_SdControl0_Execute(char** args, unsigned int argCount)
+{
+	printf("EMMC - Control0:\n");
+	printf("Use 4 data lines: %s\n", gEmmc->Control0.bits.hctl_dwidth == 1 ? "Yes" : "No");
+	printf("Select high-speed mode: %s\n", gEmmc->Control0.bits.hctl_hs_en == 1 ? "Yes" : "No");
+	printf("Use 8 data lines: %s\n", gEmmc->Control0.bits.hctl_8bit == 1 ? "Yes" : "No");
+	printf("Stop the current transaction at BLOCK_GAP: %s\n", gEmmc->Control0.bits.gap_stop == 1 ? "Yes" : "No");
+	printf("Restart when stopped at GAP_STOP: %s\n", gEmmc->Control0.bits.gap_restart == 1 ? "Yes" : "No");
+	printf("Use DAT2 read-wait protocol: %s\n", gEmmc->Control0.bits.readwait_en == 1 ? "Yes" : "No");
+	printf("Enable SDIO interrupt at BLOCK_GAP: %s\n", gEmmc->Control0.bits.gap_ien == 1 ? "Yes" : "No");
+	printf("SPI Mode enabled: %s\n", gEmmc->Control0.bits.spi_mode == 1 ? "Yes" : "No");
+	printf("Boot mode access: %s\n", gEmmc->Control0.bits.boot_en == 1 ? "Start boot mode access" : "Stop boot mode access");
+	printf("Enable alternative boot mode access: %s\n", gEmmc->Control0.bits.alt_boot_en == 1 ? "Yes" : "No");
+}
+
+unsigned int Command_SendCmd0_Execute(char** args, unsigned int argCount)
+{
+	unsigned int res = -1;
+	if((res = EmmcSendCommand(GoIdleState, 0, 0, ResponseNone)) > 0)
+	{
+		printf("Success sending Cmd0, response was: %d\n", res);
+	}
+
+	printf("Command sent\n");
+
+	return res;
 }
 
 unsigned int Command_SetPower_Execute(char** args, unsigned int argCount)
@@ -220,8 +256,12 @@ void TerminalInitCommands(void)
 	TerminalRegisterCommand("prompt", "Changes the system prompt text.", &Command_Prompt_Execute);
 	TerminalRegisterCommand("setpower", "Changes the power state(1 or 0) of the given device(0-8).", &Command_SetPower_Execute);
 	TerminalRegisterCommand("getpower", "Retrieves the power state of the given device (0-8).", &Command_GetPower_Execute);
-	
+
+	// Sd cards for debugging
 	TerminalRegisterCommand("dbgsd", "Prints the mmc struct", &Command_DbgSd_Execute);
+	TerminalRegisterCommand("sdstatus", "Prints the status of the external mass media controller", &Command_SdStatus_Execute);
+	TerminalRegisterCommand("sdcontrol0", "Prints the current control0 configuration", &Command_SdControl0_Execute);
+	TerminalRegisterCommand("sdsendcmd0", "Sends CMD0 to SD card", &Command_SendCmd0_Execute);
 }
 
 // 0: OK, -1: Unknown command

@@ -65,19 +65,19 @@ typedef enum {
 typedef volatile union {
 	unsigned int raw;
 	struct {
-		unsigned int reserved : 1;
-		unsigned int TmBlkCntEn : 1;   // Enable block counter for multiple block transfers (1 = eanble)
-		tm_auto_cmd_en TmAutoCmdEn : 2;         // Select command to send after completion of data transfer
-		unsigned int TmDatDir : 1;     // Direction of data transfer (0 = host -> Card, 1 = card -> host)
-		unsigned int TmMultiBlock : 1; // Type of transfer (0 = single, 1 = multi)
-		unsigned int reserved2 : 10;   // -
-		cmd_rspns_type CmdRspnsType : 2;        // Type of the response (see cmd_rspns_type)
-		unsigned int CmdCrcChkEn : 1;  // Check the responses CRC (1 = enable)
-		unsigned int CmdIxchkEn : 1;   // Check index has same index as command 
-		unsigned int CmdIsData : 1;    // 0 = no data transfer command
-		cmd_type CmdType : 2;                   // The type of the command to be issued
-		unsigned int CmdIndex : 6;     // Index of command to be issued
-		unsigned int reserved3 : 2;    // -
+		unsigned int reserved : 1;      // -
+		unsigned int TmBlkCntEn : 1;    // Enable block counter for multiple block transfers (1 = eanble)
+		tm_auto_cmd_en TmAutoCmdEn : 2; // Select command to send after completion of data transfer
+		unsigned int TmDatDir : 1;      // Direction of data transfer (0 = host -> Card, 1 = card -> host)
+		unsigned int TmMultiBlock : 1;  // Type of transfer (0 = single, 1 = multi)
+		unsigned int reserved2 : 10;    // -
+		cmd_rspns_type CmdRspnsType : 2;// Type of the response (see cmd_rspns_type)
+		unsigned int CmdCrcChkEn : 1;   // Check the responses CRC (1 = enable)
+		unsigned int CmdIxchkEn : 1;    // Check index has same index as command 
+		unsigned int CmdIsData : 1;     // 0 = no data transfer command
+		cmd_type CmdType : 2;           // The type of the command to be issued
+		unsigned int CmdIndex : 6;      // Index of command to be issued
+		unsigned int reserved3 : 2;     // -
 	} bits;
 } cmdtm_register;
 
@@ -228,12 +228,6 @@ typedef volatile union {
 	} bits;
 } exrdfifo_en_register;
 
-// tune_step_register
-typedef volatile union {
-	tune_step delay : 3;     // Sampling clock delay per step
-	unsigned int reserved : 29; // -
-} tune_step_register;
-
 // tune_step
 typedef enum {
 	ps200 = 0,
@@ -245,6 +239,12 @@ typedef enum {
 	ps900_2 = 6,
 	ps1100 = 7
 } tune_step;
+
+// tune_step_register
+typedef volatile union {
+	tune_step delay : 3;     // Sampling clock delay per step
+	unsigned int reserved : 29; // -
+} tune_step_register;
 
 // tune_steps_std_register
 typedef volatile union {
@@ -475,6 +475,6 @@ unsigned int EmmcPowerOn(void);
 unsigned int EmmcPowerOff(void);
 unsigned int EmmcPowerCycle(void);
 unsigned int EmmcSetClockRate(unsigned int clock, unsigned int targetRate);
-unsigned int EmmcSendCommand(EmmcCommand cmd, unsigned int argument, unsigned int timeout);
+unsigned int EmmcSendCommand(EmmcCommand cmd, unsigned int argument, unsigned int timeout, cmd_rspns_type response);
 unsigned int EmmcRead(unsigned char* buf, unsigned int bufLen, unsigned int blockToReadFrom);
 unsigned int EmmcWrite(unsigned char* buf, unsigned int bufLEn, unsigned int blockToWriteTo);

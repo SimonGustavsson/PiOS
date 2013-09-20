@@ -13,14 +13,30 @@ unsigned int EmmcInitialise(void)
 	
 	// Power cycle to ensure initial state
 	EmmcPowerCycle();
-	
-	// Print version for debugging
-	unsigned int ver = gEmmc->SlotisrVer;
-	unsigned int vendor = ver >> 24;
-	unsigned int sdversion = (ver >> 16) & 0xff;
-	unsigned int slot_status = ver & 0xff;
-	printf("ssed - Version(%d): vendor %d sdversion %d slot status %d.\n", ver, vendor, sdversion, slot_status);
-	
+
+	gEmmc->Cmdtm.bits.CmdRspnsType = ResponseNone;
+	gEmmc->Cmdtm.bits.CmdIndex = GoIdleState;
+
+	unsigned int checkCrc = 0xAA; // 01010101b
+	gEmmc->Arg1 = (1 << 8)
+	gEmmc->Cmdtm.bits.CmdRspnsType = Response48Bits;
+	gEmmc->Cmdtm.bits.CmdIndex = SendIfCond;
+
+
+
+	printf("ssed - Version: %d Vendor: %d SdVersion: %d Slot status: %d\n", 
+		gEmmc->SlotisrVer.raw, 
+		gEmmc->SlotisrVer.bits.vendor, 
+		gEmmc->SlotisrVer.bits.sdversion, 
+		gEmmc->SlotisrVer.bits.slot_status);
+	//
+	//// Print version for debugging
+	//unsigned int ver = gEmmc->SlotisrVer;
+	//unsigned int vendor = ver >> 24;
+	//unsigned int sdversion = (ver >> 16) & 0xff;
+	//unsigned int slot_status = ver & 0xff;
+	//printf("ssed - Version(%d): vendor %d sdversion %d slot status %d.\n", ver, vendor, sdversion, slot_status);
+	//
 	// gEmmc->Cmdtm = GoIdleState;
 	
 	wait(10);
@@ -124,6 +140,19 @@ unsigned int EmmcInitialise(void)
 	return 0;
 }
 
+unsigned int EmmcSendCommand(EmmcCommand cmd, unsigned int argument, unsigned int timeout, cmd_rspns_type response)
+{
+	gEmmc->Arg1 = argument;
+	gEmmc->Cmdtm.bits.CmdRspnsType = response;	
+	gEmmc->Cmdtm.bits.CmdIndex = (int)cmd;
+
+	if(response > 0)
+	{
+		// Do stuff...
+		return gEmmc->Resp0;
+	}
+	return 0;	
+}
 unsigned int EmmcPowerOn(void)
 {
 	return Mailbox_SetDevicePowerState(0x0, 1);

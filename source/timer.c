@@ -10,8 +10,8 @@ extern unsigned int GET32(unsigned int);
 unsigned int timer_init(void)
 {
 	// Setup period irq interval before enabling interrupts
-	timer_sp_clearmatch();
-	timer_sp_setinterval(TIMER_INTERRUPT_INTERVAL);
+	//timer_sp_clearmatch();
+	//timer_sp_setinterval(TIMER_INTERRUPT_INTERVAL);
 	
 	return 0;
 }

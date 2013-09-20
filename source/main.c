@@ -8,6 +8,7 @@
 #include "usbd/usbd.h"
 
 volatile unsigned int irq_counter;
+volatile extern Emmc* gEmmc;
 
 void OnCriticalError(void)
 {
@@ -36,10 +37,11 @@ void c_irq_handler (void)
 	
 	// TODO: Determine source of IRQ - for now this will always be the timer (?)
 	printf_i("IRQ no. %d\n", irq_counter);
+
 	
 	// Reset the system periodic timer
-	timer_sp_clearmatch();
-	timer_sp_setinterval(TIMER_INTERRUPT_INTERVAL);
+	//timer_sp_clearmatch();
+	//timer_sp_setinterval(TIMER_INTERRUPT_INTERVAL);
 }
 
 unsigned int system_initialize(void)
