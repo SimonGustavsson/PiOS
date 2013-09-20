@@ -181,6 +181,7 @@ typedef volatile union {
 	} bits;
 } irpt_mask_register;
 
+// uhsmode
 typedef enum {
 	SDR12 = 0,
 	SDR25 = 1,
@@ -227,7 +228,7 @@ typedef volatile union {
 	} bits;
 } exrdfifo_en_register;
 
-
+// tune_step_register
 typedef volatile union {
 	tune_step delay : 3;     // Sampling clock delay per step
 	unsigned int reserved : 29; // -
@@ -245,6 +246,7 @@ typedef enum {
 	ps1100 = 7
 } tune_step;
 
+// tune_steps_std_register
 typedef volatile union {
 	unsigned int raw;
 	struct {
@@ -253,6 +255,7 @@ typedef volatile union {
 	} bits;
 } tune_steps_std_register;
 
+// tune_steps_ddr_register
 typedef volatile union {
 	unsigned int raw;
 	struct {
@@ -261,6 +264,7 @@ typedef volatile union {
 	} bits;
 } tune_steps_ddr_register;
 
+// spi_int_spt_register
 typedef volatile union {
 	unsigned int raw;
 	struct {
@@ -269,6 +273,7 @@ typedef volatile union {
 	} bits;
 } spi_int_spt_register;
 
+// slotisr_ver_register
 typedef volatile union {
 	unsigned int raw;
 	struct {
@@ -279,6 +284,7 @@ typedef volatile union {
 	} bits;
 } slotisr_ver_register;
 
+// dbg_sel_register
 typedef volatile union {
 	unsigned int raw;
 	struct {
