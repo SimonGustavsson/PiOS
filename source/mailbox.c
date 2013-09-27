@@ -40,6 +40,42 @@ void Mailbox_Write(unsigned int channel, unsigned int data)
 	*gMailbox0Write = (data | channel);
 }
 
+unsigned int Mailbox_SD_GetBaseFrequency(void)
+{
+	volatile unsigned int mailbuffer[256] __attribute__ ((aligned (16)));
+	
+	unsigned int bufSize = 1;
+	mailbuffer[bufSize++] = 0;          // 1. This is a request
+	mailbuffer[bufSize++] = 0x00030002; // 2. "Get clock rate" tag
+	mailbuffer[bufSize++] = 8;          // 3. Value buffer size
+	mailbuffer[bufSize++] = 4;          // 4. Value length
+	mailbuffer[bufSize++] = 1;          // 5. Clock id + response - Clock id
+	mailbuffer[bufSize++] = 0;          // 6.  - Response rate (in Hz)
+	mailbuffer[bufSize++] = 0;          // 7. Closing tag
+	mailbuffer[0] = bufSize * 4;        // 0. Size of the entire buffer (in bytes)
+
+	Mailbox_Write(8, (unsigned int)mailbuffer);
+
+	Mailbox_Read(8);
+
+	// Check valid response
+	if(mailbuffer[1] != RESPONSE_SUCCESS)
+	{
+		printf("Failed to retrieve SD base frequency - Invalid mailbox response.\n");
+		return -1;
+	}
+
+	// Check returned clock id
+	if(mailbuffer[5] != 0x1)
+	{
+		printf("Failed to retrieve SD base frequency - Invalid clock id.\n");
+		return -1;
+	}
+
+	// Return the rate
+	return mailbuffer[6];
+}
+
 unsigned int Mailbox_GetPowerState(unsigned int deviceId)
 {
 	volatile unsigned int mailbuffer[256] __attribute__ ((aligned (16)));

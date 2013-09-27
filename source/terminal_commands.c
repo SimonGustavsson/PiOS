@@ -177,19 +177,8 @@ unsigned int Command_SdControl0_Execute(char** args, unsigned int argCount)
 	printf("SPI Mode enabled: %s\n", gEmmc->Control0.bits.spi_mode == 1 ? "Yes" : "No");
 	printf("Boot mode access: %s\n", gEmmc->Control0.bits.boot_en == 1 ? "Start boot mode access" : "Stop boot mode access");
 	printf("Enable alternative boot mode access: %s\n", gEmmc->Control0.bits.alt_boot_en == 1 ? "Yes" : "No");
-}
 
-unsigned int Command_SendCmd0_Execute(char** args, unsigned int argCount)
-{
-	unsigned int res = -1;
-	if((res = EmmcSendCommand(GoIdleState, 0, 0, ResponseNone)) > 0)
-	{
-		printf("Success sending Cmd0, response was: %d\n", res);
-	}
-
-	printf("Command sent\n");
-
-	return res;
+	return 0;
 }
 
 unsigned int Command_SetPower_Execute(char** args, unsigned int argCount)
@@ -261,7 +250,6 @@ void TerminalInitCommands(void)
 	TerminalRegisterCommand("dbgsd", "Prints the mmc struct", &Command_DbgSd_Execute);
 	TerminalRegisterCommand("sdstatus", "Prints the status of the external mass media controller", &Command_SdStatus_Execute);
 	TerminalRegisterCommand("sdcontrol0", "Prints the current control0 configuration", &Command_SdControl0_Execute);
-	TerminalRegisterCommand("sdsendcmd0", "Sends CMD0 to SD card", &Command_SendCmd0_Execute);
 }
 
 // 0: OK, -1: Unknown command

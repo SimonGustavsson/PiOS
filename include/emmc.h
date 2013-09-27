@@ -1,5 +1,37 @@
 #define EMMC_BASE 0x20300000
 
+#define SD_CMD_RSPNS_TYPE_NONE	0			// For no response
+#define SD_CMD_RSPNS_TYPE_136	(1 << 16)		// For response R2 (with CRC), R3,4 (no CRC)
+#define SD_CMD_RSPNS_TYPE_48	(2 << 16)		// For responses R1, R5, R6, R7 (with CRC)
+#define SD_CMD_RSPNS_TYPE_48B	(3 << 16)		// For responses R1b, R5b (with CRC)
+#define SD_CMD_RSPNS_TYPE_MASK  (3 << 16)
+
+#define SD_CMD_CRCCHK_EN	(1 << 19)
+#define SD_RESP_NONE        SD_CMD_RSPNS_TYPE_NONE
+#define SD_RESP_R1          (SD_CMD_RSPNS_TYPE_48 | SD_CMD_CRCCHK_EN)
+#define SD_RESP_R1b         (SD_CMD_RSPNS_TYPE_48B | SD_CMD_CRCCHK_EN)
+#define SD_RESP_R2          (SD_CMD_RSPNS_TYPE_136 | SD_CMD_CRCCHK_EN)
+#define SD_RESP_R3          SD_CMD_RSPNS_TYPE_48
+#define SD_RESP_R4          SD_CMD_RSPNS_TYPE_136
+#define SD_RESP_R5          (SD_CMD_RSPNS_TYPE_48 | SD_CMD_CRCCHK_EN)
+#define SD_RESP_R5b         (SD_CMD_RSPNS_TYPE_48B | SD_CMD_CRCCHK_EN)
+#define SD_RESP_R6          (SD_CMD_RSPNS_TYPE_48 | SD_CMD_CRCCHK_EN)
+#define SD_RESP_R7          (SD_CMD_RSPNS_TYPE_48 | SD_CMD_CRCCHK_EN)
+
+#define IS_APP_CMD              0x80000000
+
+// Defines for setting commands
+#define SD_CMD_DAT_DIR_HC	0
+#define SD_CMD_BLKCNT_EN	(1 << 1)
+#define SD_CMD_DAT_DIR_CH	(1 << 4)
+#define SD_CMD_MULTI_BLOCK	(1 << 5)
+#define SD_CMD_ISDATA       (1 << 21)
+#define SD_CMD_TYPE_ABORT   (3 << 22)
+#define SD_COMMAND_INDEX(x) (x << 24)
+#define SD_CMD_RESERVED(x) 0xFFFFFFFF
+#define SD_DATA_READ (SD_CMD_ISDATA | SD_CMD_DAT_DIR_CH)
+#define SD_DATA_WRITE (SD_CMD_ISDATA | SD_CMD_DAT_DIR_HC)
+
 // SdClockSpeed - SD Clock Frequencies (in Hz)
 typedef enum {
 	SdClockId       = 400000,
@@ -513,6 +545,6 @@ unsigned int EmmcPowerOn(void);
 unsigned int EmmcPowerOff(void);
 unsigned int EmmcPowerCycle(void);
 unsigned int EmmcSetClockRate(unsigned int clock, unsigned int targetRate);
-unsigned int EmmcSendCommand(EmmcCommand cmd, unsigned int argument, unsigned int timeout, cmd_rspns_type response);
+unsigned int EmmcSendCommand(unsigned int cmd, unsigned int argument);
 unsigned int EmmcRead(unsigned char* buf, unsigned int bufLen, unsigned int blockToReadFrom);
 unsigned int EmmcWrite(unsigned char* buf, unsigned int bufLEn, unsigned int blockToWriteTo);
