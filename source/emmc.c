@@ -7,21 +7,20 @@ volatile Emmc* gEmmc;
 unsigned int gEmmcUseDMA = 0;
 
 // Predefine the commands for ease of use
-static int ACMD[] = {
-	SD_CMD_RESERVED(0),
+static int ACMD[] = {	SD_CMD_RESERVED(0),
 	SD_CMD_RESERVED(1),
 	SD_CMD_RESERVED(2),
 	SD_CMD_RESERVED(3),
 	SD_CMD_RESERVED(4),
 	SD_CMD_RESERVED(5),
-	SD_COMMAND_INDEX(6) | SD_RESP_R1,
+	SD_COMMAND_INDEX(6) | SD_RESP_R1 | IS_APP_CMD,
 	SD_CMD_RESERVED(7),
 	SD_CMD_RESERVED(8),
 	SD_CMD_RESERVED(9),
 	SD_CMD_RESERVED(10),
 	SD_CMD_RESERVED(11),
 	SD_CMD_RESERVED(12),
-	SD_COMMAND_INDEX(13) | SD_RESP_R1,
+	SD_COMMAND_INDEX(13) | SD_RESP_R1 | IS_APP_CMD,
 	SD_CMD_RESERVED(14),
 	SD_CMD_RESERVED(15),
 	SD_CMD_RESERVED(16),
@@ -30,8 +29,8 @@ static int ACMD[] = {
 	SD_CMD_RESERVED(19),
 	SD_CMD_RESERVED(20),
 	SD_CMD_RESERVED(21),
-	SD_COMMAND_INDEX(22) | SD_RESP_R1 | SD_DATA_READ,
-	SD_COMMAND_INDEX(23) | SD_RESP_R1,
+	SD_COMMAND_INDEX(22) | SD_RESP_R1 | SD_DATA_READ | IS_APP_CMD,
+	SD_COMMAND_INDEX(23) | SD_RESP_R1 | IS_APP_CMD,
 	SD_CMD_RESERVED(24),
 	SD_CMD_RESERVED(25),
 	SD_CMD_RESERVED(26),
@@ -49,8 +48,8 @@ static int ACMD[] = {
 	SD_CMD_RESERVED(38),
 	SD_CMD_RESERVED(39),
 	SD_CMD_RESERVED(40),
-	SD_COMMAND_INDEX(41) | SD_RESP_R3,
-	SD_COMMAND_INDEX(42) | SD_RESP_R1,
+	SD_COMMAND_INDEX(41) | SD_RESP_R3 | IS_APP_CMD,
+	SD_COMMAND_INDEX(42) | SD_RESP_R1 | IS_APP_CMD,
 	SD_CMD_RESERVED(43),
 	SD_CMD_RESERVED(44),
 	SD_CMD_RESERVED(45),
@@ -59,7 +58,7 @@ static int ACMD[] = {
 	SD_CMD_RESERVED(48),
 	SD_CMD_RESERVED(49),
 	SD_CMD_RESERVED(50),
-	SD_COMMAND_INDEX(51) | SD_RESP_R1 | SD_DATA_READ
+	SD_COMMAND_INDEX(51) | SD_RESP_R1 | SD_DATA_READ | IS_APP_CMD
 };
 
 static int CMD[] = {
@@ -121,6 +120,18 @@ static int CMD[] = {
 	SD_COMMAND_INDEX(55) | SD_RESP_R1,
 	SD_COMMAND_INDEX(56) | SD_RESP_R1 | SD_CMD_ISDATA
 };
+
+char* gInterruptErrors[] = { "Command not finished", "Data not done", "block gap", "", "Write ready", "Read ready", "", "", "card interrupt request",
+	"", "", "", "Retune", "Boot acknowledge", "Boot operation terminated", "An error meh", "Command line timeout", "Command CRC Error", "Command line end bit not 1", "Incorrect command index", "Timeout on data line", "data CRC Error", 
+	"End bit on data line not 1", "", "Auto cmd error", "", "", "", "", "", "", ""};
+
+void PrintErrorsInInterruptRegister(unsigned int reg)
+{
+	unsigned int i;
+	for(i = 0; i < 32; i++)
+		if(reg & (1 << i) && strlen(gInterruptErrors[i]) > 0)
+			printf("Interrupt register error bit set: %s.\n", gInterruptErrors[i]);
+}
 	
 unsigned int Emmc_GetClockDivider(unsigned int base_clock, unsigned int target_rate)
 {
@@ -195,97 +206,63 @@ unsigned int EmmcInitialise(void)
 		gEmmc->SlotisrVer.bits.sdversion, 
 		gEmmc->SlotisrVer.bits.slot_status);
 	
-	printf("ssed - Resetting circuit... ");
+	//printf("ssed - Resetting circuit... ");
+	gEmmc->Control1.raw = 0x070F0000; // Reset DATA/CMD/HC
+	wait(100);
+	gEmmc->Control1.raw = 0x000F0000; // Disable data timeout?
+	wait(100);
 
-	// Reset the entire host circuit
-	gEmmc->Control1.bits.srst_hc = 1;
-
-	// Disable internal clock
-	gEmmc->Control1.bits.clk_intlen = 0;
-
-	// Disable SD clock
-	gEmmc->Control1.bits.clk_en = 0;
-
-	// Wait for controller to reset 
-	//WARNING: If reset fails we will hang forever, but it's K (for now) because we're showing a message
-	while(gEmmc->Control1.bits.clk_en != 0 || gEmmc->Control1.bits.srst_data != 0 || gEmmc->Control1.bits.srst_hc != 0) continue;
-	
-	printf("Done!\n");
-
-	printf("ssed - Control0: %d.\n", gEmmc->Control0.raw);
-	printf("ssed - Control1: %d.\n", gEmmc->Control1.raw);
-	printf("ssed - Control2: %d.\n", gEmmc->Control2.raw);
-	
-	printf("ssed - Capabilities 0: %d.\n", gEmmc->reserved);
-	printf("ssed - Capabilities 1: %d.\n", gEmmc->reserved2);
-
-	// TODO: Check if card is actually inserted (bit 16 of Status register?) 
-	//(Not doing this now as it should always be in)
-	printf("ssed - Status: %d.\n", gEmmc->Status.raw);
-
-	// Clear control2
-	gEmmc->Control2.raw = 0;
-
-	// Get clock rate from mailbox 1380
-	unsigned int base_clock = Mailbox_SD_GetBaseFrequency();
-	
-	if(base_clock == -1)
-	{
-		printf("ssed - Failed to retrieve base clock, assuming 100MHz.\n");
-		base_clock = 100000000;
-	}
-
-	// Enable the internal mmc clock
-	gEmmc->Control1.bits.clk_intlen = 1; 
-
-	// During identification we set the clock to something slow
-	// Get clock divider
-	unsigned int identificationFrequency = Emmc_GetClockDivider(base_clock, SdClockId);
-
-	if(identificationFrequency == -1)
-	{
-		printf("ssed - Faild to get clock divider.\n");
-		return -1;
-	}
-
-	printf("ssed - Identification frequency: %d.\n", identificationFrequency);
-
-	// Set the frequency and data timeout
-	gEmmc->Control1.bits.clk_freq8 = identificationFrequency;
-	gEmmc->Control1.bits.data_taunit = 7; // TMCLK * 2^10 TODO: WAT?
+	gEmmc->Control0.raw = 0x00100000;
+	gEmmc->Control1.raw = 0x000F0F27;
+	gEmmc->Control2.raw = 0x00000000;
+	gEmmc->IrptMask.raw = 0xffffffff; // We need all the interrupts
+	wait(100);
 
 	// Wait for clock to stabalize
 	printf("ssed - Waiting for clock to stabalize...");
 	while(gEmmc->Control1.bits.clk_stable != 1) continue;
 	printf(" Done!\n");
 
-	// Enable SD clock
-	printf("ssed - Enabling SD Clock.\n");
-	gEmmc->Control1.bits.clk_en = 1;
+	printf("ssed - CONTROL0: %d.\n", gEmmc->Control0.raw);
+	printf("ssed - CONTROL1: %d.\n", gEmmc->Control1.raw);
 
-	wait(1000);
+	wait(2);
 
-	// TODO: Setup interrupts
+	// Send loldata to prepare the card for commands
+	unsigned int i;
+	for(i = 0; i < 10; i++)
+	{
+		gEmmc->Cmdtm.raw = 0xFF;
+		wait(2);
+	}
 
 	// Send CMD 0
-	printf("ssed - Sending 'Go Idle State'.\n");
-
-	if(EmmcSendCommand(CMD[GoIdleState], 0) != 1)
+	printf("ssed - Sending 'Go Idle State' (0x00000010, 0).\n");
+	if(EmmcSendCommand(0x00000010, 0) != 1)
 	{
 		printf("CMD0 (GO_IDLE) failed. :-(\n");
 		return -1;
 	}
 
-	printf("ssed - Sending 'Go Idle State' Success.\n");
+	printf("ssed - Sending 'Send if Cond'(%d, 0x1AA).\n", CMD[SendIfCond]);
 
 	// 0x1AA = 0x1 2.7-3.6V (Standard, 0xAA check pattern
-	if(EmmcSendCommand(CMD[SendIfCond], 0x1AA) != 1)
+	if(EmmcSendCommand(CMD[SendIfCond], 0x1AA))
 	{
+		if(gEmmc->Resp0 == 0x1AA)
+			printf("ssed - CMD8 Response: Accepted voltage.\n");
+		else
+			printf("ssed - CMD8 Response: Did NOT accept voltage. Response: '%d'.\n", gEmmc->Resp0);
+	}
+	else
+	{	
 		printf("CMD8 (SEND_IF_COND) failed.\n");
 		return -1;
 	}
 
 	// Hmm, Send CMD5? Not sure if applicable - are SDIO cards relevant?
+
+	printf("ssed - Sending ACMD41(%d, 0)\n", ACMD[41]);
 
 	// Send ACMD41 to get OCR (voltage window = 0)
 	if(EmmcSendCommand(ACMD[41], 0) != 1)
@@ -297,12 +274,45 @@ unsigned int EmmcInitialise(void)
 	printf("ACMD41 returned: %d", gEmmc->Resp0);
 
 	printf("ssed - Initialization completed, so far so good.\n");
-
+	unsigned int ocr;
 	unsigned int card_isbusy = 1;
+	unsigned int supports_sdhc;
 	while(card_isbusy)
 	{
 		// Send initialization ACMD41
+		unsigned int flags = 0;
+
+		flags |= 1 << 28; // SDXC support
+		flags |= 1 << 30; // SDHC support
+
+		if(EmmcSendCommand(ACMD[41], 0x00ff8000 | flags))
+		{
+			wait(2000); // Wait for command to exxecute before checking response
+			if((gEmmc->Resp0 & 0x80000000))
+			{
+				ocr = (gEmmc->Resp0 >> 8) & 0xFFFF;
+				supports_sdhc = ((gEmmc->Resp0 >> 30) & 0x1);
+
+				printf("ssed - OCR is %d.\n", ocr);
+				printf("ssed - Supports sdhc: %d", supports_sdhc);
+
+				card_isbusy = 0;
+			}
+			else
+			{
+				printf("ssed - card is busy(R0:%d,R1:%d,R2:%d,R3:%d. Resending ACMD41...\n", gEmmc->Resp0, gEmmc->Resp1, gEmmc->Resp2, gEmmc->Resp3);
+				wait(1000);
+			}
+		}
+		else
+		{
+			printf("ssed - failed to send ACMD41 :S.\n");
+		}
 	}
+
+	printf("SD: Card identified: OCR: %d, SDHC support: %s", ocr, supports_sdhc == 1 ? "yes" : "no");
+
+	printf("RIght now I should be switching the clock rate, but that's not implemented yet. :(\n");
 
 
 	// Set voltage to 1.8v and enable max performance
@@ -319,78 +329,84 @@ unsigned int EmmcInitialise(void)
 
 unsigned int EmmcSendCommand(unsigned int cmd, unsigned int argument)
 {
-	if(cmd & IS_APP_CMD)
-	{ 
-		printf("ssed - send - Sending app command: '%d', with CRC: '%d'.\n", cmd, cmd & 0xFF);
-		
-		cmd &= 0xFF; // TODO: Why do we need to set this? CRC
-		if(cmd == SD_CMD_RESERVED(cmd))
-			return -1; // Invalid command
+	unsigned int c;
+	for(c = 0; c < 10; c++)
+	{
+		gEmmc->Cmdtm.raw = 0xFF;
+		wait(2);
 	}
-	
-	printf("ssed - send - waiting for command line to become available.\n");
 
 	// Wait for command line to become available
 	while(gEmmc->Status.bits.CmdInhibit == 1)
 		wait(50);
 
-	printf("ssed - send - Command line available.\n");
-
 	// If the response type is "With busy" and the command is not an abort command
 	// We have to wait for the data line to become available before sending the command
 	if((cmd & SD_RESP_R1b) == SD_RESP_R1b && (cmd & SD_CMD_TYPE_ABORT) != SD_CMD_TYPE_ABORT)
 	{
-		printf("ssed - send - command response is R1b and ABORT, waiting for dataline...\n");
-		
+		printf("ssed - send - command response is R1b and ABORT, waiting for dataline...");		
 		while(gEmmc->Status.bits.DatInhibit != 0)
 			wait(50);
 
-		printf("ssed - send - Data line available.\n");
+		printf(" Done!\n");
 	}
+	
+	if(cmd & IS_APP_CMD)
+	{ 		
+		cmd &= 0xFF; // TODO: Why do we need to set this? CRC
+		if(cmd == SD_CMD_RESERVED(cmd))
+			return -1; // Invalid command
 
+		// First tell the SD we've got an APP_CMD incoming!
+		if(EmmcSendCommand(CMD[AppCmd], 0))
+		{
+			// And then send it!
+			if(EmmcSendCommand(ACMD[cmd], argument))
+			{
+			}
+			else
+			{
+				printf("ssed - send ACMD[%d] failed. :-(\n", cmd);
+			}
+		}
+		else
+		{
+			printf("ssed - send failed to send CMD[AppCMd](%d)", CMD[AppCmd]);
+			return -1;
+		}
+	}
+	
 	// TODO: Handle DMA
-
-	printf("ssed - send - Setting blocksize count(1) and size(512).\n");
 
 	// Write block size count to register
 	gEmmc->BlockCountSize.bits.BlkCnt = 1; // Sending one block, NOTE THIS WILL NEED CHANGING WITH OTHER COMMANDS
 	gEmmc->BlockCountSize.bits.BlkSize = 512;
-
-	printf("ssed - send - Setting argument: '%d'.\n", argument);
-
+	
 	// Set arg1
 	gEmmc->Arg1 = argument;
 
 	// Finally - Write the command
-
-	printf("ssed - send - writing command '%d', before: '%d'.\n", cmd, gEmmc->Cmdtm.raw);
-
-	gEmmc->Cmdtm.raw = cmd; // 835
-
-	printf("ssed - send - writing command '%d', after: '%d'.\n", cmd, gEmmc->Cmdtm.raw);
+	gEmmc->Cmdtm.raw = cmd;
 
 	// Just relax for a bit, get a drink or something
-	wait(200); 
-
-	printf("ssed - send - waitin for command done flag (or error)\n");
-
+	wait(2); 
+	
 	// Wait for the command done flag (or error :()
-	while(gEmmc->Interrupt.bits.cmd_done != 1 || gEmmc->Interrupt.bits.err != 0)
+	while(gEmmc->Interrupt.bits.cmd_done == 0 && gEmmc->Interrupt.bits.err == 0)
 		wait(20);
 
-	printf("ssed - send - Command done! (or error) :(\n");
+	unsigned int interrupt_reg = gEmmc->Interrupt.raw;
 
 	// Clear the command complete status interrupt
 	gEmmc->Interrupt.raw = 0xffff0001; // Clear "Command finished" and all status bits 860
 
 	// Now check if we encountered an error sending our command
-	if((gEmmc->Interrupt.raw & 0xffff0001) != 1)
+	if((interrupt_reg & 0xffff0001) != 0x1)
 	{
-		printf("ssed - send - Error while waiting for command complete flag in interrupt register :(\n");
+		printf("ssed - send - Error sending command, Interrupt: '%d'.\n", interrupt_reg);
+		PrintErrorsInInterruptRegister(interrupt_reg);
 		return -1;
 	}
-
-	printf("ssed - send - Command executed successfully.\n");
 
 	switch(cmd & SD_CMD_RSPNS_TYPE_MASK)
 	{
@@ -425,7 +441,7 @@ unsigned int EmmcSendCommand(unsigned int cmd, unsigned int argument)
 		// For SDMA transfers, we have to wait for either transfer complete,
         //  DMA int or an error
 	}
-
+	
 	// Success!
 	return 1;	
 }

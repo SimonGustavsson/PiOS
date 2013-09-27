@@ -32,6 +32,8 @@
 #define SD_DATA_READ (SD_CMD_ISDATA | SD_CMD_DAT_DIR_CH)
 #define SD_DATA_WRITE (SD_CMD_ISDATA | SD_CMD_DAT_DIR_HC)
 
+#define SD_CARD_INTERRUPT       (1 << 8)
+
 // SdClockSpeed - SD Clock Frequencies (in Hz)
 typedef enum {
 	SdClockId       = 400000,
@@ -169,7 +171,7 @@ typedef volatile union {
 		unsigned int retune : 1;     // Clock retune request was made (1 = yes)
 		unsigned int bootack : 1;    // Boot acknowledge has received (1 = yes)
 		unsigned int endboot : 1;    // boot operation has terminated (1 = yes)
-		unsigned int err : 1;        // An error has occured (1 = error)
+		unsigned int err : 1;        // An error has occurred (1 = error)
 		unsigned int cto_err : 1;    // Timeout on command line (1 = error)
 		unsigned int ccrc_err : 1;   // Command CRC error (1 = error)
 		unsigned int cend_err : 1;   // End bit on command line not 1 (1 = error)
@@ -333,8 +335,8 @@ typedef volatile struct { // Placed at EMMC_BASE
 	cmdtm_register Cmdtm;                  // Command and transfer mode
 	unsigned int Resp0;                    // Response bits 31 : 0 - Cast this address to one of the SdResponseX
 	unsigned int Resp1;                    // Response bits 63 : 32
-	unsigned int Resp3;                    // Response bits 95 : 64
-	unsigned int Resp4;                    // Response bits 127 : 96
+	unsigned int Resp2;                    // Response bits 95 : 64
+	unsigned int Resp3;                    // Response bits 127 : 96
 	unsigned int Data;                     // Data
 	emmc_status_register Status;           // Status
 	control0_register Control0;            // Host configuration 0
