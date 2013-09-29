@@ -541,6 +541,13 @@ typedef struct { // 48-Bit
 	unsigned int end:1;
 } SdResponse7;
 
+typedef struct
+{
+    unsigned int scr[2];
+    unsigned int sd_bus_widths;
+    int         sd_version;
+}sd_scr;
+
 unsigned int EmmcInitialise(void);
 unsigned int EmmcGetClockSpeed(void);
 unsigned int EmmcPowerOn(void);
