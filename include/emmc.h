@@ -34,6 +34,27 @@
 
 #define SD_CARD_INTERRUPT       (1 << 8)
 
+typedef struct
+{
+    unsigned int scr[2];
+    unsigned int sd_bus_widths;
+    int         sd_version;
+}sd_scr;
+
+typedef struct {
+	sd_scr scr;
+	unsigned int last_resp0;
+	unsigned int last_resp1;
+	unsigned int last_resp2;
+	unsigned int last_resp3;
+
+	unsigned int block_size;
+	unsigned int blocks_to_transfer;
+
+	unsigned int cid[4];
+	unsigned short* receive_buffer;
+} sd;
+
 // SdClockSpeed - SD Clock Frequencies (in Hz)
 typedef enum {
 	SdClockId       = 400000,
@@ -541,12 +562,7 @@ typedef struct { // 48-Bit
 	unsigned int end:1;
 } SdResponse7;
 
-typedef struct
-{
-    unsigned int scr[2];
-    unsigned int sd_bus_widths;
-    int         sd_version;
-}sd_scr;
+
 
 unsigned int EmmcInitialise(void);
 unsigned int EmmcGetClockSpeed(void);

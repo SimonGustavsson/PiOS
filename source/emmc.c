@@ -4,19 +4,11 @@
 #include "stringutil.h"
 
 volatile Emmc* gEmmc;
-sd_scr gScr;
+sd gDevice;
 unsigned int gEmmcUseDMA = 0;
-unsigned int gLastResp0;
-unsigned int gLastResp1;
-unsigned int gLastResp2;
-unsigned int gLastResp3;
-
-unsigned int gBlockSize;
-unsigned int gBlocksToTransfer;
-unsigned int* gSdBuffer;
 
 // Support for unaligned data access
-static inline void write_word(unsigned int val, unsigned short *buf, int offset)
+static inline void write_word(unsigned int val, unsigned short* buf, int offset)
 {
     buf[offset + 0] = val & 0xff;
     buf[offset + 1] = (val >> 8) & 0xff;
@@ -24,7 +16,7 @@ static inline void write_word(unsigned int val, unsigned short *buf, int offset)
     buf[offset + 3] = (val >> 24) & 0xff;
 }
 
-static inline unsigned int read_word(unsigned short*buf, int offset)
+static inline unsigned int read_word(unsigned short* buf, int offset)
 {
 	unsigned int b0 = buf[offset + 0] & 0xff;
 	unsigned int b1 = buf[offset + 1] & 0xff;
@@ -34,9 +26,9 @@ static inline unsigned int read_word(unsigned short*buf, int offset)
 	return b0 | (b1 << 8) | (b2 << 16) | (b3 << 24);
 }
 
-
 // Predefine the commands for ease of use
-static int ACMD[] = {	SD_CMD_RESERVED(0),
+static int ACMD[] = { 
+	SD_CMD_RESERVED(0),
 	SD_CMD_RESERVED(1),
 	SD_CMD_RESERVED(2),
 	SD_CMD_RESERVED(3),
@@ -240,7 +232,6 @@ unsigned int EmmcInitialise(void)
 		gEmmc->SlotisrVer.bits.sdversion, 
 		gEmmc->SlotisrVer.bits.slot_status);
 	
-
 	gEmmc->Control1.raw |= 1 << 24;
 
 	// Wait for the circuit to reset
@@ -264,6 +255,7 @@ unsigned int EmmcInitialise(void)
 
 	gEmmc->Control1.raw = ctrl1;
 
+	// Wait for the clock to stabalize
 	while((gEmmc->Control1.raw & 0x2) != 0x2);
 
 	wait(50);
@@ -282,7 +274,7 @@ unsigned int EmmcInitialise(void)
 
 	EmmcSendCommand(CMD[SendIfCond], 0x1AA); // CMD8 Check if voltage is supported. Check pattern = 0xAA
 
-	if((gLastResp0 & 0xFFF) != 0x1AA)
+	if((gDevice.last_resp0 & 0xFFF) != 0x1AA)
 	{
 		printf("ssed - Card version is not >= 2.0.\n");
 		return -1;
@@ -298,14 +290,17 @@ unsigned int EmmcInitialise(void)
 
 		wait(20);
 
-		if((gLastResp0 >> 31) & 0x1)
+		if((gDevice.last_resp0 >> 31) & 0x1)
 			break;
 		
 		wait(20);
 	}
+	
+	// TODO: Switch voltage etc
+	EmmcSwitchClockRate(base_clock, SdClockNormal);
 
-	unsigned int sdhiCompatibility = (gLastResp0 >> 30) & 0x1;
-	unsigned int ocr = (gLastResp0 >> 8) & 0xFFFF;
+	unsigned int sdhiCompatibility = (gDevice.last_resp0 >> 30) & 0x1;
+	unsigned int ocr = (gDevice.last_resp0 >> 8) & 0xFFFF;
 
 	printf("ssed - SDHI compatibility: %d ocr: %d.\n", sdhiCompatibility, ocr);
 
@@ -313,11 +308,15 @@ unsigned int EmmcInitialise(void)
 
 	wait(20);
 
-	printf("ssed - Got CID: %d %d %d %d\n", gLastResp3, gLastResp2, gLastResp1, gLastResp0);
+	printf("ssed - Got CID: %d %d %d %d\n", gDevice.last_resp3, gDevice.last_resp2, gDevice.last_resp1, gDevice.last_resp0);
+	gDevice.cid[0] = gDevice.last_resp0;
+	gDevice.cid[1] = gDevice.last_resp1;
+	gDevice.cid[2] = gDevice.last_resp2;
+	gDevice.cid[3] = gDevice.last_resp3;
 
 	EmmcSendCommand(CMD[3], 0); // SEND_RELATIVE_ADDR 1699
 
-	unsigned int cmd3_resp = gLastResp0;
+	unsigned int cmd3_resp = gDevice.last_resp0;
 
 	printf("ssed - Relative address: %d.\n", cmd3_resp);
 
@@ -334,20 +333,17 @@ unsigned int EmmcInitialise(void)
 		return -1;
 	}
 
-
 	if(illegal_cmd)
 	{
 		printf("ssed - CMD3 illegal cmd.\n");
 		return -1;
 	}
 
-
 	if(error)
 	{
 		printf("ssed - CMD3 generic error.\n");
 		return -1;
 	}
-
 
 	if(!ready)
 	{
@@ -360,7 +356,7 @@ unsigned int EmmcInitialise(void)
 	// Not select the card to toggle it to transfer state
 	EmmcSendCommand(CMD[7], rca << 16);
 
-	unsigned int cmd7_resp = gLastResp0;
+	unsigned int cmd7_resp = gDevice.last_resp0;
 
 	status = (cmd7_resp >> 9) & 0xF;
 	if((status != 3) && (status != 4))
@@ -372,14 +368,15 @@ unsigned int EmmcInitialise(void)
 	printf("ssed - Getting SCR register.\n");
 	
 	// This is a data command, so setup the buffer
-	gSdBuffer = &(gScr.scr[0]);
-	gBlockSize = 8;
-	gBlocksToTransfer = 1;
+	gDevice.receive_buffer = (unsigned short*)&(gDevice.scr.scr[0]);
+	gDevice.block_size = 8;
+	gDevice.blocks_to_transfer = 1;
 	
+	printf("ssed - Sending AMCD51.\n");
 	EmmcSendCommand(ACMD[51], 0);
 
 	// Set back to default
-	gBlockSize = 512;
+	gDevice.block_size = 512;
 
 	// Determine card version
 	//unsigned int scr0 = 
@@ -411,10 +408,15 @@ unsigned int EmmcSendCommand(unsigned int cmd, unsigned int argument)
 		fixed_cmd = cmd - IS_APP_CMD;
 		fixed_cmd |= 0x0 << 22; // Normal command type
 		//cmd &= 0xFF; // TODO: Why do we need to set this? CRC
+		printf("ssed - Sending CMD55.\n");
 		if(!EmmcSendCommand(CMD[55], 0))
 			return -1;
 		
 		wait(50);
+	}
+	else
+	{
+		fixed_cmd = cmd;
 	}
 	
 	// TODO: Handle DMA
@@ -424,10 +426,11 @@ unsigned int EmmcSendCommand(unsigned int cmd, unsigned int argument)
 	gEmmc->Arg1 = argument;
 
 	// Finally - Write the command
-	gEmmc->Cmdtm.raw = cmd;
+	printf("ssed - sending cmdtm: '%d'.\n", fixed_cmd);
+	gEmmc->Cmdtm.raw = fixed_cmd;
 
 	// Just relax for a bit, get a drink or something
-	wait(2); 
+	wait(20); 
 	
 	// Wait for the command done flag (or error :()
 	while(gEmmc->Interrupt.bits.cmd_done == 0 && gEmmc->Interrupt.bits.err == 0)
@@ -454,18 +457,18 @@ unsigned int EmmcSendCommand(unsigned int cmd, unsigned int argument)
 			gEmmc->Resp3 = 0;
 			break;
 		case SD_CMD_RSPNS_TYPE_48:
-			gLastResp0 = gEmmc->Resp0;
+			gDevice.last_resp0 = gEmmc->Resp0;
 			gEmmc->Resp0 = 0;
 			break;
 		case SD_CMD_RSPNS_TYPE_48B:
-			gLastResp0 = gEmmc->Resp0;
+			gDevice.last_resp0 = gEmmc->Resp0;
 			gEmmc->Resp0 = 0;
 			break;
 		case SD_CMD_RSPNS_TYPE_136:
-			gLastResp0 = gEmmc->Resp0;
-			gLastResp1 = gEmmc->Resp1;
-			gLastResp2 = gEmmc->Resp2;
-			gLastResp3 = gEmmc->Resp3;
+			gDevice.last_resp0 = gEmmc->Resp0;
+			gDevice.last_resp1 = gEmmc->Resp1;
+			gDevice.last_resp2 = gEmmc->Resp2;
+			gDevice.last_resp3 = gEmmc->Resp3;
 			break;
 	}
 
@@ -482,11 +485,11 @@ unsigned int EmmcSendCommand(unsigned int cmd, unsigned int argument)
 		}
 
 		unsigned int current_block = 0;
-		unsigned int* buf = &gSdBuffer[0];
+		unsigned short* buf = gDevice.receive_buffer;
 
-		while(current_block < gBlocksToTransfer)
+		while(current_block < gDevice.blocks_to_transfer)
 		{
-			if(gBlocksToTransfer > 1)
+			if(gDevice.blocks_to_transfer > 1)
 				printf("ssed - send - Waiting for block %d to get ready.\n", current_block);
 
 			// Wait for block
@@ -503,7 +506,7 @@ unsigned int EmmcSendCommand(unsigned int cmd, unsigned int argument)
 
 			// Transfer the block
 			unsigned int current_byte_number = 0;
-			while(current_byte_number < gBlockSize)
+			while(current_byte_number < gDevice.block_size)
 			{
 				if(is_write)
 				{
