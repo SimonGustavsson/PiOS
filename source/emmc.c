@@ -219,6 +219,40 @@ unsigned int Emmc_GetClockDivider(unsigned int base_clock, unsigned int target_r
 	return ret;
 }
 
+unsigned int EmmcSwitchClockRate(unsigned int base_clock, unsigned int target_rate)
+{
+	unsigned int divider = Emmc_GetClockDivider(base_clock, target_rate);
+	if(divider == -1)
+	{
+		printf("ssed -  Failed to retrieve divider for target_rate: %d.\n", target_rate);
+		return -1;
+	}
+
+	// Wait for command line, and DAT line to become available
+	while(gEmmc->Status.bits.CmdInhibit == 1 || gEmmc->Status.bits.DatInhibit == 1)
+		wait(100);
+
+	// Turn the clock off
+	gEmmc->Control1.raw &= ~(1 << 2);
+
+	// Write the new divider
+	unsigned int control1 = gEmmc->Control1.raw;
+	control1 &= ~0xFFE0; // Clear old clock generator select
+	control1 |= divider;
+
+	gEmmc->Control1.raw = control1;
+
+	// Re enable the SD clock with the new speed
+	control1 |= (1 << 2);
+	gEmmc->Control1.raw = control1;
+
+	wait(200);
+
+	printf("ssed - emmc clock rate successfully changed to: %d Hz.\n", target_rate);
+
+	return 1;
+}
+
 unsigned int EmmcInitialise(void)
 {
 	gEmmc = (Emmc*)EMMC_BASE;
@@ -298,6 +332,52 @@ unsigned int EmmcInitialise(void)
 	
 	// TODO: Switch voltage etc
 	EmmcSwitchClockRate(base_clock, SdClockNormal);
+
+	wait(100); // Wait for clock rate to change
+
+	printf("ssed - Switching to 1.8V mode.\n");
+	if(!EmmcSendCommand(CMD[VoltageSwitch], 0))
+	{
+		printf("ssed - CMD[VoltageSwitch] failed.\n");
+		return -1;
+	}
+
+	// Disable SD clock
+	gEmmc->Control1.raw &= ~(1 << 2);
+
+	// Check DAT[3:0]
+	unsigned int status_reg = gEmmc->Status.raw;
+	unsigned int dat30 = (status_reg >> 20) & 0xF;
+	if(dat30 != 0)
+	{
+		printf("ssed - DAT[3:0] did not settle to 0. Was: %d\n", dat30);
+		return -1;
+	}
+
+	// Set 1.8V signal enable to 1
+	gEmmc->Control0.raw |= (1 << 8);
+
+	wait(5);
+
+	// Check to make sure signal enable is still set
+	if(((gEmmc->Control0.raw >> 8) & 0x1) == 0)
+	{
+		printf("ssed - Controller did not keep the 1.8V signal high.\n");
+		return -1;
+	}
+	
+	// Reenable sd clock
+	gEmmc->Control1.raw |= (1 << 2);
+
+	wait(1);
+
+	if(((gEmmc->Status.raw >> 20) & 0xF) != 0xF)
+	{
+		printf("ssed - DAT[3:0] did not settle to 1111b, %d", ((gEmmc->Status.raw >> 20) & 0xF));
+		return -1;
+	}
+
+	printf("ssed - Voltage switch complete.\n");
 
 	unsigned int sdhiCompatibility = (gDevice.last_resp0 >> 30) & 0x1;
 	unsigned int ocr = (gDevice.last_resp0 >> 8) & 0xFFFF;
@@ -407,8 +487,7 @@ unsigned int EmmcSendCommand(unsigned int cmd, unsigned int argument)
 	{ 		
 		fixed_cmd = cmd - IS_APP_CMD;
 		fixed_cmd |= 0x0 << 22; // Normal command type
-		//cmd &= 0xFF; // TODO: Why do we need to set this? CRC
-		printf("ssed - Sending CMD55.\n");
+
 		if(!EmmcSendCommand(CMD[55], 0))
 			return -1;
 		
@@ -426,7 +505,6 @@ unsigned int EmmcSendCommand(unsigned int cmd, unsigned int argument)
 	gEmmc->Arg1 = argument;
 
 	// Finally - Write the command
-	printf("ssed - sending cmdtm: '%d'.\n", fixed_cmd);
 	gEmmc->Cmdtm.raw = fixed_cmd;
 
 	// Just relax for a bit, get a drink or something
