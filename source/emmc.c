@@ -2,29 +2,15 @@
 #include "mailbox.h"
 #include "timer.h"
 #include "stringutil.h"
+#include "utilities.h"
 
 volatile Emmc* gEmmc;
 sd gDevice;
 unsigned int gEmmcUseDMA = 0;
 
-// Support for unaligned data access
-static inline void write_word(unsigned int val, unsigned short* buf, int offset)
-{
-    buf[offset + 0] = val & 0xff;
-    buf[offset + 1] = (val >> 8) & 0xff;
-    buf[offset + 2] = (val >> 16) & 0xff;
-    buf[offset + 3] = (val >> 24) & 0xff;
-}
+unsigned int gLastCommand = 0;
+unsigned int gLastCommandSuccess = 0;
 
-static inline unsigned int read_word(unsigned short* buf, int offset)
-{
-	unsigned int b0 = buf[offset + 0] & 0xff;
-	unsigned int b1 = buf[offset + 1] & 0xff;
-	unsigned int b2 = buf[offset + 2] & 0xff;
-	unsigned int b3 = buf[offset + 3] & 0xff;
-
-	return b0 | (b1 << 8) | (b2 << 16) | (b3 << 24);
-}
 
 // Predefine the commands for ease of use
 static int ACMD[] = { 
@@ -141,6 +127,8 @@ static int CMD[] = {
 	SD_COMMAND_INDEX(55) | SD_RESP_R1,
 	SD_COMMAND_INDEX(56) | SD_RESP_R1 | SD_CMD_ISDATA
 };
+
+char* gSdVersionStrings[] = { "Unknown", "Version 1", "Version 1.1", "Version 2", "Version 3", "Version 4"};
 
 char* gInterruptErrors[] = { "Command not finished", "Data not done", "Block gap", "", "Write ready", "Read ready", "", "", "Card interrupt request",
 	"", "", "", "Retune", "Boot acknowledge", "Boot operation terminated", "An error meh", "Command line timeout", "Command CRC Error", "Command line end bit not 1", "Incorrect command index", "Timeout on data line", "Data CRC Error", 
@@ -529,14 +517,43 @@ unsigned int EmmcInitialise(void)
 		return -1;
 	}
 
-	printf("Success after %d tries.\n", retries + 1);
+	printf("Success after %d tries. SCR[0] = %d, SCR[1] = %d\n", retries + 1, gDevice.scr.scr[0], gDevice.scr.scr[1]);
+	printf("ssed - ACMD51 response: %d, %d, %d, %d\n", gDevice.last_resp0, gDevice.last_resp1, gDevice.last_resp2, gDevice.last_resp3);
 		
 	// Set back to default
 	gDevice.block_size = 512;
+	
+	// ACMD51 is "kind" enough to give us the SCR in big endian... Swap it
+	unsigned int scr0 = byte_swap(gDevice.scr.scr[0]);
+	unsigned int sd_spec = (scr0 >> (56 - 32)) & 0xF;
+	unsigned int sd_spec3 = (scr0 >> (47 - 32)) & 0x1;
+	unsigned int sd_spec4 = (scr0 >> (42 - 32)) & 0x1;
+	gDevice.scr.sd_bus_widths = (scr0 >> (48 - 32)) & 0xF;
 
-	// Determine card version
-	//unsigned int scr0 = // 1810
+	printf("ssed - bus widths = %d", gDevice.scr.sd_bus_widths);
 
+	gDevice.scr.sd_version = SdVersionUnknown;
+	if(sd_spec == 0)
+		gDevice.scr.sd_version = SdVersion1;
+	else if(sd_spec == 1)
+		gDevice.scr.sd_version = SdVersion1_1;
+	else if(sd_spec == 2)
+	{
+		if(sd_spec3 == 0)
+			gDevice.scr.sd_version = SdVersion2;
+		else if(sd_spec3 == 1)
+		{
+			if(sd_spec4 == 0)
+				gDevice.scr.sd_version = SdVersion3;
+			else if(sd_spec4 == 1)
+				gDevice.scr.sd_version = SdVersion4;
+		}
+	}
+	
+    printf("ssed - SCR[0]: %d, SCR[1]: %d\n", gDevice.scr.scr[0], gDevice.scr.scr[1]);;
+    printf("ssed - SCR: %d, %d\n", byte_swap(gDevice.scr.scr[0]), byte_swap(gDevice.scr.scr[1]));
+    printf("ssed - SCR: version %s, bus_widths %d\n", gSdVersionStrings[gDevice.scr.sd_version], gDevice.scr.sd_bus_widths);
+	
 	printf("ssed - Initialization complete!\n");
 
 	return 0;
@@ -544,6 +561,9 @@ unsigned int EmmcInitialise(void)
 
 unsigned int EmmcSendCommand(unsigned int cmd, unsigned int argument)
 {
+	gLastCommand = 0;
+	gLastCommandSuccess = 0;
+
 	// Wait for command line to become available
 	while(gEmmc->Status.bits.CmdInhibit == 1)
 		wait(50);
@@ -715,7 +735,7 @@ unsigned int EmmcSendCommand(unsigned int cmd, unsigned int argument)
 	}
 
 	// If the command was with data, wait for the appropriate interrupt
-	if((cmd & SD_RESP_R1b) == SD_RESP_R1b || 0 == 1) // 0 == 1 should be "is data transfer"
+	if((cmd & SD_RESP_R1b) == SD_RESP_R1b || (cmd & SD_CMD_ISDATA))
 	{
 		// Check if DAT is not already 0
 		if(gEmmc->Status.bits.DatInhibit == 0)
@@ -724,10 +744,21 @@ unsigned int EmmcSendCommand(unsigned int cmd, unsigned int argument)
 		}
 		else
 		{
+			printf("ssed - Reading busy data command and stuff...\n");
+
 			while(gEmmc->Interrupt.bits.cmd_done != 0 || gEmmc->Interrupt.bits.err == 0)
 				wait(20);
+			
+			interrupt_reg = gEmmc->Interrupt.raw;
+			gEmmc->Interrupt.raw = 0xFFFF0002;
 
-			// TODO: Handle case where both data timeout and transfer complete are set - transfer complete overrides data timeout 966
+			if((((interrupt_reg & 0xFFFF0002) != 0x2) && (interrupt_reg & 0xFFFF0002) != 0x100002))
+			{
+				printf("ssed - Error occurred whilst waiting for transfer complete interrupt! :-(\n");
+				return -1;
+			}
+
+			gEmmc->Interrupt.raw = 0xFFFF0002;
 		}
 	}
 	else if(0 == 1) // is_dma

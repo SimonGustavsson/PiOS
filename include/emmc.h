@@ -34,6 +34,16 @@
 
 #define SD_CARD_INTERRUPT       (1 << 8)
 
+typedef enum {
+	SdVersionUnknown = 0,
+	SdVersion1 = 1,
+	SdVersion1_1 = 2,
+	SdVersion2 = 3,
+	SdVersion3 = 4,
+	SdVersion4 = 5
+
+} SdVersion;
+
 typedef struct
 {
     unsigned int scr[2];
