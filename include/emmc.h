@@ -64,6 +64,8 @@ typedef struct {
 	unsigned int cid[4];
 	unsigned int* receive_buffer;
 	unsigned int rca;
+	unsigned int supports_sdhc;
+	unsigned int ocr;
 } sd;
 
 // SdClockSpeed - SD Clock Frequencies (in Hz)
