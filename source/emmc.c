@@ -142,19 +142,21 @@ static int CMD[] = {
 	SD_COMMAND_INDEX(56) | SD_RESP_R1 | SD_CMD_ISDATA
 };
 
-char* gInterruptErrors[] = { "Command not finished", "Data not done", "block gap", "", "Write ready", "Read ready", "", "", "card interrupt request",
-	"", "", "", "Retune", "Boot acknowledge", "Boot operation terminated", "An error meh", "Command line timeout", "Command CRC Error", "Command line end bit not 1", "Incorrect command index", "Timeout on data line", "data CRC Error", 
+char* gInterruptErrors[] = { "Command not finished", "Data not done", "Block gap", "", "Write ready", "Read ready", "", "", "Card interrupt request",
+	"", "", "", "Retune", "Boot acknowledge", "Boot operation terminated", "An error meh", "Command line timeout", "Command CRC Error", "Command line end bit not 1", "Incorrect command index", "Timeout on data line", "Data CRC Error", 
 	"End bit on data line not 1", "", "Auto cmd error", "", "", "", "", "", "", ""};
 
 void PrintErrorsInInterruptRegister(unsigned int reg)
 {
 	printf("[ERROR] ssed - send - Command failed to complete (interrupt:%d) ", reg);
+
+	// Start at 1 to skip "Command not finished" message
 	unsigned int i;
-	for(i = 0; i < 32; i++)
+	for(i = 1; i < 32; i++)
 	{
 		if(reg & (1 << i) && strlen(gInterruptErrors[i]) > 0 && i != 15) // 15 = "error has occured", only show the detailed on(there is always one?)
 		{
-			printf("%s.\n", gInterruptErrors[i]);
+			printf("%d. %s.\n", i, gInterruptErrors[i]);
 			return;
 		}
 	}
@@ -256,6 +258,7 @@ unsigned int EmmcSwitchClockRate(unsigned int base_clock, unsigned int target_ra
 unsigned int EmmcInitialise(void)
 {
 	gEmmc = (Emmc*)EMMC_BASE;
+	gDevice.rca = 0;
 
 	// Power cycle to ensure initial state
 	EmmcPowerCycle();
@@ -337,10 +340,22 @@ unsigned int EmmcInitialise(void)
 		wait(20);
 
 		if((gDevice.last_resp0 >> 31) & 0x1)
+		{
+			card_supports_voltage_switch = (gDevice.last_resp0 >> 24) & 0x1;
+
+			if((gDevice.last_resp0 >> 30) & 0x1)
+				printf("ssed - card supports SDHC.\n");
+
 			break;
-		
+		}
+
 		wait(20);
 	}
+
+	if(((gDevice.last_resp0 >> 30) & 0x1) == 0)
+		printf("ssed - card is a SDSC.\n");
+	else
+		printf("ssed - card is SDHC/SDXC.\n");
 	
 	// TODO: Switch voltage etc
 	EmmcSwitchClockRate(base_clock, SdClockNormal);
@@ -408,7 +423,7 @@ unsigned int EmmcInitialise(void)
 
 	printf("ssed - SDHI compatibility: %d ocr: %d.\n", sdhiCompatibility, ocr);
 
-	EmmcSendCommand(CMD[2], 0x0); // ALL SEND CID
+	EmmcSendCommand(CMD[AllSendCid], 0x0);
 
 	wait(20);
 
@@ -418,19 +433,19 @@ unsigned int EmmcInitialise(void)
 	gDevice.cid[2] = gDevice.last_resp2;
 	gDevice.cid[3] = gDevice.last_resp3;
 
-	EmmcSendCommand(CMD[3], 0); // SEND_RELATIVE_ADDR 1699
+	EmmcSendCommand(CMD[SendRelativeAddr], 0);
 
 	unsigned int cmd3_resp = gDevice.last_resp0;
 
 	printf("ssed - Relative address: %d.\n", cmd3_resp);
 
-	unsigned int rca = (cmd3_resp >> 16) & 0xFFFF;
+	gDevice.rca = (cmd3_resp >> 16) & 0xFFFF;
 	unsigned int crc_error = (cmd3_resp >> 15) & 0x1;
 	unsigned int illegal_cmd = (cmd3_resp >> 14) & 0x1;
 	unsigned int error = (cmd3_resp >> 13) & 0x1;
 	unsigned int status = (cmd3_resp >> 9) & 0xF;
 	unsigned int ready = (cmd3_resp >> 8) & 0x1;
-	
+
 	if(crc_error)
 	{
 		printf("ssed - CMD3 CRC error.\n");
@@ -455,10 +470,14 @@ unsigned int EmmcInitialise(void)
 		return -1;
 	}
 
-	printf("ssed - RCA: %d\n", rca);
+	printf("ssed - RCA: %d\n", gDevice.rca);
 
 	// Not select the card to toggle it to transfer state
-	EmmcSendCommand(CMD[7], rca << 16);
+	if(!EmmcSendCommand(CMD[SelectCard], gDevice.rca << 16))
+	{
+		printf("ssed - Failed to select card.\n");
+		return -1;
+	}
 
 	unsigned int cmd7_resp = gDevice.last_resp0;
 
@@ -469,21 +488,56 @@ unsigned int EmmcInitialise(void)
 		return -1;
 	}
 
+	// Get card status (For debugging) to ensure we're in transfer mode
+	if(!EmmcSendCommand(CMD[SendStatus], gDevice.rca << 16))
+	{
+		printf("ssed - Could not retrieve status from card.\n");
+		return -1;
+	}
+
+	// Set block length to 512
+	if(!EmmcSendCommand(CMD[SetBlockLen], 512))
+	{
+		printf("ssed - Failed to set initial block length to 512.\n");
+		return -1;
+	}
+
+	// What black magic is this!?
+	gDevice.block_size = 512;
+	unsigned int controller_block_size = gEmmc->BlockCountSize.raw;
+	controller_block_size &= (~0xFFF);
+	controller_block_size |= 0x200;
+	gEmmc->BlockCountSize.raw = controller_block_size;
+	
 	printf("ssed - Getting SCR register.\n");
 	
 	// This is a data command, so setup the buffer
-	gDevice.receive_buffer = (unsigned short*)&(gDevice.scr.scr[0]);
+	gDevice.receive_buffer = (unsigned int*)&(gDevice.scr.scr[0]); // 1174
 	gDevice.block_size = 8;
 	gDevice.blocks_to_transfer = 1;
 	
-	printf("ssed - Sending AMCD51.\n");
-	EmmcSendCommand(ACMD[51], 0);
+	// Try sending it 5 times, because CRC hobbits sleep early on
+	printf("ssed - Sending AMCD51 (SEND_SCR).\n");
+	unsigned int retries = 0;
+	unsigned int acmd51SendResult;
+	printf("ssed - sending ACMD51 - ");
+	while(!(acmd51SendResult = EmmcSendCommand(ACMD[51], 0)) && retries++ < 5);
 
+	if(!acmd51SendResult)
+	{
+		printf("Failed, tried 5 times.\n");
+		return -1;
+	}
+
+	printf("Success after %d tries.\n", retries + 1);
+		
 	// Set back to default
 	gDevice.block_size = 512;
 
 	// Determine card version
-	//unsigned int scr0 = 
+	//unsigned int scr0 = // 1810
+
+	printf("ssed - Initialization complete!\n");
 
 	return 0;
 }
@@ -512,9 +566,13 @@ unsigned int EmmcSendCommand(unsigned int cmd, unsigned int argument)
 		fixed_cmd = cmd - IS_APP_CMD;
 		fixed_cmd |= 0x0 << 22; // Normal command type
 
-		if(!EmmcSendCommand(CMD[55], 0))
-			return -1;
+		unsigned int rca = 0;
+		if(gDevice.rca)
+			rca = gDevice.rca << 16;
 		
+		if(!EmmcSendCommand(CMD[55], rca))
+			return -1;
+
 		wait(50);
 	}
 	else
@@ -541,7 +599,7 @@ unsigned int EmmcSendCommand(unsigned int cmd, unsigned int argument)
 	unsigned int interrupt_reg = gEmmc->Interrupt.raw;
 
 	// Clear the command complete status interrupt
-	gEmmc->Interrupt.raw = 0xffff0001; // Clear "Command finished" and all status bits 860
+	gEmmc->Interrupt.raw = 0xffff0001; // Clear "Command finished" and all status bits
 
 	// Now check if we encountered an error sending our command
 	if((interrupt_reg & 0xffff0001) != 0x1)
@@ -587,7 +645,7 @@ unsigned int EmmcSendCommand(unsigned int cmd, unsigned int argument)
 		}
 
 		unsigned int current_block = 0;
-		unsigned short* buf = gDevice.receive_buffer;
+		unsigned int* buf = gDevice.receive_buffer;
 
 		while(current_block < gDevice.blocks_to_transfer)
 		{

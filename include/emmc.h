@@ -52,7 +52,8 @@ typedef struct {
 	unsigned int blocks_to_transfer;
 
 	unsigned int cid[4];
-	unsigned short* receive_buffer;
+	unsigned int* receive_buffer;
+	unsigned int rca;
 } sd;
 
 // SdClockSpeed - SD Clock Frequencies (in Hz)
@@ -420,7 +421,7 @@ typedef volatile struct { // Placed at EMMC_BASE
 typedef enum {	
 	GoIdleState          = 0,	// Resets SD card
 	SendOpCond           = 1,	// Sends host capacity support information and kick off card initialization
-	AllSendCid           = 2,	// Broadcast to all commands to send cid
+	AllSendCid           = 2,	// Broadcast: Request all cards to send cid
 	SendRelativeAddr     = 3,	// Request new relative card adress (RCA) from card
 	
 	SetDsr               = 4,	// Programs the DSR of all cards
@@ -561,8 +562,6 @@ typedef struct { // 48-Bit
 	unsigned int crc7:7;
 	unsigned int end:1;
 } SdResponse7;
-
-
 
 unsigned int EmmcInitialise(void);
 unsigned int EmmcGetClockSpeed(void);
