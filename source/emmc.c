@@ -306,20 +306,32 @@ unsigned int EmmcInitialise(void)
 
 	EmmcSendCommand(CMD[GoIdleState], 0); // CMD0, should add timeout?
 
-	EmmcSendCommand(CMD[SendIfCond], 0x1AA); // CMD8 Check if voltage is supported. Check pattern = 0xAA
-
+	// CMD8 Check if voltage is supported. 
+	// Voltage: 0001b (2.7-3.6V), Check pattern: 0xAA
+	EmmcSendCommand(CMD[SendIfCond], 0x1AA); 
 	if((gDevice.last_resp0 & 0xFFF) != 0x1AA)
 	{
 		printf("ssed - Card version is not >= 2.0.\n");
 		return -1;
 	}
 
+	printf("ssed - Voltage switched to 2.7-3.6V.\n");
+
 	EmmcSendCommand(ACMD[41], 0);
 
-	unsigned int acmd41arg = 0x00ff8000 | (1 << 24) | (1 << 28) | (1 << 30);
-
+	unsigned int card_supports_voltage_switch = (gDevice.last_resp0 & (1 << 24));
 	while(1)
 	{
+		// Switch to 1.8V Request, Set Maximum performance, Enable SDHC and SDXC support
+		// TODO: Add check to see if it's a V2 card and only enable SDHC/SDXC if it is
+		unsigned int acmd41arg = 0x00ff8000 | (1 << 28) | (1 << 30);
+
+		if(card_supports_voltage_switch)
+		{
+			printf("ssed - Sending ACMD41 with argument voltage switch supported.\n");
+			acmd41arg |= (1 << 24);
+		}
+
 		EmmcSendCommand(ACMD[41], acmd41arg);
 
 		wait(20);
@@ -335,50 +347,62 @@ unsigned int EmmcInitialise(void)
 
 	wait(100); // Wait for clock rate to change
 
-	printf("ssed - Switching to 1.8V mode.\n");
-	if(!EmmcSendCommand(CMD[VoltageSwitch], 0))
+	if(card_supports_voltage_switch)
 	{
-		printf("ssed - CMD[VoltageSwitch] failed.\n");
-		return -1;
-	}
+		printf("ssed - Switching to 1.8V mode.\n");
 
-	// Disable SD clock
-	gEmmc->Control1.raw &= ~(1 << 2);
+		if(!EmmcSendCommand(CMD[VoltageSwitch], 0))
+		{
+			printf("ssed - CMD[VoltageSwitch] failed.\n");
+			return -1;
+		}
 
-	// Check DAT[3:0]
-	unsigned int status_reg = gEmmc->Status.raw;
-	unsigned int dat30 = (status_reg >> 20) & 0xF;
-	if(dat30 != 0)
-	{
-		printf("ssed - DAT[3:0] did not settle to 0. Was: %d\n", dat30);
-		return -1;
-	}
+		// Disable SD clock
+		gEmmc->Control1.raw &= ~(1 << 2);
 
-	// Set 1.8V signal enable to 1
-	gEmmc->Control0.raw |= (1 << 8);
+		// Check DAT[3:0]
+		unsigned int status_reg = gEmmc->Status.raw;
+		unsigned int dat30 = (status_reg >> 20) & 0xF;
+		if(dat30 != 0)
+		{
+			printf("ssed - DAT[3:0] did not settle to 0. Was: %d\n", dat30);
+			return -1;
+		}
 
-	wait(5);
+		// Set 1.8V signal enable to 1
+		gEmmc->Control0.raw |= (1 << 8);
 
-	// Check to make sure signal enable is still set
-	if(((gEmmc->Control0.raw >> 8) & 0x1) == 0)
-	{
-		printf("ssed - Controller did not keep the 1.8V signal high.\n");
-		return -1;
-	}
+		wait(5);
+
+		// Check to make sure signal enable is still set
+		if(((gEmmc->Control0.raw >> 8) & 0x1) == 0)
+		{
+			printf("ssed - Controller did not keep the 1.8V signal high.\n");
+			return -1;
+		}
 	
-	// Reenable sd clock
-	gEmmc->Control1.raw |= (1 << 2);
+		// Re enable sd clock
+		gEmmc->Control1.raw |= (1 << 2);
 
-	wait(1);
+		status_reg = gEmmc->Status.raw;
 
-	if(((gEmmc->Status.raw >> 20) & 0xF) != 0xF)
-	{
-		printf("ssed - DAT[3:0] did not settle to 1111b, %d", ((gEmmc->Status.raw >> 20) & 0xF));
-		return -1;
-	}
+		dat30 = (status_reg >> 20) & 0xF;
 
-	printf("ssed - Voltage switch complete.\n");
+		if(dat30 != 0xF)
+		{
+            printf("ssed - DAT[3:0] did not settle to 1111b. Was: %d.\n", dat30);
 
+			// Power off?
+
+			return -1;
+		}
+		
+		wait(1);
+
+		printf("ssed - Voltage switch complete.\n");
+	}	
+
+	
 	unsigned int sdhiCompatibility = (gDevice.last_resp0 >> 30) & 0x1;
 	unsigned int ocr = (gDevice.last_resp0 >> 8) & 0xFFFF;
 
