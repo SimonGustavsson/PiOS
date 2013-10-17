@@ -31,7 +31,7 @@ typedef union {
 typedef union {
 	unsigned int raw;
 
-	typedef struct {
+	struct {
 		unsigned int pin0 : 1;
 		unsigned int pin1 : 1;
 		unsigned int pin2 : 1;
@@ -70,7 +70,7 @@ typedef union {
 typedef union {
 	unsigned int raw;
 
-	typedef struct {
+	struct {
 		unsigned int pin32 : 1;
 		unsigned int pin33 : 1;
 		unsigned int pin34 : 1;
@@ -107,7 +107,7 @@ typedef enum {
 typedef union {
 	unsigned int raw;
 	
-	typedef  struct {
+	struct {
 		pud_state pud : 2;
 		unsigned int reserved : 29;
 	} bits;
