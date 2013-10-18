@@ -423,7 +423,7 @@ void KeyboardUpdate(void)
 {
 	if(!EnsureKeyboard())
 	{
-		print("Failed to update keyboard, could not obtain device.", strlen("Failed to update keyboard, could not obtain device."));
+		//print("Failed to update keyboard, could not obtain device.", strlen("Failed to update keyboard, could not obtain device."));
 		return;
 	}
 	
