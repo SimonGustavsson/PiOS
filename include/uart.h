@@ -45,8 +45,8 @@ typedef union {
 	unsigned int raw;
 
 	struct {
-		unsigned int data_size : 1; // 1 = 8-bit, 0 = 7-bit
-		unsigned int reserved : 5;
+		unsigned int data_size : 2; // 11 = 8-bit, 1 = 7-bit
+		unsigned int reserved : 4;
 		unsigned int break_field : 1; //
 		unsigned int dlab_access : 1;
 		unsigned int reserved2 : 24;
@@ -207,10 +207,10 @@ typedef union {
 typedef volatile struct { // Located at 0x20215000
 	aux_reg irq;                   // Auxiliary Interrupt status
 	aux_reg enables;               // Auxiliary enables
-	unsigned int reserved[9];      // -
+	unsigned int reserved[14];     // -
 	aux_mu_io_reg mu_io;           // Mini Uart I/O Data 
 	aux_mu_ier_reg mu_ier;         // Mini Uart Interrupt Enable
-	aux_mu_iir_reg mu_iir;         // Mini Uart Interrupt Identify
+	aux_mu_iir_reg mu_iir;         // Mini Uart Interrupt Identify 52
 	uax_mu_lcr_reg mu_lcr;         // Mini Uart Line Control
 	uax_mu_mcr_reg mu_mcr;         // Mini uart Modem Control
 	aux_mu_lsr_reg mu_lsr;         // Mini Uart Line Status
@@ -229,3 +229,5 @@ typedef volatile struct { // Located at 0x20215000
 } Uart;
 
 unsigned int uart_initialize(void);
+void uart_send_string(char* s);
+void uart_send_char(unsigned int c);

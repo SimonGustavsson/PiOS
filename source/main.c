@@ -6,9 +6,11 @@
 #include "terminal.h"
 #include "timer.h"
 #include "usbd/usbd.h"
+#include "uart.h"
 
 volatile unsigned int irq_counter;
 volatile extern Emmc* gEmmc;
+volatile Uart* gUart;
 
 void OnCriticalError(void)
 {
@@ -47,6 +49,8 @@ void c_irq_handler (void)
 unsigned int system_initialize(void)
 {
 	unsigned int result = 0;
+
+	gUart = (Uart*)UART_BASE;
 	
 	// First and foremost: The LED so we can flash it to signal errors if FB init fails
 	LedInit();
@@ -71,9 +75,28 @@ unsigned int system_initialize(void)
 
 	// Note: EMMC is not essential to system initialisation
 	if(EmmcInitialise() != 0)
-		printf("Failed to intialize emmc.\n");
+		printf("Failed to intialise emmc.\n");
+
+	if(uart_initialize() != 0)
+		printf("Failed to initialize uart.\n");
 	
 	return result;
+}
+
+void WaitForUartAlive(void)
+{
+	printf("Waiting for user to connect via uart...\n");
+
+	while(gUart->mu_lsr.bits.data_read == 0)
+	{ 
+		/* Do Nothing */ 
+	}
+
+	printf("User connected, launching system.\n");
+	uart_send_string("Welcome, user!\n");
+
+	// Do something with the data?
+	unsigned int received = gUart->mu_io.bits.data;
 }
 
 int cmain(void)
@@ -82,15 +105,22 @@ int cmain(void)
 		
 	if(system_initialize() == 0)
 	{
-		terminal_printWelcome();
+		// System all up and running, wait for a alive sign from the uart before proceeding
+		// TODO: Conditionalize this - only use if no screen attached
+		WaitForUartAlive();
 
+
+		// Kick off the terminal
+		terminal_printWelcome();
 		terminal_printPrompt();
 		
 		while(1)
 		{
 			terminal_update();
-			
-			wait(10);
+
+			uart_send_string("Hello, Uart!\n");
+
+			wait(250);
 		}
 	}	
 		
