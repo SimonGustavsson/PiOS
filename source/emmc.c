@@ -294,7 +294,7 @@ unsigned int EmmcInitialise(void)
 	if(base_clock == -1)
 		base_clock = 100000000;
 
-	printf("ssed - Base clock speed: %d.\n", base_clock);
+	//printf("ssed - Base clock speed: %d.\n", base_clock);
 
 	control1 = gEmmc->Control1.raw;
 	control1 |= 1; // Enable clock
@@ -332,7 +332,7 @@ unsigned int EmmcInitialise(void)
 		printf("ssed - Card version is not >= 2.0.\n");
 		return -1;
 	}
-	printf("ssed - Voltage switched to 2.7-3.6V.\n");
+	//printf("ssed - Voltage switched to 2.7-3.6V.\n");
 	
 	// This only returns if it's an SDIO card, this is expected to fail for all non-SDIO cards
 	//if(EmmcSendCommand(CMD[IOSetOpCond], 0))
@@ -356,7 +356,7 @@ unsigned int EmmcInitialise(void)
 
 		if(card_supports_voltage_switch)
 		{
-			printf("ssed - Sending ACMD41 with argument voltage switch supported.\n");
+			//printf("ssed - Sending ACMD41 with argument voltage switch supported.\n");
 			acmd41arg |= (1 << 24);
 		}
 
@@ -392,7 +392,7 @@ unsigned int EmmcInitialise(void)
 
 	if(card_supports_voltage_switch)
 	{
-		printf("ssed - Switching to 1.8V mode.\n");
+		//printf("ssed - Switching to 1.8V mode.\n");
 
 		if(!EmmcSendCommand(CMD[VoltageSwitch], 0))
 		{
@@ -462,7 +462,7 @@ unsigned int EmmcInitialise(void)
 		return -1;
 	}
 	
-	printf("ssed - Got CID: %d %d %d %d\n", gDevice.last_resp3, gDevice.last_resp2, gDevice.last_resp1, gDevice.last_resp0);
+	//printf("ssed - Got CID: %d %d %d %d\n", gDevice.last_resp3, gDevice.last_resp2, gDevice.last_resp1, gDevice.last_resp0);
 	gDevice.cid[0] = gDevice.last_resp0;
 	gDevice.cid[1] = gDevice.last_resp1;
 	gDevice.cid[2] = gDevice.last_resp2;
@@ -477,7 +477,7 @@ unsigned int EmmcInitialise(void)
 
 	unsigned int cmd3_resp = gDevice.last_resp0;
 
-	printf("ssed - Relative address: %d.\n", cmd3_resp);
+	//printf("ssed - Relative address: %d.\n", cmd3_resp);
 
 	gDevice.rca = (cmd3_resp >> 16) & 0xFFFF;
 	unsigned int crc_error = (cmd3_resp >> 15) & 0x1;
@@ -573,7 +573,7 @@ unsigned int EmmcInitialise(void)
 		return -1;
 	}
 
-	printf("ssed - ACMD51 response: %d, %d, %d, %d\n", gDevice.last_resp0, gDevice.last_resp1, gDevice.last_resp2, gDevice.last_resp3);
+	//printf("ssed - ACMD51 response: %d, %d, %d, %d\n", gDevice.last_resp0, gDevice.last_resp1, gDevice.last_resp2, gDevice.last_resp3);
 		
 	// Set back to default
 	gDevice.block_size = 512;
@@ -605,9 +605,9 @@ unsigned int EmmcInitialise(void)
 		}
 	}
 	
-    printf("ssed - SCR[0]: %d, SCR[1]: %d\n", gDevice.scr.scr[0], gDevice.scr.scr[1]);;
-    printf("ssed - SCR: %d, %d\n", byte_swap(gDevice.scr.scr[0]), byte_swap(gDevice.scr.scr[1]));
-    printf("ssed - SCR: version %s, bus_widths %d\n", gSdVersionStrings[gDevice.scr.sd_version], gDevice.scr.sd_bus_widths);
+    //printf("ssed - SCR[0]: %d, SCR[1]: %d\n", gDevice.scr.scr[0], gDevice.scr.scr[1]);;
+    //printf("ssed - SCR: %d, %d\n", byte_swap(gDevice.scr.scr[0]), byte_swap(gDevice.scr.scr[1]));
+    //printf("ssed - SCR: version %s, bus_widths %d\n", gSdVersionStrings[gDevice.scr.sd_version], gDevice.scr.sd_bus_widths);
 	
 	if(gDevice.scr.sd_bus_widths & 0x4)
 	{
