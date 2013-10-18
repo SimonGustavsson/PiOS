@@ -87,10 +87,12 @@ void WaitForUartAlive(void)
 {
 	printf("Waiting for user to connect via uart...\n");
 
-	while(gUart->mu_lsr.bits.data_read == 0)
-	{ 
-		/* Do Nothing */ 
-	}
+	printf("MU_LSR is located at 0x%h.\n", &gUart->mu_lsr.raw);
+
+	//
+	// TODO: This is never true - why?
+	//
+	while(gUart->mu_lsr.bits.data_ready == 0) { /* Do nothing */ }
 
 	printf("User connected, launching system.\n");
 	uart_send_string("Welcome, user!\n");

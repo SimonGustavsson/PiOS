@@ -38,6 +38,9 @@ unsigned int uart_initialize(void)
 	var &= ~(7 << 12); //gpio14
     var |= 2 << 12;    //alt5
 
+	var &= ~(7 << 15); // Gpio15
+	var |= 2 << 15; // Alt 5
+
 	*(unsigned int*)GPFSEL1 = var;
 
 	wait(5);
@@ -45,7 +48,7 @@ unsigned int uart_initialize(void)
 	// Enable pull down/up clock on pin 14
 	//gGpio->gppudclk0.bits.pin14 = 1;
 	printf("GPPUDCLK0 = %d.\n", *(volatile unsigned int*)GPPUDCLK0);
-	*(volatile unsigned int*)GPPUDCLK0 = (1 << 14);
+	*(volatile unsigned int*)GPPUDCLK0 = (1 << 14) | (1 << 15);
 
 	wait(5);
 	

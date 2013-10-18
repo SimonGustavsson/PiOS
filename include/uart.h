@@ -67,7 +67,7 @@ typedef union {
 	unsigned int raw;
 
 	struct {
-		unsigned int data_read : 1;
+		unsigned int data_ready : 1;
 		unsigned int receiver_overrun : 1;
 		unsigned int reserved : 3;
 		unsigned int transmitter_empty : 1;
