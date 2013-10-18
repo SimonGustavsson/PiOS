@@ -88,6 +88,57 @@ void itoa(int number, char* buf)
 		*--buf = '-';
 }
 
+void dec_to_hex(char* buf, unsigned int dec)
+{
+	unsigned int reminder[50];
+	unsigned int length = 0;
+
+	while(dec > 0)
+	{
+		reminder[length] = dec % 16;
+		dec = dec / 16;	
+		length++;
+	}
+
+	char* buf_ptr = buf;
+
+	int i;
+	for(i = length - 1; i >= 0; i--)
+	{
+		switch(reminder[i])
+		{
+			case 10:
+				*buf_ptr++ = 'A';
+				break;
+			case 11:
+				*buf_ptr++ = 'B';
+				break;
+			case 12:
+				*buf_ptr++ = 'C';
+				break;
+			case 13:
+				*buf_ptr++ = 'D';
+				break;
+			case 14:
+				*buf_ptr++ = 'E';
+				break;
+			default:
+				{
+					// Display as digits
+					char itoa_buf[10];
+					itoa(reminder[i], itoa_buf);
+
+					strcpy(itoa_buf, buf_ptr);
+
+					buf_ptr += strlen(itoa_buf);
+				break;
+				}
+		}
+	}
+
+	*buf_ptr = '\0';
+}
+
 void printf_i(char* text, ...)
 {
 	va_list ap;
@@ -121,6 +172,19 @@ void printf_i(char* text, ...)
 				strcpy(arg, result);
 				
 				result += strlen(arg);
+			}
+			else if(*(text + 1) == 'h') // hex
+			{
+				char hex_buf[50];
+				char* hex_buf_ptr = &hex_buf[0];
+
+				dec_to_hex(hex_buf_ptr, va_arg(ap, int));
+				
+				strcpy(hex_buf, result);
+				
+				unsigned int hexLength = strlen(hex_buf);
+
+				result += hexLength;
 			}
 			
 			// make sure we skip the type specifier
@@ -170,7 +234,20 @@ void printf(char* text, ...)
 				
 				result += strlen(arg);
 			}
-			
+			else if(*(text + 1) == 'h') // hex
+			{
+				char hex_buf[50];
+				char* hex_buf_ptr = &hex_buf[0];
+
+				dec_to_hex(hex_buf_ptr, va_arg(ap, int));
+				
+				strcpy(hex_buf, result);
+				
+				unsigned int hexLength = strlen(hex_buf);
+
+				result += hexLength;
+			}
+
 			// make sure we skip the type specifier
 			text++;
 			
