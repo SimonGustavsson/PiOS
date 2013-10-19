@@ -24,7 +24,6 @@ typedef struct {
 	volatile unsigned int c3;       // Compare 3 /
 } timer;
 
-
 unsigned int timer_init(void);
 void timer_sp_setinterval(unsigned int interval);
 void timer_sp_clearmatch(void);
