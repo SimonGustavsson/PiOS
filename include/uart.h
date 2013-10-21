@@ -22,11 +22,13 @@ typedef union {
 
 typedef union {
 	unsigned int raw;
-
-	struct {
-		unsigned int enable_transmit_interrupt : 1;
-		unsigned int enable_receive_interrupt : 1;
-		unsigned int reserved : 30;
+	struct {		
+		unsigned int interrupt_pending : 1;
+		unsigned int interrupt_id_fifo_clear : 2; // On write: bit 1 will clear receive FIFO and bit 2 will clear. On read 0 = no interrupt, 1 = transmit holding registry empty, 2 = Receiver holds valid byte
+		unsigned int timeout : 1; // NOTE: Always 0 as mini uart has no timeout function
+		unsigned int reserved : 2;
+		unsigned int fifo_enables : 2;
+		unsigned int reserved2 : 24;
 	} bits;
 } aux_mu_iir_reg;
 
@@ -34,9 +36,9 @@ typedef union {
 	unsigned int raw;
 
 	struct {
-		unsigned int interrupt_pending : 1;
-		unsigned int interrupt_id_fifo_clear : 2; // On write: bit 1 will clear receive FIFO and bit 2 will clear. On read 0 = no interrupt, 1 = transmit holding registry empty, 2 = Receiver holds valid byte
-		unsigned int timeout : 1; // NOTE: Always 0 as mini uart has no timeout function
+		unsigned int enable_transmit_interrupt : 1;
+		unsigned int enable_receive_interrupt : 1;
+		unsigned int reserved: 30;
 
 	} bits;
 } aux_mu_ier_reg;
@@ -231,3 +233,4 @@ typedef volatile struct { // Located at 0x20215000
 unsigned int uart_initialize(void);
 void uart_send_string(char* s);
 void uart_send_char(unsigned int c);
+unsigned int uart_read_char(unsigned int block);

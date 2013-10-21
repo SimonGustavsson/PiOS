@@ -10,7 +10,6 @@
 
 volatile unsigned int irq_counter;
 volatile extern Emmc* gEmmc;
-volatile Uart* gUart;
 
 void OnCriticalError(void)
 {
@@ -50,14 +49,15 @@ unsigned int system_initialize(void)
 {
 	unsigned int result = 0;
 
-	gUart = (Uart*)UART_BASE;
-
 	// First and foremost: The LED so we can flash it to signal errors if FB init fails
 	gpio_initialize();
-
+	
 	// Initialize terminal first so we can print error messages if any (Hah, unlikely!)
 	if((result = terminal_init()) != 0)
 		OnCriticalError(); // Critical error: Failed to initialize framebuffer :-(
+	
+	if(uart_initialize() != 0)
+		printf("Failed to initialize uart.\n");
 
 	// Note: Timer is not essential to system initialisation
 	if(timer_init() != 0)
@@ -77,9 +77,6 @@ unsigned int system_initialize(void)
 	//if(EmmcInitialise() != 0)
 	//	printf("Failed to intialise emmc.\n");
 
-	if(uart_initialize() != 0)
-		printf("Failed to initialize uart.\n");
-
 	return result;
 }
 
@@ -87,12 +84,12 @@ void WaitForUartAlive(void)
 {
 	printf("Waiting for user to connect via uart...\n");
 
-	while(gUart->mu_lsr.bits.data_ready == 0) { /* Do nothing */ }
+	// Block until a char is read
+	uart_read_char(1);
 
 	printf("User connected, launching system.\n");
 
 	uart_send_string("Welcome, user!\n");
-	// If we want to know what the user sent, check gUart->mu_io.bits.data
 }
 
 int cmain(void)
@@ -112,7 +109,7 @@ int cmain(void)
 		while(1)
 		{
 			terminal_update();
-						
+
 			wait(10);
 		}
 	}	
