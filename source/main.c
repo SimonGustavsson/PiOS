@@ -6,7 +6,7 @@
 #include "terminal.h"
 #include "timer.h"
 #include "usbd/usbd.h"
-#include "uart.h"
+#include "mini_uart.h"
 
 volatile unsigned int irq_counter;
 volatile extern Emmc* gEmmc;
