@@ -1,4 +1,5 @@
 #include "mailbox.h"
+#include "memory.h"
 #include "stringutil.h"
 #include "timer.h"
 
@@ -16,14 +17,19 @@ unsigned int Mailbox_Read(unsigned int channel)
 	{
 		while (*gMailbox0Status & MAILBOX_EMPTY)
 		{
+			FlushCache();
+
 			// Arbitrary large number for timeout
 			if(count++ >(1<<25))
 			{
 				return 0xffffffff;
 			}
 		}
+		DataMemoryBarrier();
 		
 		data = *gMailbox0Read;
+
+		DataMemoryBarrier();
 
 		if ((data & 15) == channel)
 			return data;
@@ -33,9 +39,13 @@ unsigned int Mailbox_Read(unsigned int channel)
 void Mailbox_Write(unsigned int channel, unsigned int data)
 {
 	// Wait until there's space in the mailbox
-	while (*gMailbox0Status & MAILBOX_FULL){
+	while (*gMailbox0Status & MAILBOX_FULL)
+	{
+		FlushCache();
 	}
 	
+	DataMemoryBarrier();
+
 	// 28 MSB is data, 4 LSB = channel
 	*gMailbox0Write = (data | channel);
 }
