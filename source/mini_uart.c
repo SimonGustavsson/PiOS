@@ -4,11 +4,11 @@
 #include "stringutil.h"
 
 static gpio_reg *gGpio;
-static Uart *gUart;
-unsigned int uart_initialize(void)
+static MiniUart *gUart;
+unsigned int mini_uart_initialize(void)
 {
 	gGpio = (gpio_reg*)GPIO_BASE;
-	gUart = (Uart*)UART_BASE;
+	gUart = (MiniUart*)MINI_UART_BASE;
 
 	// Setup the uart
 	gUart->enables.raw = 1; // Can't set individual bits
@@ -48,7 +48,7 @@ unsigned int uart_initialize(void)
 	return 0;
 }
 
-unsigned int uart_read_char(unsigned int block)
+unsigned int mini_uart_read_char(unsigned int block)
 {
 	if(block)
 	{
@@ -60,17 +60,17 @@ unsigned int uart_read_char(unsigned int block)
 	return gUart->mu_io.bits.data;
 }
 
-void uart_send_string(char* s)
+void mini_uart_send_string(char* s)
 {
 	while(*s != '\0')
 	{
-		uart_send_char(*s);
+		mini_uart_send_char(*s);
 
 		s++;
 	}
 }
 
-void uart_send_char(unsigned int c)
+void mini_uart_send_char(unsigned int c)
 {
 	while(1)
 	{
@@ -82,7 +82,7 @@ void uart_send_char(unsigned int c)
 	{
 		gUart->mu_io.raw = '\n'; // LF
 
-		uart_send_char('\r'); // Carriage return
+		mini_uart_send_char('\r'); // Carriage return
 	}
 	else
 	{

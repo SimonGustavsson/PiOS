@@ -1,4 +1,4 @@
-#define UART_BASE 0x20215000
+#define MINI_UART_BASE 0x20215000
 
 typedef union {
 	unsigned int raw;
@@ -228,9 +228,9 @@ typedef volatile struct { // Located at 0x20215000
 	aux_spi_peek spi0_peek;        // SPI 1 Peek
 	aux_spi_cntl0_reg spi1_cntl0;  // SPI 2 Control register 0
 	aux_spi_cntl1_reg spi1_cntl1;  // SPI 2 Control register 1
-} Uart;
+} MiniUart;
 
-unsigned int uart_initialize(void);
-void uart_send_string(char* s);
-void uart_send_char(unsigned int c);
-unsigned int uart_read_char(unsigned int block);
+unsigned int mini_uart_initialize(void);
+void mini_uart_send_string(char* s);
+void mini_uart_send_char(unsigned int c);
+unsigned int mini_uart_read_char(unsigned int block);

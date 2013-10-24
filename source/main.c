@@ -56,7 +56,7 @@ unsigned int system_initialize(void)
 	if((result = terminal_init()) != 0)
 		OnCriticalError(); // Critical error: Failed to initialize framebuffer :-(
 	
-	if(uart_initialize() != 0)
+	if(mini_uart_initialize() != 0)
 		printf("Failed to initialize uart.\n");
 
 	// Note: Timer is not essential to system initialisation
@@ -85,11 +85,11 @@ void WaitForUartAlive(void)
 	printf("Waiting for user to connect via uart...\n");
 
 	// Block until a char is read
-	uart_read_char(1);
+	mini_uart_read_char(1);
 
 	printf("User connected, launching system.\n");
 
-	uart_send_string("Welcome, user!\n");
+	mini_uart_send_string("Welcome, user!\n");
 }
 
 int cmain(void)
