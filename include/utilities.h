@@ -1,6 +1,6 @@
 
 // Support for unaligned data access
-static inline void write_word(unsigned int val, unsigned short* buf, int offset)
+static inline void write_word(unsigned int val, unsigned char* buf, int offset)
 {
     buf[offset + 0] = val & 0xff;
     buf[offset + 1] = (val >> 8) & 0xff;
@@ -8,7 +8,7 @@ static inline void write_word(unsigned int val, unsigned short* buf, int offset)
     buf[offset + 3] = (val >> 24) & 0xff;
 }
 
-static inline unsigned int read_word(unsigned short* buf, int offset)
+static inline unsigned int read_word(unsigned char* buf, int offset)
 {
 	unsigned int b0 = buf[offset + 0] & 0xff;
 	unsigned int b1 = buf[offset + 1] & 0xff;

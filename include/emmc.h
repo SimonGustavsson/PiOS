@@ -66,6 +66,7 @@ typedef struct {
 	unsigned int rca;
 	unsigned int supports_sdhc;
 	unsigned int ocr;
+	unsigned int failed_voltage_switch;
 } sd;
 
 // SdClockSpeed - SD Clock Frequencies (in Hz)
@@ -575,12 +576,16 @@ typedef struct { // 48-Bit
 	unsigned int end:1;
 } SdResponse7;
 
-unsigned int EmmcInitialise(void);
+int EmmcInitialise(void);
 unsigned int EmmcGetClockSpeed(void);
 unsigned int EmmcPowerOn(void);
 unsigned int EmmcPowerOff(void);
 unsigned int EmmcPowerCycle(void);
 unsigned int EmmcSetClockRate(unsigned int clock, unsigned int targetRate);
-unsigned int EmmcSendCommand(unsigned int cmd, unsigned int argument);
 unsigned int EmmcRead(unsigned char* buf, unsigned int bufLen, unsigned int blockToReadFrom);
 unsigned int EmmcWrite(unsigned char* buf, unsigned int bufLEn, unsigned int blockToWriteTo);
+int Emmc_IssueCommandInt(unsigned int command, unsigned int argument);
+int Emmc_IssueCommand(unsigned int command, unsigned int argument);
+int EmmcReadBlock(char* buf, unsigned int buflen, unsigned int block_number);
+
+

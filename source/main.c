@@ -56,8 +56,8 @@ unsigned int system_initialize(void)
 	if((result = terminal_init()) != 0)
 		OnCriticalError(); // Critical error: Failed to initialize framebuffer :-(
 	
-	if(mini_uart_initialize() != 0)
-		printf("Failed to initialize uart.\n");
+	//if(mini_uart_initialize() != 0)
+	//	printf("Failed to initialize uart.\n");
 
 	// Note: Timer is not essential to system initialisation
 	if(timer_init() != 0)
@@ -74,8 +74,8 @@ unsigned int system_initialize(void)
 		printf("Keyboard initialise failed, error code: %d\n", result);
 
 	// Note: EMMC is not essential to system initialisation
-	//if(EmmcInitialise() != 0)
-	//	printf("Failed to intialise emmc.\n");
+	if(EmmcInitialise() != 0)
+		printf("Failed to intialise emmc.\n");
 
 	return result;
 }
@@ -100,17 +100,23 @@ int cmain(void)
 	{
 		// System all up and running, wait for a alive sign from the uart before proceeding
 		// TODO: Conditionalize this - only use if no screen attached
-		WaitForUartAlive();
+		//WaitForUartAlive();
 
 		// Kick off the terminal
 		terminal_printWelcome();
 		terminal_printPrompt();
+		char buf[512];
+
+		if(EmmcReadBlock(&buf[0], 512, 0))
+		{
+			printf("Block 0 is: %s", buf);
+		}
 
 		while(1)
 		{
 			terminal_update();
 
-			wait(10);
+			wait(5);
 		}
 	}	
 

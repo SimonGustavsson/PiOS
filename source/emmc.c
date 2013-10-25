@@ -4,6 +4,11 @@
 #include "stringutil.h"
 #include "utilities.h"
 
+#define SDMA_BUFFER     0x6000
+#define SDMA_BUFFER_PA  (SDMA_BUFFER + 0xC0000000)
+#define SD_CMD_DMA          1
+#define ACMD(a) (a | IS_APP_CMD)
+
 volatile Emmc* gEmmc;
 sd gDevice;
 unsigned int gEmmcUseDMA = 0;
@@ -11,6 +16,9 @@ unsigned int gEmmcUseDMA = 0;
 unsigned int gLastCommand = 0;
 unsigned int gLastCommandSuccess = 0;
 unsigned int gLastError = 0;
+static unsigned int gHciVersion;
+static unsigned int gSdCapabilities0;
+static unsigned int gSdCapabilities1;
 
 // Predefine the commands for ease of use
 static int ACMD[] = { 
@@ -128,11 +136,23 @@ static int CMD[] = {
 	SD_COMMAND_INDEX(56) | SD_RESP_R1 | SD_CMD_ISDATA
 };
 
-char* gSdVersionStrings[] = { "Unknown", "Version 1", "Version 1.1", "Version 2", "Version 3", "Version 4"};
+char* gSdVersionStrings[] = { "Unknown", "Version 1/1.01", "Version 1.10", "Version 2.00", "Version 3.0x", "Version 4.xx"};
 
 char* gInterruptErrors[] = { "Command not finished", "Data not done", "Block gap", "", "Write ready", "Read ready", "", "", "Card interrupt request",
 	"", "", "", "Retune", "Boot acknowledge", "Boot operation terminated", "An error meh", "Command line timeout", "Command CRC Error", "Command line end bit not 1", "Incorrect command index", "Timeout on data line", "Data CRC Error", 
 	"End bit on data line not 1", "", "Auto cmd error", "", "", "", "", "", "", ""};
+
+void *memcpy(void *dest, const void *src, unsigned int n)
+{
+        char *s = (char *)src;
+        char *d = (char *)dest;
+        while(n > 0)
+        {
+                *d++ = *s++;
+                n--;
+        }
+        return dest;
+}
 
 void PrintErrorsInInterruptRegister(unsigned int reg)
 {
@@ -196,15 +216,14 @@ unsigned int Emmc_GetClockDivider(unsigned int base_clock, unsigned int target_r
 
 	unsigned int freq_select = divisor & 0xFF;
 	unsigned int upper_bits = (divisor >> 8) & 0x3;
-	unsigned int ret = (freq_select << 8) | (upper_bits << 6);
+	unsigned int ret = (freq_select << 8) | (upper_bits << 6) | (0 << 5);
 
 	// For debugging
-	int denominator = -1;
-	if(divisor != 0)
-		denominator = divisor * 2;
-	int actual_clock = base_clock / denominator;
-	printf("ssed - Base clock: %d, target rate: %d, divisor: %d, actual clock: %d, ret: %d\n",
-		base_clock, target_rate, divisor, actual_clock, ret);
+	//int denominator = -1;
+	//if(divisor != 0)
+	//	denominator = divisor * 2;
+	//
+	//int actual_clock = base_clock / denominator;
 
 	return ret;
 }
@@ -225,6 +244,8 @@ unsigned int EmmcSwitchClockRate(unsigned int base_clock, unsigned int target_ra
 	// Turn the clock off
 	gEmmc->Control1.raw &= ~(1 << 2);
 
+	wait(200);
+
 	// Write the new divider
 	unsigned int control1 = gEmmc->Control1.raw;
 	control1 &= ~0xFFE0; // Clear old clock generator select
@@ -232,73 +253,93 @@ unsigned int EmmcSwitchClockRate(unsigned int base_clock, unsigned int target_ra
 
 	gEmmc->Control1.raw = control1;
 
+	wait(100);
+
 	// Re enable the SD clock with the new speed
 	control1 |= (1 << 2);
 	gEmmc->Control1.raw = control1;
 
 	wait(200);
 
-	printf("ssed - emmc clock rate successfully changed to: %d Hz.\n", target_rate);
-
 	return 1;
 }
 
-unsigned int EmmcInitialise(void)
+int EmmcInitialise(void)
 {
 	gEmmc = (Emmc*)EMMC_BASE;
 	gDevice.rca = 0;
 	gDevice.blocks_to_transfer = 0;
+	gEmmcUseDMA = 0;
 
 	printf("ssed - Initialising...\n");
 
 	// Power cycle to ensure initial state
 	// TODO: Add error checking
-	EmmcPowerCycle();
+	if(EmmcPowerCycle() != 0)
+	{
+		printf("ssed - Controller did not successfully power cycle.\n");
+		return -1;
+	}
 
-	printf("ssed - Version: %d Vendor: %d SdVersion: %d Slot status: %d\n",
+	//printf("ssed - Controller power cycled.\n");
+
+	gHciVersion = (gEmmc->SlotisrVer.raw >> 16) & 0xff ;
+	
+	/*printf("ssed - Version: %d Vendor: %d SdVersion: %d Slot status: %d\n",
 		gEmmc->SlotisrVer.raw, 
 		gEmmc->SlotisrVer.bits.vendor, 
 		gEmmc->SlotisrVer.bits.sdversion, 
-		gEmmc->SlotisrVer.bits.slot_status);
-
-	if(gEmmc->SlotisrVer.bits.sdversion < 2)
+		gEmmc->SlotisrVer.bits.slot_status);*/
+	
+	if(gHciVersion < 2)
 	{
-		printf("ssed - Only SDHCI versions >= 3.0 are supported.\n");
+		printf("ssed - Only SDHCI versions >= 3.0 are supported. %d is a bit shit innit.\n", gHciVersion);
 		return -1;
 	}
 	
 	// Disable clock
 	unsigned int control1 = gEmmc->Control1.raw;
 	control1 |= (1 << 24);
-	control1 &= ~(1 << 2);
+	control1 &= ~(1 << 2); // Disable clock
 	control1 &= ~(1 << 0);
 	gEmmc->Control1.raw = control1;
 	
 	// Wait for the circuit to reset
-	while((gEmmc->Control1.raw & (0x7 << 24)) != 0);
+	while((gEmmc->Control1.raw & (0x7 << 24)) != 0) { /* Do Nothing */ }
+
+	gSdCapabilities0 = gEmmc->Capabilities0;
+	gSdCapabilities1 = gEmmc->Capabilities1;
+
+	//printf("ssed - Capabilities: %d - %d.\n", gSdCapabilities0, gSdCapabilities1);
 
 	// Wait for a card to be detected (should always be the case on the pi)
 	while((gEmmc->Status.raw & (1 << 16)) != (1 << 16));
+	
+	gEmmc->Control2.raw = 0;
 
-	if((gEmmc->Status.raw  & (1 << 16)) == 0)
+	// Get base clock rate
+	unsigned int base_clock = Mailbox_SD_GetBaseFrequency();
+	if(base_clock == -1)
 	{
-		printf("ssed - No card inserted, how the hell did this happen!? :)\n");
+		printf("ssed - Invalid base clock, assuming 100MHz.\n");
+		base_clock = 100000000;
+	}
+
+	//printf("ssed - Base clock speed: %d.\n", base_clock);
+	
+	// Set identification frequency 400 kHz (this is then later increased to 25MHz)
+	control1 = gEmmc->Control1.raw;
+	control1 |= 1; // Enable clock
+
+
+	unsigned int id_freq = Emmc_GetClockDivider(base_clock, SdClockId);
+	if(id_freq == -1)
+	{
+		printf("ssed - Unable to get valid clock divider for ID frequency.\n");
 		return -1;
 	}
 
-	// TODO: Read capabilities (not documented in BCM)?
-
-	gEmmc->Control2.raw = 0;
-
-	unsigned int base_clock = Mailbox_SD_GetBaseFrequency();
-	if(base_clock == -1)
-		base_clock = 100000000;
-
-	//printf("ssed - Base clock speed: %d.\n", base_clock);
-
-	control1 = gEmmc->Control1.raw;
-	control1 |= 1; // Enable clock
-	control1 |= Emmc_GetClockDivider(base_clock, 400000);
+	control1 |= id_freq;
 	control1 |= (7 << 16); // Data timeout TMCLK * 2^10
 
 	gEmmc->Control1.raw = control1;
@@ -306,19 +347,24 @@ unsigned int EmmcInitialise(void)
 	// Wait for the clock to stabalize
 	while((gEmmc->Control1.raw & 0x2) != 0);
 
-	wait(2);
+	wait(100);
 
 	gEmmc->Control1.raw |= 4; // Enable the clock
 
-	wait(2);
+	wait(100);
 
 	gEmmc->IrptEn.raw = 0; // Disable ARM interrupts
 	gEmmc->Interrupt.raw = 0xFFFFFFFF;
-	gEmmc->IrptMask.raw = 0x17F7137;
+	unsigned int irpt_mask = 0xFFFFFFFF & (~SD_CARD_INTERRUPT);
 
-	wait(2);
+	// ENABLE INTERRUPTS?
+	irpt_mask |= SD_CARD_INTERRUPT;
 
-	if(!EmmcSendCommand(CMD[GoIdleState], 0)) // CMD0, should add timeout?
+	gEmmc->IrptMask.raw = irpt_mask;
+	
+	wait(100);
+
+	if(!Emmc_IssueCommand(GoIdleState, 0)) // CMD0, should add timeout?
 	{
 		printf("ssed - No CMD0 response.\n");
 		return -1;
@@ -326,84 +372,93 @@ unsigned int EmmcInitialise(void)
 
 	// CMD8 Check if voltage is supported. 
 	// Voltage: 0001b (2.7-3.6V), Check pattern: 0xAA
-	EmmcSendCommand(CMD[SendIfCond], 0x1AA); 
-	if((gDevice.last_resp0 & 0xFFF) != 0x1AA)
-	{
-		printf("ssed - Card version is not >= 2.0.\n");
+	int v2_later = 0;
+	if(!Emmc_IssueCommand(SendIfCond, 0x1AA))
+	{	
+		printf("ssed - Send if cond failed.\n");
 		return -1;
 	}
-	//printf("ssed - Voltage switched to 2.7-3.6V.\n");
-	
-	// This only returns if it's an SDIO card, this is expected to fail for all non-SDIO cards
-	//if(EmmcSendCommand(CMD[IOSetOpCond], 0))
-	//{
-	//	printf("ssed - Unsupported SDIO card detected.\n");
-	//}
-	
+
+	if((gDevice.last_resp0 & 0xFFF) != 0x1AA)
+	{
+		printf("ssed - Card version is not >= 2.0. CMD8 resp: %d.\n", gDevice.last_resp0 & 0xFFF);
+		return -1;
+	}
+
+	v2_later = 1;
+
 	// Send inquiry ACMD41 to get OCR
-	if(!EmmcSendCommand(ACMD[41], 0))
+	if(!Emmc_IssueCommand(ACMD(41), 0))
 	{
 		printf("ssed - Inquiry ACMD41 failed.\n");
 		return -1;
 	}
-
-	unsigned int card_supports_voltage_switch = (gDevice.last_resp0 & (1 << 24));
+	
+	unsigned int card_supports_voltage_switch = 0; //(gDevice.last_resp0 & (1 << 24));
 	while(1)
 	{
-		// Switch to 1.8V Request, Set Maximum performance, Enable SDHC and SDXC support
-		// TODO: Add check to see if it's a V2 card and only enable SDHC/SDXC if it is
-		unsigned int acmd41arg = 0x00ff8000 | (1 << 28) | (1 << 30);
-
-		if(card_supports_voltage_switch)
+		unsigned int flags = 0;
+		if(v2_later)
 		{
-			//printf("ssed - Sending ACMD41 with argument voltage switch supported.\n");
-			acmd41arg |= (1 << 24);
+			// Enable SDHC support
+			flags |= (1 << 30);
+
+			// Set 1.8v support
+			if(!gDevice.failed_voltage_switch)
+				flags |= (1 << 24);
+
+			// Enable SDXC Maximum performance
+			flags |= (1 << 28);
 		}
 
-		EmmcSendCommand(ACMD[41], acmd41arg);
-
-		wait(20);
+		if(!Emmc_IssueCommand(ACMD(41), 0x00FF8000 | flags))
+		{
+			printf("ssed - Error issuing ACMD41\n");
+			return -1;
+		}
 
 		if((gDevice.last_resp0 >> 31) & 0x1)
 		{
 			gDevice.ocr = (gDevice.last_resp0 >> 8) & 0xFFFF;
 			gDevice.supports_sdhc = (gDevice.last_resp0 >> 30) & 0x1;
 			
-			if((gDevice.last_resp0 >> 30) & 0x1)
-				printf("ssed - card supports SDHC.\n");
+			/*if((gDevice.last_resp0 >> 30) & 0x1)
+				printf("ssed - card supports SDHC.\n");*/
 			
 			card_supports_voltage_switch = (gDevice.last_resp0 >> 24) & 0x1;
 
 			break;
 		}
 
-		wait(200);
+		wait(500);
 	}
 
+	/* TODO: Store this for later use?
 	if(((gDevice.last_resp0 >> 30) & 0x1) == 0)
 		printf("ssed - card is a SDSC.\n");
 	else
 		printf("ssed - card is SDHC/SDXC.\n");
+	*/
 	
 	// We have an SD card which supports SDR12 mode at 25MHz - Set frequency
 	EmmcSwitchClockRate(base_clock, SdClockNormal);
-
-	wait(5); // Wait for clock rate to change
+	
+	wait(100); // Wait for clock rate to change
 
 	if(card_supports_voltage_switch)
 	{
-		//printf("ssed - Switching to 1.8V mode.\n");
+		printf("ssed - Switching to 1.8V mode.\n");
 
-		if(!EmmcSendCommand(CMD[VoltageSwitch], 0))
+		if(!Emmc_IssueCommand(VoltageSwitch, 0))
 		{
 			printf("ssed - CMD[VoltageSwitch] failed.\n");
 
 			// Power off
-			Mailbox_SetDevicePowerState(0, 0);
+			gDevice.failed_voltage_switch = 1;
 
-			// TODO: Call initialize again, but don't try 1.8V mode
+			EmmcPowerOff();
 
-			return -1;
+			return EmmcInitialise();
 		}
 
 		// Disable SD clock
@@ -415,24 +470,29 @@ unsigned int EmmcInitialise(void)
 		if(dat30 != 0)
 		{
 			printf("ssed - DAT[3:0] did not settle to 0. Was: %d\n", dat30);
+			
+			gDevice.failed_voltage_switch = 1;
 
-			// TODO: Reinitialize but don't try 1.8V mode
-			return -1;
+			EmmcPowerOff();
+
+			return EmmcInitialise();
 		}
 
 		// Set 1.8V signal enable to 1
 		gEmmc->Control0.raw |= (1 << 8);
 
-		wait(5);
+		wait(50);
 
 		// Check to make sure signal enable is still set
 		if(((gEmmc->Control0.raw >> 8) & 0x1) == 0)
 		{
 			printf("ssed - Controller did not keep the 1.8V signal high.\n");
+			
+			gDevice.failed_voltage_switch = 1;
 
-			// TODO: Reinitialize without 1.8V support
+			EmmcPowerOff();
 
-			return -1;
+			return EmmcInitialise();
 		}
 	
 		// Re enable sd clock
@@ -448,15 +508,16 @@ unsigned int EmmcInitialise(void)
 		{
             printf("ssed - DAT[3:0] did not settle to 1111b. Was: %d.\n", dat30);
 
-			// TODO: Reinitialize without 1.8V support
+			gDevice.failed_voltage_switch = 1;
+			EmmcPowerOff();
 
-			return -1;
+			return EmmcInitialise();
 		}
 
 		printf("ssed - Voltage switch complete.\n");
 	}	
 
-	if(!EmmcSendCommand(CMD[AllSendCid], 0x0))
+	if(!Emmc_IssueCommand(AllSendCid, 0x0))
 	{
 		printf("ssed - Error sending ALL_SEND_CID.\n");
 		return -1;
@@ -469,7 +530,7 @@ unsigned int EmmcInitialise(void)
 	gDevice.cid[3] = gDevice.last_resp3;
 
 	// Enter data state
-	if(!EmmcSendCommand(CMD[SendRelativeAddr], 0))
+	if(!Emmc_IssueCommand(SendRelativeAddr, 0))
 	{
 		printf("ssed - Error sending SEND_RELATIVE_ADDR.\n");
 		return -1;
@@ -509,42 +570,31 @@ unsigned int EmmcInitialise(void)
 		printf("ssed - CMD3 not ready for data.\n");
 		return -1;
 	}
-
-	printf("ssed - RCA: %d\n", gDevice.rca);
-
+	
 	// Not select the card to toggle it to transfer state
-	if(!EmmcSendCommand(CMD[SelectCard], gDevice.rca << 16))
+	if(!Emmc_IssueCommand(SelectCard, gDevice.rca << 16))
 	{
 		printf("ssed - Error sending SELECT_CARD.\n");
 		return -1;
 	}
 
 	unsigned int cmd7_resp = gDevice.last_resp0;
-
 	status = (cmd7_resp >> 9) & 0xF;
+
 	if((status != 3) && (status != 4))
 	{
 		printf("ssed - Invalid status: %d.\n", status);
 		return -1;
 	}
 
-	// Get card status (For debugging) to ensure we're in transfer mode
-	if(!EmmcSendCommand(CMD[SendStatus], gDevice.rca << 16))
-	{
-		printf("ssed - Could not retrieve status from card.\n");
-		return -1;
-	}
-
-	// Set block length to 512 if it's not a SDHC card
 	if(!gDevice.supports_sdhc)
 	{
-		if(!EmmcSendCommand(CMD[SetBlockLen], 512))
+		if(!Emmc_IssueCommand(SetBlockLen, 512))
 		{
-			printf("ssed - Failed to set initial block length to 512.\n");
+			printf("ssed - Error sending SET_BLOCKLEN.\n");
 			return -1;
 		}
 	}
-
 
 	// Black magic
 	gDevice.block_size = 512;
@@ -552,24 +602,15 @@ unsigned int EmmcInitialise(void)
 	controller_block_size &= (~0xFFF);
 	controller_block_size |= 0x200;
 	gEmmc->BlockCountSize.raw = controller_block_size;
-	
-	printf("ssed - Getting SCR register.\n");
-	
+		
 	// This is a data command, so setup the buffer
 	gDevice.receive_buffer = (unsigned int*)&(gDevice.scr.scr[0]); // 1174
 	gDevice.block_size = 8;
 	gDevice.blocks_to_transfer = 1;
 	
-	// Try sending it 5 times, because CRC hobbits sleep early on
-	unsigned int retries = 0;
-	unsigned int acmd51SendResult;
-
-	// Not sure if we should retry here?
-	while(!(acmd51SendResult = EmmcSendCommand(ACMD[51], 0)) && retries++ < 5);
-
-	if(!acmd51SendResult)
+	if(!Emmc_IssueCommand(ACMD(51), 0))
 	{
-		printf("ssed - Failed to send ACMD51.\n");
+		printf("ssed -     Failed to send ACMD51.\n");
 		return -1;
 	}
 
@@ -584,8 +625,6 @@ unsigned int EmmcInitialise(void)
 	unsigned int sd_spec3 = (scr0 >> (47 - 32)) & 0x1;
 	unsigned int sd_spec4 = (scr0 >> (42 - 32)) & 0x1;
 	gDevice.scr.sd_bus_widths = (scr0 >> (48 - 32)) & 0xF;
-
-	printf("ssed - bus widths = %d\n", gDevice.scr.sd_bus_widths);
 
 	gDevice.scr.sd_version = SdVersionUnknown;
 	if(sd_spec == 0)
@@ -604,13 +643,13 @@ unsigned int EmmcInitialise(void)
 				gDevice.scr.sd_version = SdVersion4;
 		}
 	}
-	
-    //printf("ssed - SCR[0]: %d, SCR[1]: %d\n", gDevice.scr.scr[0], gDevice.scr.scr[1]);;
-    //printf("ssed - SCR: %d, %d\n", byte_swap(gDevice.scr.scr[0]), byte_swap(gDevice.scr.scr[1]));
-    //printf("ssed - SCR: version %s, bus_widths %d\n", gSdVersionStrings[gDevice.scr.sd_version], gDevice.scr.sd_bus_widths);
-	
-	if(gDevice.scr.sd_bus_widths & 0x4)
+
+	// 5 means both 4-bit and 8-bit are supported
+	// It must support at least one, so fall back to 4-bit if 8 fails
+	unsigned int data_mode = 8;
+	if(gDevice.scr.sd_bus_widths != 5)
 	{
+		data_mode = 4;
 		// Set 4-bit transfer mode (ACMD6)
 		printf("ssed - Setting 4-bit data mode.\n");
 
@@ -619,7 +658,7 @@ unsigned int EmmcInitialise(void)
 		unsigned int new_interrupt_mask = old_interrupt_mask & ~(1 << 8);
 		gEmmc->IrptMask.raw = new_interrupt_mask;
 
-		if(EmmcSendCommand(ACMD[6], 0x2))
+		if(Emmc_IssueCommand(ACMD(6), 0x2))
 		{
 			printf("ssed - failed to switch to 4-bit data mode.\n");
 		}
@@ -635,249 +674,36 @@ unsigned int EmmcInitialise(void)
 		}
 	}
 
-	printf("ssed - Found a valid %s SD card.\n", gSdVersionStrings[gDevice.scr.sd_version]);
+	
+	printf("ssed - Found a valid %s SD card, using %d-bit transfer mode.\n", gSdVersionStrings[gDevice.scr.sd_version], data_mode);
 
 	gEmmc->Interrupt.raw = 0xFFFFFFFF;
 
-	printf("ssed - Initialization complete!\n");
+	printf("ssed - Initialization complete, the SD card is now your bitch!\n");
 
 	return 0;
 }
 
-unsigned int EmmcSendCommand(unsigned int cmd, unsigned int argument)
+unsigned int EmmcPowerOff(void)
 {
-	gLastCommand = 0;
-	gLastCommandSuccess = 0;
-
-	// Wait for command line to become available
-	while(gEmmc->Status.bits.CmdInhibit == 1)
-		wait(1);
-
-	// If the response type is "With busy" and the command is not an abort command
-	// We have to wait for the data line to become available before sending the command
-	if((cmd & SD_CMD_RSPNS_TYPE_MASK) == SD_CMD_RSPNS_TYPE_48B && (cmd & SD_CMD_TYPE_ABORT) != SD_CMD_TYPE_ABORT)
-	{	
-		while(gEmmc->Status.bits.DatInhibit != 0)
-			wait(1);
-	}
-	
-	if(gDevice.blocks_to_transfer > 0xFFFF)
-	{
-		printf("ssed - blocks_too_transfer is too large %d\n", gDevice.blocks_to_transfer);
-		gLastCommandSuccess = 0;
-		return -1;
-	}
-
-	// Write block size count to register
-	gEmmc->BlockCountSize.bits.BlkCnt = gDevice.blocks_to_transfer;
-	gEmmc->BlockCountSize.bits.BlkSize = gDevice.block_size;
-
-	unsigned int fixed_cmd;
-	if(cmd & IS_APP_CMD)
-	{ 		
-		fixed_cmd = cmd - IS_APP_CMD;
-		fixed_cmd |= 0x0 << 22; // Normal command type
-
-		gLastCommand = fixed_cmd;
-
-		unsigned int rca = 0;
-		if(gDevice.rca)
-			rca = gDevice.rca << 16;
-		
-		if(!EmmcSendCommand(CMD[55], rca))
-			return -1;
-
-		wait(50);
-	}
-	else
-	{
-		gLastCommand = cmd;
-		fixed_cmd = cmd;
-	}
-	
-	// TODO: Handle DMA
-
-	
-	// Set arg1
-	gEmmc->Arg1 = argument;
-
-	// Finally - Write the command
-	gEmmc->Cmdtm.raw = fixed_cmd;
-
-	// Just relax for a bit, get a drink or something
-	wait(2); 
-	
-	// Wait for the command done flag (or error :()
-	while(gEmmc->Interrupt.bits.cmd_done == 0 && gEmmc->Interrupt.bits.err == 0)
-		wait(20);
-
-	unsigned int interrupt_reg = gEmmc->Interrupt.raw;
-
-	// Clear the command complete status interrupt
-	gEmmc->Interrupt.raw = 0xffff0001; // Clear "Command finished" and all status bits
-
-	// Now check if we encountered an error sending our command
-	if((interrupt_reg & 0xffff0001) != 0x1)
-	{
-		gLastError = interrupt_reg & 0xFFFF0000;
-
-		PrintErrorsInInterruptRegister(interrupt_reg);
-		return -1;
-	}
-
-	wait(2);
-
-	switch(cmd & SD_CMD_RSPNS_TYPE_MASK)
-	{
-		case SD_CMD_RSPNS_TYPE_NONE:
-			gEmmc->Resp0 = 0;
-			gEmmc->Resp1 = 0;
-			gEmmc->Resp2 = 0;
-			gEmmc->Resp3 = 0;
-			break;
-		case SD_CMD_RSPNS_TYPE_48:
-		case SD_CMD_RSPNS_TYPE_48B:
-			gDevice.last_resp0 = gEmmc->Resp0;
-			gEmmc->Resp0 = 0;
-			break;
-		case SD_CMD_RSPNS_TYPE_136:
-			gDevice.last_resp0 = gEmmc->Resp0;
-			gDevice.last_resp1 = gEmmc->Resp1;
-			gDevice.last_resp2 = gEmmc->Resp2;
-			gDevice.last_resp3 = gEmmc->Resp3;
-			break;
-	}
-
-	if(cmd & SD_CMD_ISDATA)
-	{
-		unsigned int irpt;
-		unsigned int is_write = 0;
-		if(cmd & SD_CMD_DAT_DIR_CH)
-			irpt = (1 << 5); // Read
-		else
-		{
-			is_write = 1;
-			irpt = (1 << 4);
-		}
-
-		unsigned int current_block = 0;
-		unsigned int* bufferAddress = gDevice.receive_buffer;
-
-		while(current_block < gDevice.blocks_to_transfer)
-		{
-			if(gDevice.blocks_to_transfer > 1)
-				printf("ssed - send - Waiting for block %d to get ready.\n", current_block);
-
-			// Wait for block
-			while(!(gEmmc->Interrupt.raw & (irpt | 0x8000)));
-			interrupt_reg = gEmmc->Interrupt.raw;
-
-			gEmmc->Interrupt.raw = 0xFFFF0000 | irpt;
-
-			if((interrupt_reg & (0xFFFF0000 | irpt)) != irpt)
-			{
-				gLastError = interrupt_reg & 0xFFFF0000;
-				printf("ssed - send - Error occurred whilst waiting for data ready interrupt.\n");
-				return -1; // sadness, failed to read
-			}
-
-			// Transfer the block
-			unsigned int current_byte_number = 0;
-			while(current_byte_number < gDevice.block_size)
-			{
-				if(is_write)
-				{
-					gEmmc->Data = read_word((unsigned short*)bufferAddress, 0);
-				}
-				else
-				{
-					write_word(gEmmc->Data, (unsigned short*)bufferAddress, 0);
-				}
-				current_byte_number += 4;
-				bufferAddress++;
-			}
-
-			printf("ssed - send - Block transfer complete.\n");
-
-			current_block ++;
-		}
-	}
-
-	// Wait for transfer complete (set if read/write transfer with busy)
-	if((((cmd & SD_CMD_RSPNS_TYPE_MASK) == SD_CMD_RSPNS_TYPE_48B) ||(cmd & SD_CMD_ISDATA)))
-	{
-		// First make sure DAT Is not already 0
-		if(gEmmc->Status.bits.DatInhibit == 0)
-			gEmmc->Interrupt.raw = 0xFFFF0002;
-		else
-		{
-			// Wait for the interrupt
-			printf("ssed - send - Waiting for transfer complete interrupt.\n");
-			while(!(gEmmc->Interrupt.raw & 0x8002));
-			printf("ssed - send - Got transfer complete interrupt!\n");
-
-			interrupt_reg = gEmmc->Interrupt.raw;
-
-			gEmmc->Interrupt.raw = 0xFFFF0002;
-
-			if(((interrupt_reg & 0xFFFF0002) != 0x2) && ((interrupt_reg & 0xFFFF0002) != 0x100002))
-			{
-				printf("ssed - send - Error occured whilst waiting for transfer complete interrupt.\n");
-				
-				gLastError = interrupt_reg & 0xFFFF0000;
-
-				return -1;
-			}
-
-			gEmmc->Interrupt.raw = 0xFFFF0002;
-		}
-	}
-
-	// If the command was with data, wait for the appropriate interrupt
-	if((cmd & SD_RESP_R1b) == SD_RESP_R1b || (cmd & SD_CMD_ISDATA))
-	{
-		// Check if DAT is not already 0
-		if(gEmmc->Status.bits.DatInhibit == 0)
-		{
-			// Write 0xffff0002 to interrupt? :S Clear it again I guess?
-		}
-		else
-		{
-			printf("ssed - Reading busy data command and stuff...\n");
-
-			while(gEmmc->Interrupt.bits.cmd_done != 0 || gEmmc->Interrupt.bits.err == 0)
-				wait(20);
-			
-			interrupt_reg = gEmmc->Interrupt.raw;
-			gEmmc->Interrupt.raw = 0xFFFF0002;
-
-			if((((interrupt_reg & 0xFFFF0002) != 0x2) && (interrupt_reg & 0xFFFF0002) != 0x100002))
-			{
-				printf("ssed - Error occurred whilst waiting for transfer complete interrupt! :-(\n");
-				return -1;
-			}
-
-			gEmmc->Interrupt.raw = 0xFFFF0002;
-		}
-	}
-	else if(0 == 1) // is_dma
-	{
-		// For SDMA transfers, we have to wait for either transfer complete,
-        //  DMA int or an error
-	}
-	
-	// Success!
-	return 1;	
+	return Mailbox_SetDevicePowerState(HwId_Emmc, 0);
 }
 
 unsigned int EmmcPowerOn(void)
 {
-	return Mailbox_SetDevicePowerState(0x0, 1);
+	return Mailbox_SetDevicePowerState(HwId_Emmc, 1);
 }
 
-unsigned int EmmcPowerOff(void)
+unsigned int Emmc_GetBaseClockHz()
 {
-	return Mailbox_SetDevicePowerState(0x0, 0);
+	return Mailbox_SD_GetBaseFrequency();
+}
+
+void Emmc_SD_PowerOff(void)
+{
+	unsigned int control0 = gEmmc->Control0.raw;
+	control0 &= ~(1 << 8);
+	gEmmc->Control0.raw = control0;
 }
 
 unsigned int EmmcPowerCycle(void)
@@ -887,11 +713,10 @@ unsigned int EmmcPowerCycle(void)
 	unsigned int res = 0;
 	if((res = EmmcPowerOff()) < 0)
 	{
-		printf("Failed!\n");
 		return -1;
 	}	
 	
-	wait(50);
+	wait(100);
 	
 	if((res = EmmcPowerOn()) < 0)
 		printf("Failed!\n");
@@ -900,3 +725,540 @@ unsigned int EmmcPowerCycle(void)
 	
 	return EmmcPowerOn();
 }
+
+//static int Emmc_ResetCommandLine()
+//{
+//	gEmmc->Control1.raw |= (1 << 25);
+//
+//	// Or are we waiting for it to be set to 0?
+//	while((gEmmc->Control1.raw & (1 << 25)) == 1) { /* Do Nothing */ }
+//
+//	return 0;
+//}
+
+static int Emmc_ResetDatLine()
+{
+	gEmmc->Control1.raw |= (1 << 26);
+
+	while((gEmmc->Control1.raw & (1 << 26)) == 1) { /* Do Nothing */ } 
+
+	return 0;
+}
+
+static void Emmc_HandleCardInterrupt(void)
+{
+	unsigned int status = gEmmc->Status.raw;
+
+	printf("ssed - card interrupt\n");
+	printf("ssed - controller status: 0x%h", status);
+
+	if(gDevice.rca)
+	{
+		if(!Emmc_IssueCommand(SendStatus, gDevice.rca << 16))
+		{
+			printf("Failed to send SendStatus command when handling interrupt.\n");
+		}
+	}
+}
+
+static void Emmc_HandleInterrupt()
+{
+	unsigned int irpt = gEmmc->Interrupt.raw;
+	unsigned int reset_mask = 0;
+
+	if(irpt & 1)
+	{
+		printf("ssed - Interrupt: Command complete.\n");
+		reset_mask |= 1;
+	}
+
+	if(irpt & (1 << 1))
+	{
+		//printf("ssed - Interrupt: Card transfer complete.\n");
+		reset_mask |= (1 << 1);
+	}
+
+	if(irpt & (1 << 2))
+	{
+		printf("ssed - Interrupt: Block gap event.\n");
+		reset_mask |= (1 << 2);
+	}
+
+	if(irpt & (1 << 3))
+	{
+		printf("ssed - Interrupt: DMA.\n");
+		reset_mask |= (1 << 3);
+	}
+
+	if(irpt & (1 << 4))
+	{
+		printf("ssed - Interrupt: Write buffer ready.\n");
+		reset_mask |= (1 << 4);
+	}
+
+	if(irpt & (1 << 5))
+	{
+		printf("ssed - Interrupt: Read buffer ready.\n");
+		reset_mask |= (1 << 5);
+	}
+
+	if(irpt & (1 << 6))
+	{
+		printf("ssed - SD Card inserted.\n");
+		reset_mask |= (1 << 6);
+	}
+
+	if(irpt & (1 << 7))
+	{
+		printf("ssed - SD Card removed.\n");
+		reset_mask |= (1 << 7);
+	}
+
+	if(irpt & (1 << 8))
+	{
+		printf("ssed - Interrupt: Card interrupt.\n");
+		Emmc_HandleCardInterrupt();
+		reset_mask = (1 << 8);
+	}
+
+	if(irpt & 0x8000)
+	{
+		printf("ssed - Interrupt: Error occurred.\n");
+		reset_mask |= 0xFFFF8000;
+	}
+
+	gEmmc->Interrupt.raw = reset_mask;
+}
+
+static int Emmc_EnsureDataMode(void)
+{
+	if(gDevice.rca == 0)
+	{
+		int ret = EmmcInitialise();
+
+		if(ret != 0)
+			return ret;
+	}
+
+	printf("ssed - EnsureDataMode() obtaining status register for card_rca %h.", gDevice.rca);
+
+	if(!Emmc_IssueCommand(SendStatus, gDevice.rca << 16))
+	{
+		printf("ssed - EnsureDataMode() error sending CMD13.\n");
+		gDevice.rca = 0;
+		return -1;
+	}
+
+	unsigned int status = gDevice.last_resp0;
+	unsigned int current_state = (status >> 9) & 0xF;
+
+	printf("ssed - Current State: %d.\n", current_state);
+
+	if(current_state == 3)
+	{
+		// Currently in stand-by state - Select it
+		if(!Emmc_IssueCommand(SelectCard, gDevice.rca << 16))
+		{
+			printf("ssed - EnsureDataMode() no response from CMD17.\n");
+			gDevice.rca = 0;
+			return -1;
+		}
+	}
+	else if(current_state == 5)
+	{
+		if(!Emmc_IssueCommand(StopTransmitting, 0))
+		{
+			printf("ssed - EnsureDataMode() no response from CMD12.\n");
+			gDevice.rca = 0;
+			return -1;
+		}
+
+		Emmc_ResetDatLine();
+	}
+	else if(current_state != 4)
+	{
+		// not in transfer state - Re initialize
+		int ret = EmmcInitialise();
+		if(ret != 0)
+			return ret;
+	}
+
+	if(current_state != 4)
+	{
+		printf("ssed - EnsureDataMode() rechecking status: \n");
+
+		if(Emmc_IssueCommand(SendStatus, gDevice.rca << 16))
+		{
+			printf("ssed - EnsureDataMode() no response from CMD13\n");
+			gDevice.rca = 0;
+			return -1;
+		}
+
+		status = gDevice.last_resp0;
+		current_state = (status >> 9) & 0xF;
+
+		printf("ssed - current state: %d\n", current_state);
+
+		if(current_state != 4)
+		{
+			printf("ssed - Unable to initialize SD card to Data mode (state %d)\n", current_state);
+			gDevice.rca = 0;
+			return -1;
+		}
+	}
+
+	return 0;
+}
+
+int Emmc_IssueCommandInt(unsigned int command, unsigned int argument)
+{
+	// Check command inhibit
+	while(gEmmc->Status.raw & 0x1)
+		wait(5);
+
+	// With busy command
+	if((command & SD_CMD_RSPNS_TYPE_MASK) == SD_CMD_RSPNS_TYPE_48B)
+	{
+		if((command & SD_CMD_RSPNS_TYPE_MASK) != SD_CMD_TYPE_ABORT)
+		{
+			// Not abort command
+			while((gEmmc->Status.raw & 0x2))
+				wait(10);
+		}
+	}
+
+	unsigned int is_sdma = 0;
+	if((command & SD_CMD_ISDATA) && gEmmcUseDMA)
+	{
+		printf("ssed - Performing SDMA transfer, current interrupt: %d.\n", gEmmc->Interrupt.raw);
+
+		is_sdma = 1;
+	}
+
+	if(is_sdma)
+		gEmmc->Arg2 = SDMA_BUFFER_PA;
+
+	if(gDevice.blocks_to_transfer > 0xFFFF)
+	{
+		printf("ssed - blocks to transfer too great: %d.\n", gDevice.blocks_to_transfer);
+		return -1;
+	}
+
+	unsigned int blksizecnt = gDevice.block_size | (gDevice.blocks_to_transfer << 16);
+	gEmmc->BlockCountSize.raw = blksizecnt;
+
+	// Set argument
+	gEmmc->Arg1 = argument;
+
+	if(is_sdma)
+		command |= SD_CMD_DMA;
+
+	gEmmc->Cmdtm.raw = command;
+
+	wait(5);
+	
+	while(gEmmc->Interrupt.bits.cmd_done == 0 && gEmmc->Interrupt.bits.err == 0) { /* Do Nothing  */} 
+
+	unsigned int irpts = gEmmc->Interrupt.raw;
+
+	gEmmc->Interrupt.raw = 0xFFFF0001;
+
+	if((irpts & 0xFFFF0001) != 0x1)
+	{
+		printf("ssed - Error occurred whilst waiting for command complete interrupt.\n");
+
+		gLastError = irpts & 0xFFFF0000;
+		return -1;
+	}
+
+	wait(100);
+
+	// Get response data
+	switch(command & SD_CMD_RSPNS_TYPE_MASK)
+	{
+	case SD_CMD_RSPNS_TYPE_48:
+	case SD_CMD_RSPNS_TYPE_48B:
+		gDevice.last_resp0 = gEmmc->Resp0;
+		break;
+	case SD_CMD_RSPNS_TYPE_136:
+		gDevice.last_resp0 = gEmmc->Resp0;
+		gDevice.last_resp1 = gEmmc->Resp1;
+		gDevice.last_resp2 = gEmmc->Resp2;
+		gDevice.last_resp3 = gEmmc->Resp3;
+		break;
+	}
+
+	if((command & SD_CMD_ISDATA) && (is_sdma == 0))
+	{
+		unsigned int wr_irpt;
+		int is_write = 0;
+
+		if(command & SD_CMD_DAT_DIR_CH)
+			wr_irpt = (1 << 5);  // Read
+		else
+		{
+			is_write = 1;
+			wr_irpt = (1 << 4);  // Write
+		}
+
+		int current_block = 0;
+		unsigned int* current_buffer_address = gDevice.receive_buffer;
+		while(current_block < gDevice.blocks_to_transfer)
+		{
+			if(gDevice.blocks_to_transfer > 1)
+				printf("ssed - Multi block transfer, awaiting block %d ready.\n", current_block);
+
+			while(!(gEmmc->Interrupt.raw & (wr_irpt | 0x8000))) { /* Do Nothing */ }
+
+			irpts = gEmmc->Interrupt.raw;
+
+			gEmmc->Interrupt.raw = 0xFFFF0000 | wr_irpt;
+
+			if((irpts & (0xFFFF0000 | wr_irpt)) != wr_irpt)
+			{
+				gLastError = irpts & 0xFFFF0000;
+				return -1;
+			}
+
+			// Transfer block
+			unsigned int current_byte_number = 0;
+			while(current_byte_number < gDevice.block_size)
+			{
+				if(is_write)
+				{
+					unsigned int data = read_word((unsigned char*)current_buffer_address, 0);
+					gEmmc->Data = data;
+				}
+				else
+				{
+					unsigned int data = gEmmc->Data;
+					write_word(data, (unsigned char*)current_buffer_address, 0);
+				}
+
+				current_byte_number += 4;
+				current_buffer_address++;
+			}
+			
+			// printf("ssed - Block %d transfer complete.\n", current_block);
+
+			current_block++;
+		}
+	}
+
+	if((((command &  SD_CMD_RSPNS_TYPE_MASK) == SD_CMD_RSPNS_TYPE_48B) || 
+		(command & SD_CMD_ISDATA)) && (is_sdma))
+	{
+		if((gEmmc->Status.raw & 0x2) == 0)
+			gEmmc->Interrupt.raw = 0xFFFF0002;
+		else
+		{
+			while(!(gEmmc->Interrupt.raw & 0x8002)) { /* Do Nothing */ }
+
+			irpts = gEmmc->Interrupt.raw;
+
+			gEmmc->Interrupt.raw = 0xFFFF0002;
+
+			if(((irpts & 0xFFFF0002) != 0x2) && ((irpts & 0xFFFF0002) != 0x100002))
+			{
+				printf("ssed - Error occurred whilst waiting for transfer complete interrupt.\n");
+
+				gLastError = irpts & 0xFFFF0000;
+				return -1;
+			}
+
+			gEmmc->Interrupt.raw = 0xFFFF0002;
+		}
+	}
+	else if(is_sdma)
+	{
+		// We have to wait for either transfer complete, DMA interrupt or an error
+
+		// First make DAT is not already 0
+		if((gEmmc->Status.raw & 0x2) == 0)
+			gEmmc->Interrupt.raw = 0xFFFF000A;
+		else
+		{
+			while(!(gEmmc->Interrupt.raw & 0x800A)) { /* Do Nothing */ }
+
+			irpts = gEmmc->Interrupt.raw;
+
+			gEmmc->Interrupt.raw = 0xFFFF000A;
+
+			// Detect errors
+			if((irpts & 0x8000) && ((irpts & 0x2) != 0x2))
+			{
+				printf("ssed - error occurred whilst waiting for transfer complete interrupt.\n");
+				gLastError = irpts & 0xFFFF0000;
+				return -1;
+			}
+
+			if((irpts & 0x8) && ((irpts & 0x2) != 0x2))
+			{
+				printf("ssed - Error: DMA interrupt occurred without transfer complete interrupt.\n");
+				gLastError = irpts & 0xFFFF0000;
+				return -1;
+			}
+
+			// Transfer complete?
+			if(irpts & 0x2)
+			{
+				printf("ssed - SDMA transfer complete.\n");
+
+				memcpy(gDevice.receive_buffer, (const void*)SDMA_BUFFER, gDevice.block_size);
+			}
+			else
+			{
+				// Unknown error
+				if(irpts == 0)
+					printf("ssed - timeout waiting for SDMA transfer to complete.\n");
+				else
+					printf("ssed - Unknown SDMA transfer error\n");
+
+				printf("ssed - Interrupt: %h, Status: %h.\n", irpts, gEmmc->Status.raw);
+
+				if((irpts == 0) && ((gEmmc->Status.raw & 0x3) == 0x2))
+				{
+					// The data transfer is still going - try to stop it
+					printf("ssed - Aborting transfer.\n");
+
+					gEmmc->Cmdtm.raw = CMD[StopTransmitting];
+
+					wait(2000);
+				}
+				gLastError = irpts & 0xFFFF0000;
+				return -1;
+			}
+		}
+	}
+
+	return 1;
+}
+
+int Emmc_IssueCommand(unsigned int command, unsigned int argument)
+{
+	Emmc_HandleInterrupt();
+
+	if(command & IS_APP_CMD)
+	{
+		command &= 0xFF;
+		if(ACMD[command] == SD_CMD_RESERVED(0))
+		{
+			printf("ssed - Invalid ACMD%d\n", command);
+			return -1;
+		}
+
+		gLastCommand = AppCmd;
+
+		unsigned int rca = 0;
+		if(gDevice.rca)
+			rca = gDevice.rca << 16;
+
+		if(Emmc_IssueCommandInt(CMD[AppCmd], rca))
+		{
+			//printf("ssed - APP_CMD Sent, sending ACMD%d.\n", command);
+
+			gLastCommand = command | IS_APP_CMD;
+
+			Emmc_IssueCommandInt(ACMD[command], argument);
+		}
+	}
+	else
+	{
+		//printf("ssed - Issuing CMD%d.\n", command);
+		if(CMD[command] == SD_CMD_RESERVED(0))
+		{
+			printf("ssed - Invalid command CMD%d.\n", command);
+			return -1;
+		}
+
+		gLastCommand = command;
+
+		Emmc_IssueCommandInt(CMD[command], argument);
+	}
+
+	return 1;
+}
+
+unsigned int Emmc_DoDataCommand(char* buf, unsigned int is_write, unsigned int buflen, unsigned int block_number)
+{
+	if(!gDevice.supports_sdhc)
+		block_number *= 512;
+
+	if(buflen < gDevice.block_size)
+	{
+		printf("Buffer too small to read an entire block.\n");
+		return -1;
+	}
+
+	gDevice.blocks_to_transfer = buflen / gDevice.block_size;
+
+	if(buflen % gDevice.block_size)
+	{
+		printf("Called with a buffer size (%d) that is not a multiple of the block size (%d).\n", buflen, gDevice.block_size);
+		return -1;
+	}
+
+	gDevice.receive_buffer = (unsigned int*)buf;
+
+	int command;
+	if(is_write)
+	{
+		if(gDevice.blocks_to_transfer > 1)
+			command = WriteMultipleBlocks;
+		else
+			command = WriteBlock;
+	}
+	else
+	{
+		if(gDevice.blocks_to_transfer > 1)
+			command = ReadMultipleBlocks;
+		else
+			command = ReadSingleBlock;
+	}
+
+	int retry_count = 0;
+	int max_retries = 3;
+	while(retry_count < max_retries)
+	{
+		if(!Emmc_IssueCommand(command, block_number))
+		{
+			printf("ssed - Error sending command CMD%d, error: %d\n", command, gLastError);
+			retry_count++;
+			if(retry_count < max_retries)
+				printf("ssed - Retrying...\n");
+			else
+				printf("ssed - Giving up...\n");
+		}
+	}
+
+	if(retry_count == max_retries)
+	{
+		gDevice.rca = 0;
+		return -1;
+	}
+
+	return 0;
+}
+
+int EmmcReadBlock(char* buf, unsigned int buflen, unsigned int block_number)
+{
+	if(Emmc_EnsureDataMode() != 0)
+		return -1;
+
+	printf("ssed - SD Read ready, reading block %d.\n", block_number);
+
+	if(Emmc_DoDataCommand(buf, 0, buflen, block_number) < 0)
+		return -1;
+
+	printf("ssed - SD data read successful.\n");
+
+	return buflen;
+}
+
+//static int Emmc_SuitableForDma(void *buf)
+//{
+//	if((unsigned int)buf & 0xfff)
+//        return 0;
+//    else
+//        return 1;
+//}
