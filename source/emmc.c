@@ -840,8 +840,6 @@ static int Emmc_EnsureDataMode(void)
 			return ret;
 	}
 
-	printf("ssed - EnsureDataMode() obtaining status register for card_rca %h.", gDevice.rca);
-
 	if(!Emmc_IssueCommand(SendStatus, gDevice.rca << 16))
 	{
 		printf("ssed - EnsureDataMode() error sending CMD13.\n");
@@ -851,8 +849,6 @@ static int Emmc_EnsureDataMode(void)
 
 	unsigned int status = gDevice.last_resp0;
 	unsigned int current_state = (status >> 9) & 0xF;
-
-	printf("ssed - Current State: %d.\n", current_state);
 
 	if(current_state == 3)
 	{
@@ -1003,6 +999,7 @@ int Emmc_IssueCommandInt(unsigned int command, unsigned int argument)
 
 		int current_block = 0;
 		unsigned int* current_buffer_address = gDevice.receive_buffer;
+
 		while(current_block < gDevice.blocks_to_transfer)
 		{
 			if(gDevice.blocks_to_transfer > 1)
@@ -1039,7 +1036,7 @@ int Emmc_IssueCommandInt(unsigned int command, unsigned int argument)
 				current_buffer_address++;
 			}
 			
-			// printf("ssed - Block %d transfer complete.\n", current_block);
+			//printf("ssed - Block %d transfer complete.\n", current_block);
 
 			current_block++;
 		}
@@ -1220,7 +1217,9 @@ unsigned int Emmc_DoDataCommand(char* buf, unsigned int is_write, unsigned int b
 	int max_retries = 3;
 	while(retry_count < max_retries)
 	{
-		if(!Emmc_IssueCommand(command, block_number))
+		if(Emmc_IssueCommand(command, block_number))
+			break;
+		else
 		{
 			printf("ssed - Error sending command CMD%d, error: %d\n", command, gLastError);
 			retry_count++;
@@ -1245,12 +1244,8 @@ int EmmcReadBlock(char* buf, unsigned int buflen, unsigned int block_number)
 	if(Emmc_EnsureDataMode() != 0)
 		return -1;
 
-	printf("ssed - SD Read ready, reading block %d.\n", block_number);
-
 	if(Emmc_DoDataCommand(buf, 0, buflen, block_number) < 0)
 		return -1;
-
-	printf("ssed - SD data read successful.\n");
 
 	return buflen;
 }

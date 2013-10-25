@@ -109,7 +109,14 @@ int cmain(void)
 
 		if(EmmcReadBlock(&buf[0], 512, 0))
 		{
-			printf("Block 0 is: %s", buf);
+			if(buf[0x1FE] != 0x55 || buf[0x1FF] != 0xAA)
+			{
+				printf("Not a valid MBR, buf[0x1FE] = %d, buf[0x1FF] = %d\n", buf[0x1FE], buf[0x1FF]);
+			}
+			else
+			{
+				printf("Valid MBR detected on SD Card, woho!\n");
+			}
 		}
 
 		while(1)
