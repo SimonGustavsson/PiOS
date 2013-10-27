@@ -142,18 +142,6 @@ char* gInterruptErrors[] = { "Command not finished", "Data not done", "Block gap
 	"", "", "", "Retune", "Boot acknowledge", "Boot operation terminated", "An error meh", "Command line timeout", "Command CRC Error", "Command line end bit not 1", "Incorrect command index", "Timeout on data line", "Data CRC Error", 
 	"End bit on data line not 1", "", "Auto cmd error", "", "", "", "", "", "", ""};
 
-void *memcpy(void *dest, const void *src, unsigned int n)
-{
-        char *s = (char *)src;
-        char *d = (char *)dest;
-        while(n > 0)
-        {
-                *d++ = *s++;
-                n--;
-        }
-        return dest;
-}
-
 void PrintErrorsInInterruptRegister(unsigned int reg)
 {
 	printf("[ERROR] ssed - send - Command failed to complete (interrupt:%d) ", reg);
@@ -1035,8 +1023,6 @@ int Emmc_IssueCommandInt(unsigned int command, unsigned int argument)
 				current_byte_number += 4;
 				current_buffer_address++;
 			}
-			
-			//printf("ssed - Block %d transfer complete.\n", current_block);
 
 			current_block++;
 		}

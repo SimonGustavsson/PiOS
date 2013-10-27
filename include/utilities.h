@@ -27,3 +27,25 @@ static inline unsigned int byte_swap(unsigned int in)
     unsigned int ret = (b0 << 24) | (b1 << 16) | (b2 << 8) | b3;
     return ret;
 }
+
+static inline void *memcpy(void *dest, const void *src, unsigned int bytesToCopy)
+{
+        char *s = (char *)src;
+        char *d = (char *)dest;
+        while(bytesToCopy > 0)
+        {
+                *d++ = *s++;
+                bytesToCopy--;
+        }
+        return dest;
+}
+
+static inline unsigned int byte_to_int(char* buf)
+{
+	return (buf[0] + ((int)buf[1] << 8) + ((int)buf[2] << 16) + ((int)buf[3] << 24));
+}
+
+static inline unsigned int byte_to_short(char* buf)
+{
+	return (buf[0] + ((int)buf[1] << 8));
+}
