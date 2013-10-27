@@ -24,9 +24,6 @@ typedef struct {
 	//unsigned char boot_code[446]; // Includes the bootcode (irrelevant on the pi)
 	partition_entry partitions[4];
 	unsigned char signature[2]; // Should always be 0x55 0xAA
-
-	unsigned int root_start;
-	unsigned int cluster_start;
 } mbr;
 
 typedef struct {
@@ -52,8 +49,12 @@ typedef struct {
 	unsigned int root_dir_start;         // 0x02 0x00 0x00 0x00 (Cluster where the root directory can be found) (dec 2)
 	unsigned short info_sector;          // 0x01 0x00 (File system info sector) (dec 1)
 	unsigned short backup_sector;        // 0x06 0x00 (Sector of FAT backup of this sector) (dec 6)
-
+	
 	// (Omitted bootstrapper code and signature)
+
+	// Calculated offsets
+	unsigned int root_start_sector;
+	unsigned int cluster_start_sector;
 } fat32_boot_sector;
 
 typedef struct {
@@ -81,10 +82,22 @@ typedef union{
 } file_attribute;
 
 typedef struct {
-	unsigned short name; // Offset; 0x00 - (11 bytes)
+	unsigned int signature; // Offset: 0x0 - Should always be 0x41615252?
+	unsigned int signature2; // Offset: 0x1E4 - Should always be 0x61417272?
+	unsigned int free_clusters; // Offset: 0x1E8 - -1 if unknown
+	unsigned int most_recent_allocated_cluster; // Offset: 0x1EC -
+	unsigned int end_of_sector_marker; // Offset: 0x1FE - Always 0xAA55
+} fat32_info_sector;
+
+typedef struct {
+	unsigned char name[12]; // Offset; 0x00 - (11 bytes)
 	file_attribute attribute; // Offset: 0x0B
-	unsigned short first_cluster_high; // Offset: 0x14
-	unsigned short first_cluster_low; // Offset: 0x1A
+	unsigned int created_time; // Note: Only 24 bits used
+	unsigned short create_date;
+	unsigned short last_access_date; // 
+	unsigned short last_modified_time;
+	unsigned short last_modified_date;
+	unsigned short first_cluster;
 	unsigned int size;
 } dir_entry;
 
