@@ -7,6 +7,7 @@
 #include "timer.h"
 #include "usbd/usbd.h"
 #include "mini_uart.h"
+#include "fat32.h"
 
 volatile unsigned int irq_counter;
 volatile extern Emmc* gEmmc;
@@ -77,6 +78,9 @@ unsigned int system_initialize(void)
 	if(EmmcInitialise() != 0)
 		printf("Failed to intialise emmc.\n");
 
+	if(fat32_initialize() != 0)
+		printf("Failed to initialize fat32.\n");
+
 	return result;
 }
 
@@ -105,20 +109,7 @@ int cmain(void)
 		// Kick off the terminal
 		terminal_printWelcome();
 		terminal_printPrompt();
-		char buf[512];
-
-		if(EmmcReadBlock(&buf[0], 512, 0))
-		{
-			if(buf[0x1FE] != 0x55 || buf[0x1FF] != 0xAA)
-			{
-				printf("Not a valid MBR, buf[0x1FE] = %d, buf[0x1FF] = %d\n", buf[0x1FE], buf[0x1FF]);
-			}
-			else
-			{
-				printf("Valid MBR detected on SD Card, woho!\n");
-			}
-		}
-
+		
 		while(1)
 		{
 			terminal_update();

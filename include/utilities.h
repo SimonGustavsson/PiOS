@@ -40,9 +40,10 @@ static inline void *memcpy(void *dest, const void *src, unsigned int bytesToCopy
         return dest;
 }
 
-static inline unsigned int byte_to_int(char* buf)
+static inline unsigned int byte_to_int(unsigned char* buf)
 {
-	return (buf[0] + ((int)buf[1] << 8) + ((int)buf[2] << 16) + ((int)buf[3] << 24));
+	// NOTE: Assumes little endian
+	return (buf[0] + (buf[1] << 8) + (buf[2] << 16) + (buf[3] << 24));
 }
 
 static inline unsigned int byte_to_short(char* buf)
