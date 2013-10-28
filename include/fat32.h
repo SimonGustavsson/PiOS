@@ -73,7 +73,7 @@ typedef union{
 		unsigned int read_only : 1;
 		unsigned int hidden : 1;
 		unsigned int system_file : 1;
-		unsigned int volume_id : 1; // File is volume ID
+		unsigned int volume_id : 1; // This attribute is also used to indicate that the file entry is a Long file name entry
 		unsigned int directory : 1; // Is a Sub directory (32-byte records)
 		unsigned int archive : 1; // Has changed since backup
 		unsigned int unused : 1; // 0
@@ -92,14 +92,28 @@ typedef struct {
 typedef struct {
 	unsigned char name[12]; // Offset; 0x00 - (11 bytes)
 	file_attribute attribute; // Offset: 0x0B
-	unsigned int created_time; // Note: Only 24 bits used
-	unsigned short create_date;
+	unsigned char reserved; // Reserved for Windows NT
+	unsigned char creation_time_in_tenths; // Creation time in tenths of a second. Note: Only 24 bits used
+	unsigned short create_time; // 5 bits Hour, 6 bits minutes, 5 bits seconds
+	unsigned short create_date; // 7 bits year, 4 bits month, 5 bits day
 	unsigned short last_access_date; // 
+	unsigned short first_cluster_high; // High 16 bits is first cluster number
 	unsigned short last_modified_time;
 	unsigned short last_modified_date;
-	unsigned short first_cluster;
-	unsigned int size;
+	unsigned short first_cluster_low;  // Low 16 bits is the first cluster number
+	unsigned int size; // In bytes
 } dir_entry;
+
+typedef struct {
+	unsigned char long_name_index; // The order of this entry in the sequence of long file name entries
+	unsigned char name[10]; // The first 5, 2-byte characters of this entry
+	file_attribute attribute; // 
+	unsigned char type; // Zero for name entries
+	unsigned char checksum;
+	unsigned char name2[12]; // The next 6, 2-byte characters of this entry
+	unsigned short reserved; // Always zero
+	unsigned char name3[4]; // The final 2, 2-byte characters of this entry
+} dir_entry_long;
 
 
 // NOTE: Only 28 bits used for cluster number, clear upper 4 before reading
