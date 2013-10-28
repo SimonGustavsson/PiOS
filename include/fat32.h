@@ -90,7 +90,7 @@ typedef struct {
 } fat32_info_sector;
 
 typedef struct {
-	unsigned char name[12]; // Offset; 0x00 - (11 bytes)
+	unsigned char name[11]; // Offset; 0x00 - (11 bytes)
 	file_attribute attribute; // Offset: 0x0B
 	unsigned char reserved; // Reserved for Windows NT
 	unsigned char creation_time_in_tenths; // Creation time in tenths of a second. Note: Only 24 bits used

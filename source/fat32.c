@@ -2,12 +2,15 @@
 #include "utilities.h"
 #include "emmc.h"
 #include "stringutil.h"
+#include "terminal.h"
 
 static char gBlock_buf[512];
 filesystem* gFs;
 
 unsigned int fat32_read_boot_sector(unsigned int block_number)
 {
+	printf("fat32 - Reading boot sector from block number: %d.\n", block_number);
+
 	if(!EmmcReadBlock(&gBlock_buf[0], 512, block_number))
 	{
 		printf("fat32 - Failed to read volume id block (%d).\n", block_number);
@@ -16,6 +19,7 @@ unsigned int fat32_read_boot_sector(unsigned int block_number)
 	
 	// Read Partition boot sector ("volume ID")
 	char* vi = &gBlock_buf[0];
+
 	memcpy(&gFs->boot_sector.partition_type_name[0], &vi[0x3], 8); 
 	gFs->boot_sector.partition_type_name[8] = '\0'; // Make oem name print friendly
 	memcpy(&gFs->boot_sector.bytes_per_sector, &vi[0x0B], 2);
@@ -94,11 +98,11 @@ unsigned int fat32_read_boot_sector(unsigned int block_number)
 unsigned int fat32_initialize(void) // Pass in device?
 {
 	printf("fat32 - Initializing...\n");
-
+	
 	// Read MBR
 	if(!EmmcReadBlock(gBlock_buf, 512, 0))
 	{
-		printf("fat32 - Failed to read mbr.\n");
+		printf("fat32 - Failed to read mbr sector 0\n");
 		return -1;
 	}
 	
@@ -134,7 +138,7 @@ unsigned int fat32_initialize(void) // Pass in device?
 	unsigned int boot_sector_block = byte_to_int((unsigned char*)&gFs->mbr.partitions[part_index].lba_begin[0]);
 	if(boot_sector_block < 1)
 	{
-		printf("fat32 - Invalid boot sector block number (%d).\n", boot_sector_block);
+		printf("fat32 - Invalid boot sector block number (%d), expected a number higher than 0.\n", boot_sector_block);
 		return -1;
 	}
 
@@ -156,11 +160,16 @@ unsigned int fat32_initialize(void) // Pass in device?
 		return -1;
 	}
 
-	// Read root file table
-	// NOTE "Volume label" attribute = LONG File name!
-
-
-	printf("fat32 - Initialize success.\n");
+	// Read file table
+	printf("first 5 file entries: \n");
+	// First 5 file entries
+	for(i = 0; i < 5; i++)
+	{
+		print(&gBlock_buf[i * 32], 32);
+		print("\n", 1);
+	}
+	
+	printf("\nfat32 - Initialize success.\n");
 
 	return 0;
 }
