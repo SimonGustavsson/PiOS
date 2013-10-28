@@ -78,6 +78,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\include\emmc.h" />
+    <ClInclude Include="..\include\fat32.h" />
     <ClInclude Include="..\include\framebuffer.h" />
     <ClInclude Include="..\include\gpio.h" />
     <ClInclude Include="..\include\interrupts.h" />
@@ -91,9 +92,11 @@
     <ClInclude Include="..\include\terminal_commands.h" />
     <ClInclude Include="..\include\timer.h" />
     <ClInclude Include="..\include\uart.h" />
+    <ClInclude Include="..\include\utilities.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\emmc.c" />
+    <ClCompile Include="..\source\fat32.c" />
     <ClCompile Include="..\source\framebuffer.c" />
     <ClCompile Include="..\source\gpio.c" />
     <ClCompile Include="..\source\interrupts.c" />

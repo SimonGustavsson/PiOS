@@ -57,6 +57,12 @@
     <ClInclude Include="..\include\uart.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\fat32.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\utilities.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\emmc.c">
@@ -96,6 +102,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\source\uart.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\fat32.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
