@@ -9,8 +9,6 @@ filesystem* gFs;
 
 unsigned int fat32_read_boot_sector(unsigned int block_number)
 {
-	printf("fat32 - Reading boot sector from block number: %d.\n", block_number);
-
 	if(!EmmcReadBlock(&gBlock_buf[0], 512, block_number))
 	{
 		printf("fat32 - Failed to read volume id block (%d).\n", block_number);
@@ -41,24 +39,24 @@ unsigned int fat32_read_boot_sector(unsigned int block_number)
 	memcpy(&gFs->boot_sector.info_sector, &vi[0x30], 2);
 	memcpy(&gFs->boot_sector.backup_sector, &vi[0x32], 2);
 
-	printf("fat32 - Root partition: OEM name: '%s'.\n", gFs->boot_sector.partition_type_name);	
-	printf("fat32 - Root partition: Bytes per sector: %d.\n", gFs->boot_sector.bytes_per_sector);
-	printf("fat32 - Root partition: Sectors per cluster: %d.\n", gFs->boot_sector.sectors_per_cluster);
-	printf("fat32 - Root partition: Reserved sectors: %d.\n", gFs->boot_sector.num_reserved_sectors);
-	printf("fat32 - Root partition: There are %d copies of the FAT.\n", gFs->boot_sector.num_fats);
-	printf("fat32 - Root partition: There are %d root entries.\n", gFs->boot_sector.root_entries);
-	printf("fat32 - Root partition: There are %d small sectors.\n", gFs->boot_sector.small_sectors); // If 0, large is used instead
-	printf("fat32 - Root partition: The type of the media is %h.\n", gFs->boot_sector.media_type);
-	printf("fat32 - Root partition: %d sectors per fat.\n", gFs->boot_sector.sectors_per_fat);
-	printf("fat32 - Root partition: %d sectors per head.\n", gFs->boot_sector.sectors_per_head);
-	printf("fat32 - Root partition: %d hidden sectors.\n", gFs->boot_sector.hidden_sectors);
-	printf("fat32 - Root partition: %d large sectors.\n", gFs->boot_sector.large_sectors);
-	printf("fat32 - Root partition: %d large sectors per fat.\n", gFs->boot_sector.large_sectors_per_fat);	
-	printf("fat32 - Root partition: Flags: %d\n", gFs->boot_sector.flags);
-	printf("fat32 - Root partition: Version: %d\n", gFs->boot_sector.version);
-	printf("fat32 - Root partition: Root dir start sector: %d.\n", gFs->boot_sector.root_dir_start);
-	printf("fat32 - Root partition: Info sector: %d.\n", gFs->boot_sector.info_sector);
-	printf("fat32 - Root partition: backup sector: %d.\n", gFs->boot_sector.backup_sector);
+	//printf("fat32 - Root partition: OEM name: '%s'.\n", gFs->boot_sector.partition_type_name);	
+	//printf("fat32 - Root partition: Bytes per sector: %d.\n", gFs->boot_sector.bytes_per_sector);
+	//printf("fat32 - Root partition: Sectors per cluster: %d.\n", gFs->boot_sector.sectors_per_cluster);
+	//printf("fat32 - Root partition: Reserved sectors: %d.\n", gFs->boot_sector.num_reserved_sectors);
+	//printf("fat32 - Root partition: There are %d copies of the FAT.\n", gFs->boot_sector.num_fats);
+	//printf("fat32 - Root partition: There are %d root entries.\n", gFs->boot_sector.root_entries);
+	//printf("fat32 - Root partition: There are %d small sectors.\n", gFs->boot_sector.small_sectors); // If 0, large is used instead
+	//printf("fat32 - Root partition: The type of the media is %h.\n", gFs->boot_sector.media_type);
+	//printf("fat32 - Root partition: %d sectors per fat.\n", gFs->boot_sector.sectors_per_fat);
+	//printf("fat32 - Root partition: %d sectors per head.\n", gFs->boot_sector.sectors_per_head);
+	//printf("fat32 - Root partition: %d hidden sectors.\n", gFs->boot_sector.hidden_sectors);
+	//printf("fat32 - Root partition: %d large sectors.\n", gFs->boot_sector.large_sectors);
+	//printf("fat32 - Root partition: %d large sectors per fat.\n", gFs->boot_sector.large_sectors_per_fat);	
+	//printf("fat32 - Root partition: Flags: %d\n", gFs->boot_sector.flags);
+	//printf("fat32 - Root partition: Version: %d\n", gFs->boot_sector.version);
+	//printf("fat32 - Root partition: Root dir start sector: %d.\n", gFs->boot_sector.root_dir_start);
+	//printf("fat32 - Root partition: Info sector: %d.\n", gFs->boot_sector.info_sector);
+	//printf("fat32 - Root partition: backup sector: %d.\n", gFs->boot_sector.backup_sector);
 
 	if(gFs->boot_sector.bytes_per_sector != 512)
 	{
@@ -84,15 +82,113 @@ unsigned int fat32_read_boot_sector(unsigned int block_number)
 	if(gFs->boot_sector.cluster_start_sector * 32 % gFs->boot_sector.bytes_per_sector)
 		gFs->boot_sector.cluster_start_sector += 1;
 
-	unsigned int cluster_count = 2 + (gFs->boot_sector.large_sectors - gFs->boot_sector.cluster_start_sector - 2) * gFs->boot_sector.sectors_per_cluster;
-
-	printf("fat32 - Root start: %d.\n", gFs->boot_sector.root_start_sector);
-	printf("fat32 - Cluster start: %d.\n", gFs->boot_sector.cluster_start_sector);
-	printf("fat32 - Cluster count: %d.\n", cluster_count);
+	//unsigned int cluster_count = 2 + (gFs->boot_sector.large_sectors - gFs->boot_sector.cluster_start_sector - 2) * gFs->boot_sector.sectors_per_cluster;
+	//printf("fat32 - Root start: %d.\n", gFs->boot_sector.root_start_sector);
+	//printf("fat32 - Cluster start: %d.\n", gFs->boot_sector.cluster_start_sector);
+	//printf("fat32 - Cluster count: %d.\n", cluster_count);
 
 	// TODO: Make sure we properly read the extended FAT32 part of the boot sector (See osdev/FAT)
 	
 	return 0;
+}
+
+unsigned int unicode16_to_asci(long_entry* dest, unsigned short* src, int srcLength)
+{
+	unsigned int i;
+	for(i = 0; i < srcLength; i++)
+	{
+		if(src[i] == 0)
+		{
+			dest->length = i;
+			dest->name[i] = 0;
+			return 1;
+		}
+
+		dest->name[i] = (char)src[i];
+	}
+
+	dest->length = srcLength;
+
+	return i;
+}
+
+unsigned int parse_dir_block(char* buf, int buflen, dir_entry* entries)
+{
+	int root_dir_entry_index;
+	char tmp[26]; // Temporary buffer for storing the long file name when converting
+	long_entry long_entries[63];
+	unsigned int num_long_entries;
+	unsigned int i;
+	int last_long;
+
+	last_long = 0;
+	root_dir_entry_index = 0;
+	num_long_entries = 0;
+
+	for(i = 0; i < buflen; i++)
+	{
+		if(*buf == 0) break; // no more entries
+
+		// If the entry exists
+		if(*buf != 0xE5)
+		{
+			if(buf[11] == 0x0F) // Long entry
+			{
+				unsigned char index = buf[0] - 1; // 1 based
+
+				if(index & 0x40)
+					index &= ~0x40; // Last long entry for this file
+
+				// Copy name to buffer so it's all in one block
+				memcpy(&tmp[0], &buf[1], 10);
+				memcpy(&tmp[0 + 10], &buf[14], 12);
+				memcpy(&tmp[0 + 10 + 12], &buf[28], 4);
+
+				// Store it as ASCI
+				unicode16_to_asci(&long_entries[num_long_entries], (unsigned short*)tmp, 13);
+
+				num_long_entries++;
+				last_long = 1;
+			}
+			else
+			{
+				if(last_long)
+				{
+					// Concatenate all long entries into one block
+					unsigned int j;
+					unsigned int offset = 0;
+					char full_name[255];
+					for(j = 0; j < num_long_entries; j++)
+					{
+						memcpy(&full_name[offset], long_entries[j].name, long_entries[j].length);
+					
+						offset += long_entries[j].length;
+					}
+
+					memcpy(entries[root_dir_entry_index].long_name, full_name, offset + 1);
+					last_long = 0;
+				}
+
+				memcpy(entries[root_dir_entry_index].name, &buf[0], 11);
+				entries[root_dir_entry_index].attribute.raw = buf[11];
+				entries[root_dir_entry_index].creation_time_in_tenths = buf[13];
+				entries[root_dir_entry_index].create_time = (unsigned short)buf[14];
+				entries[root_dir_entry_index].create_date = (unsigned short)buf[16];
+				entries[root_dir_entry_index].last_access_date = (unsigned short)buf[18];
+				entries[root_dir_entry_index].first_cluster_high = (unsigned short)buf[20];
+				entries[root_dir_entry_index].last_modified_time = (unsigned short)buf[22];
+				entries[root_dir_entry_index].last_modified_time = (unsigned short)buf[24];
+				entries[root_dir_entry_index].first_cluster_low = (unsigned short)buf[26];
+				entries[root_dir_entry_index].size = (unsigned int)buf[28];
+
+				root_dir_entry_index++;
+			}
+		}
+
+		buf += 32; // Parse next entry
+	}
+
+	return root_dir_entry_index;
 }
 
 unsigned int fat32_initialize(void) // Pass in device?
@@ -132,8 +228,6 @@ unsigned int fat32_initialize(void) // Pass in device?
 		}
 	}
 
-	printf("fat32 - Partition %d is a valid partition of type %d.\n", part_index + 1, gFs->mbr.partitions[part_index].type);
-
 	// Read the boot sector
 	unsigned int boot_sector_block = byte_to_int((unsigned char*)&gFs->mbr.partitions[part_index].lba_begin[0]);
 	if(boot_sector_block < 1)
@@ -147,26 +241,25 @@ unsigned int fat32_initialize(void) // Pass in device?
 		printf("fat32 - Failed to read boot sector.\n");
 		return -1;
 	}
-	printf("fat32 - Read bootsector from block %d.\n", boot_sector_block);
 
-	// First 
 	unsigned int root_dir_lba = boot_sector_block + (gFs->boot_sector.sectors_per_fat * gFs->boot_sector.num_fats) + gFs->boot_sector.num_reserved_sectors;
-
-	printf("fat32 - Reading the root directory at sector: %d, offset: 0x%h.\n", root_dir_lba, root_dir_lba * gFs->boot_sector.bytes_per_sector);
-
 	if(!EmmcReadBlock(gBlock_buf, 512, root_dir_lba))
 	{
 		printf("Failed to read root dir block %d.\n", root_dir_lba);
 		return -1;
 	}
 
+	char* rd = (char*)&gBlock_buf[0];
+
 	// Read file table
-	printf("first 5 file entries: \n");
-	// First 5 file entries
-	for(i = 0; i < 5; i++)
+	printf("Files in /root/:\n");
+	dir_entry rootDirEntries[100];
+
+	unsigned int entries_found = parse_dir_block(rd, 512, rootDirEntries);
+
+	for(i = 0; i < entries_found; i++)
 	{
-		print(&gBlock_buf[i * 32], 32);
-		print("\n", 1);
+		printf("%s\n", rootDirEntries[i].name);
 	}
 	
 	printf("\nfat32 - Initialize success.\n");

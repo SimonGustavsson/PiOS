@@ -102,7 +102,14 @@ typedef struct {
 	unsigned short last_modified_date;
 	unsigned short first_cluster_low;  // Low 16 bits is the first cluster number
 	unsigned int size; // In bytes
+	unsigned char long_name[256];
 } dir_entry;
+
+// Temp while gathering all bits of the name
+typedef struct {
+	unsigned char name[255];
+	unsigned int length;
+} long_entry;
 
 typedef struct {
 	unsigned char long_name_index; // The order of this entry in the sequence of long file name entries

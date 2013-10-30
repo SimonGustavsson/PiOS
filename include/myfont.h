@@ -23,10 +23,10 @@
                       ""ooooooooo""
 
     - Hello, I'm Lars, I'm here to push the array down far enough
-	for the line numbers to line up with the ASCI code of the characters
+	for the line numbers to line up with the ASCI code of the characters (in decimal)
 	aaaaaand, I'm done!
+	(0 - 31 is all control characters that aren't printed)
 
-	
 */
 static const unsigned char gKernelFont[][9] = { 
     { 0,0,0,0,0,0,0,0,0 },           // space
@@ -88,7 +88,7 @@ static const unsigned char gKernelFont[][9] = {
 	{ 17,17,10,4,10,17,17,0,0 },     // X
 	{ 17,17,10,4,4,4,4,0,0 },        // Y
 	{ 31,1,2,4,8,16,31,0,0 },        // Z
-	{ 31,16,16,16,16,16,16,31,0,0},  // [
+	{ 31,16,16,16,16,16,16,31,0 },  // [
 	{ 0,16,8,4,2,1,0,0,0},           // Backslash
 	{ 31,1,1,1,1,1,31,0,0},          // ]
 	{ 8,20,34,0,0,0,0,0 },           // ^
@@ -123,8 +123,136 @@ static const unsigned char gKernelFont[][9] = {
 	{ 4,8,8,8,16,8,8,8,4},           // {
 	{ 16,16,16,16,16,16,16,16,0 },   // |
 	{ 32,16,16,16,8,16,16,16,32},    // }
-	{ 0,0,0,33,82,140,0,0,0 },       // ~ Was: 
-	{ 31,31,31,31,31,31,31,0,0 }     // character-sized block
+	{ 0,0,0,33,82,140,0,0,0 },       // ~ 
+	{ 31,31,31,31,31,31,31,0,0 }     // DEL (character-sized block)
+	// Control Character [xxx] /* TODO: Create bitmap characters for these: */ 
+	// Control Character [xxx]
+	// Break permitted here [BPH] Zero width space
+	// NBH
+	// IND
+	// NEL
+	// SSA
+	// ESA
+	// HTS
+	// HTJ
+	// VTS
+	// PLD
+	// PLU
+	// RI
+	// SS2
+	// SS3
+	// DCS
+	// PU1
+	// PU2
+	// STS
+	// CCH
+	// MW
+	// SPA
+	// EPA
+	// SOS
+	// XXX
+	// SCI
+	// CSI
+	// ST
+	// OSC
+	// PM
+	// APC
+	// NB SP
+	// ¡
+	// ¢
+	// £
+	// ¤
+	// ¥
+	// ¦
+	// §
+	// ¨
+	// ©
+	// ª
+	// «
+	// ¬
+	// SHY
+	// ®
+	// ¯
+	// °
+	// ±
+	// ²
+	// ³
+	// ´
+	// μ
+	// ¶
+	// ·
+	// ¸
+	// ¹
+	// º
+	// »
+	// ¼
+	// ½
+	// ¾
+	// ¿
+	// À
+	// Á
+	// Â
+	// Ã
+	// Ä
+	// Å
+	// Æ
+	// Ç
+	// È
+	// É
+	// Ê
+	// Ë
+	// Ì
+	// Í
+	// Î
+	// Ï
+	// Ð
+	// Ñ
+	// Ò
+	// Ó
+	// Ô
+	// Õ
+	// Ö
+	// ×
+	// Ø
+	// Ù
+	// Ú
+	// Û
+	// Ü
+	// Ý
+	// Þ
+	// ß
+	// à
+	// á
+	// â
+	// ã
+	// ä
+	// å
+	// æ
+	// ç
+	// è
+	// é
+	// ê
+	// ë
+	// ì
+	// í
+	// î
+	// ï
+	// ð
+	// ñ
+	// ò
+	// ó
+	// ô
+	// õ
+	// ö
+	// ÷
+	// ø
+	// ù
+	// ú
+	// û
+	// ü
+	// ý
+	// þ
+	// ÿ
 };
 // Characters not in use, but they might come in handy later on
 // { 0,4,0,31,0,4,0,0,0 },          // divide sign
