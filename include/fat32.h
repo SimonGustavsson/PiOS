@@ -24,6 +24,7 @@ typedef struct {
 	//unsigned char boot_code[446]; // Includes the bootcode (irrelevant on the pi)
 	partition_entry partitions[4];
 	unsigned char signature[2]; // Should always be 0x55 0xAA
+	unsigned int boot_sector_block;
 } mbr;
 
 typedef struct {
@@ -52,9 +53,7 @@ typedef struct {
 	
 	// (Omitted bootstrapper code and signature)
 
-	// Calculated offsets
 	unsigned int root_start_sector;
-	unsigned int cluster_start_sector;
 } fat32_boot_sector;
 
 typedef struct {
@@ -92,7 +91,7 @@ typedef struct {
 typedef struct {
 	unsigned char name[11]; // Offset; 0x00 - (11 bytes)
 	file_attribute attribute; // Offset: 0x0B
-	unsigned char reserved; // Reserved for Windows NT
+	unsigned char reserved; // Reserved for Windows NT (Supposedly this tells us about the casing)
 	unsigned char creation_time_in_tenths; // Creation time in tenths of a second. Note: Only 24 bits used
 	unsigned short create_time; // 5 bits Hour, 6 bits minutes, 5 bits seconds
 	unsigned short create_date; // 7 bits year, 4 bits month, 5 bits day

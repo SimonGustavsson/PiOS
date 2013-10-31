@@ -76,16 +76,12 @@ unsigned int fat32_read_boot_sector(unsigned int block_number)
 		return -1;
 	}
 
-	gFs->boot_sector.root_start_sector = gFs->boot_sector.num_reserved_sectors + (gFs->boot_sector.num_fats * gFs->boot_sector.sectors_per_fat);
-	gFs->boot_sector.cluster_start_sector = gFs->boot_sector.root_start_sector + (gFs->boot_sector.root_entries * 32) / gFs->boot_sector.bytes_per_sector;
+	gFs->boot_sector.root_start_sector = gFs->mbr.boot_sector_block + gFs->boot_sector.num_reserved_sectors + 
+		(gFs->boot_sector.num_fats * gFs->boot_sector.sectors_per_fat);
 
-	if(gFs->boot_sector.cluster_start_sector * 32 % gFs->boot_sector.bytes_per_sector)
-		gFs->boot_sector.cluster_start_sector += 1;
-
-	//unsigned int cluster_count = 2 + (gFs->boot_sector.large_sectors - gFs->boot_sector.cluster_start_sector - 2) * gFs->boot_sector.sectors_per_cluster;
-	//printf("fat32 - Root start: %d.\n", gFs->boot_sector.root_start_sector);
-	//printf("fat32 - Cluster start: %d.\n", gFs->boot_sector.cluster_start_sector);
-	//printf("fat32 - Cluster count: %d.\n", cluster_count);
+	unsigned int cluster_count = 2 + (gFs->boot_sector.large_sectors - gFs->boot_sector.root_start_sector - 2) * gFs->boot_sector.sectors_per_cluster;
+	printf("fat32 - Root start: %d.\n", gFs->boot_sector.root_start_sector);
+	printf("fat32 - Cluster count: %d.\n", cluster_count);
 
 	// TODO: Make sure we properly read the extended FAT32 part of the boot sector (See osdev/FAT)
 	
@@ -185,6 +181,13 @@ unsigned int parse_dir_block(char* buf, int buflen, dir_entry* entries)
 	return root_dir_entry_index;
 }
 
+unsigned int read_dir_at_cluster(char* buf, int buflen, dir_entry* entries, unsigned int cluster)
+{
+	unsigned int cluster_lba = gFs->boot_sector.root_start_sector + (cluster * gFs->boot_sector.sectors_per_cluster);
+	
+	return -1; // Not implemented
+}
+
 unsigned int fat32_initialize(void) // Pass in device?
 {
 	printf("fat32 - Initializing...\n");
@@ -223,20 +226,22 @@ unsigned int fat32_initialize(void) // Pass in device?
 	}
 
 	// Read the boot sector
-	unsigned int boot_sector_block = byte_to_int((unsigned char*)&gFs->mbr.partitions[part_index].lba_begin[0]);
-	if(boot_sector_block < 1)
+	gFs->mbr.boot_sector_block = byte_to_int((unsigned char*)&gFs->mbr.partitions[part_index].lba_begin[0]);
+	if(gFs->mbr.boot_sector_block < 1)
 	{
-		printf("fat32 - Invalid boot sector block number (%d), expected a number higher than 0.\n", boot_sector_block);
+		printf("fat32 - Invalid boot sector block number (%d), expected a number higher than 0.\n", gFs->mbr.boot_sector_block);
 		return -1;
 	}
 
-	if(fat32_read_boot_sector(boot_sector_block) != 0)
+	printf("boot sector block: %d.\n", gFs->mbr.boot_sector_block);
+	if(fat32_read_boot_sector(gFs->mbr.boot_sector_block) != 0)
 	{
 		printf("fat32 - Failed to read boot sector.\n");
 		return -1;
 	}
 
-	unsigned int root_dir_lba = boot_sector_block + (gFs->boot_sector.sectors_per_fat * gFs->boot_sector.num_fats) + gFs->boot_sector.num_reserved_sectors;
+	unsigned int root_dir_lba = gFs->mbr.boot_sector_block + (gFs->boot_sector.sectors_per_fat * gFs->boot_sector.num_fats) + gFs->boot_sector.num_reserved_sectors;
+	printf("ROOT DIR LBA: %d.\n", root_dir_lba);
 	if(!EmmcReadBlock(gBlock_buf, 512, root_dir_lba))
 	{
 		printf("Failed to read root dir block %d.\n", root_dir_lba);
@@ -259,8 +264,9 @@ unsigned int fat32_initialize(void) // Pass in device?
 			printf((char*)e->long_name);
 		else
 			print((char*)e->name, 8);
-
-		printf(" Attribute: %d.\n", e->attribute.raw);
+		
+		unsigned int cluster_of_file = (e->first_cluster_high << 16) + e->first_cluster_low;
+		printf(" Cluster(high): %d, cluster(Low): %d.\n", e->first_cluster_high, e->first_cluster_low, cluster_of_file);
 	}
 	
 	printf("\nfat32 - Initialize success.\n");
