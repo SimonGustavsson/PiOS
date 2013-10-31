@@ -102,6 +102,7 @@ typedef struct {
 	unsigned short last_modified_date;
 	unsigned short first_cluster_low;  // Low 16 bits is the first cluster number
 	unsigned int size; // In bytes
+	unsigned char has_long_name;
 	unsigned char long_name[256];
 } dir_entry;
 

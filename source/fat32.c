@@ -145,7 +145,7 @@ unsigned int parse_dir_block(char* buf, int buflen, dir_entry* entries)
 				memcpy(&tmp[0 + 10 + 12], &buf[28], 4);
 
 				// Store it as ASCI
-				unicode16_to_asci(&long_entries[num_long_entries], (unsigned short*)tmp, 13);
+				unicode16_to_asci(&long_entries[index], (unsigned short*)tmp, 13);
 
 				num_long_entries++;
 				last_long = 1;
@@ -166,20 +166,14 @@ unsigned int parse_dir_block(char* buf, int buflen, dir_entry* entries)
 					}
 
 					memcpy(entries[root_dir_entry_index].long_name, full_name, offset + 1);
+					
+					entries[root_dir_entry_index].has_long_name = 1;
+
 					last_long = 0;
 				}
 
-				memcpy(entries[root_dir_entry_index].name, &buf[0], 11);
-				entries[root_dir_entry_index].attribute.raw = buf[11];
-				entries[root_dir_entry_index].creation_time_in_tenths = buf[13];
-				entries[root_dir_entry_index].create_time = (unsigned short)buf[14];
-				entries[root_dir_entry_index].create_date = (unsigned short)buf[16];
-				entries[root_dir_entry_index].last_access_date = (unsigned short)buf[18];
-				entries[root_dir_entry_index].first_cluster_high = (unsigned short)buf[20];
-				entries[root_dir_entry_index].last_modified_time = (unsigned short)buf[22];
-				entries[root_dir_entry_index].last_modified_time = (unsigned short)buf[24];
-				entries[root_dir_entry_index].first_cluster_low = (unsigned short)buf[26];
-				entries[root_dir_entry_index].size = (unsigned int)buf[28];
+				// Copy the 8.3 data over to a struct for convenient access
+				memcpy(&entries[root_dir_entry_index], &buf[0], 32);
 
 				root_dir_entry_index++;
 			}
@@ -252,14 +246,21 @@ unsigned int fat32_initialize(void) // Pass in device?
 	char* rd = (char*)&gBlock_buf[0];
 
 	// Read file table
-	printf("Files in /root/:\n");
-	dir_entry rootDirEntries[100];
+	printf("Files in root/:\n");
+	dir_entry rootDirEntries[50];
 
 	unsigned int entries_found = parse_dir_block(rd, 512, rootDirEntries);
 
 	for(i = 0; i < entries_found; i++)
 	{
-		printf("%s\n", rootDirEntries[i].name);
+		dir_entry* e = &rootDirEntries[i];
+
+		if(e->has_long_name)
+			printf((char*)e->long_name);
+		else
+			print((char*)e->name, 8);
+
+		printf(" Attribute: %d.\n", e->attribute.raw);
 	}
 	
 	printf("\nfat32 - Initialize success.\n");
