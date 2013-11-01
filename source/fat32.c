@@ -238,6 +238,10 @@ static unsigned int parse_directory_block(char* buf, int buflen, dir_entry* entr
 			// Copy 8.3 data to the file entry
 			memcpy(&entries[file_index], &buf[0], 32);
 
+			// switcheroo
+			printf("cluster low(%d): << 8: %d, >> 8: %d\n", entries[file_index].first_cluster_low, (entries[file_index].first_cluster_low << 8), (entries[file_index].first_cluster_low >> 8));
+			entries[file_index].first_cluster_low = (entries[file_index].first_cluster_low << 8 | entries[file_index].first_cluster_low >> 8);
+
 			file_index++;
 		}
 
@@ -349,23 +353,22 @@ unsigned int fat32_initialize(void) // Pass in device?
 	{
 		dir_entry* e = &rootDirEntries[i];
 
+		if(e->attribute.bits.directory)
+		{
+			print("[", 1);
+		}
+
 		if(e->has_long_name)
 			printf((char*)e->long_name);
 		else
 			print((char*)e->name, 11);
 		
-		printf(" A: %h, R: %h, CT: %h, time: %h, acce: %h, clush: %h, modt: %h, modd: %h, clusl: %d, size: %d .\n", 
-			e->attribute,
-			e->reserved,
-			e->creation_time_in_tenths,
-			e->create_time,
-			e->create_date,
-			e->last_access_date,
-			e->first_cluster_high,
-			e->last_modified_time,
-			e->last_modified_date,
-			e->first_cluster_low,
-			e->size);
+		if(e->attribute.bits.directory)
+		{
+			print("]", 1);
+		}
+
+		printf(" - Cluster: %d.\n", e->first_cluster_low);
 	}
 	
 	printf("\nfat32 - Initialize success.\n");

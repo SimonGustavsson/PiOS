@@ -92,7 +92,7 @@ typedef struct {
 
 typedef struct {
 	unsigned char name[11]; // Offset; 0x00 - (11 bytes)
-	unsigned char attribute; // Offset: 0x0B
+	file_attribute attribute; // Offset: 0x0B
 	unsigned char reserved; // Reserved for Windows NT (Supposedly this tells us about the casing)
 	unsigned char creation_time_in_tenths; // Creation time in tenths of a second. Note: Only 24 bits used
 	unsigned short create_time; // 5 bits Hour, 6 bits minutes, 5 bits seconds

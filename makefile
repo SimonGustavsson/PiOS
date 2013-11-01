@@ -1,5 +1,5 @@
 TOOL = arm-none-eabi
-CFLAGS = -Wall -O2 -nostdlib -nostartfiles -ffreestanding --no-common
+CFLAGS = -Wall -O2 -nostdlib -nostartfiles -ffreestanding --no-common -Wpadded
 LINKER_FLAGS = --no-wchar-size-warning --no-undefined
 
 # Make sure gcc searches the include folder
