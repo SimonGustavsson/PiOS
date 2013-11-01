@@ -1,3 +1,5 @@
+#define LONG_FILE_ENTRY_SIG 0x0F
+
 typedef enum{
 	UnknownFsType = 0x00,
 	Fat12 = 0x01,
@@ -69,14 +71,14 @@ typedef struct {
 typedef union{
 	unsigned char raw;
 	struct {
-		unsigned int read_only : 1;
-		unsigned int hidden : 1;
-		unsigned int system_file : 1;
-		unsigned int volume_id : 1; // This attribute is also used to indicate that the file entry is a Long file name entry
-		unsigned int directory : 1; // Is a Sub directory (32-byte records)
-		unsigned int archive : 1; // Has changed since backup
-		unsigned int unused : 1; // 0
-		unsigned int unused2 : 1; // 0
+		unsigned char read_only : 1;
+		unsigned char hidden : 1;
+		unsigned char system_file : 1;
+		unsigned char volume_id : 1; // This attribute is also used to indicate that the file entry is a Long file name entry
+		unsigned char directory : 1; // Is a Sub directory (32-byte records)
+		unsigned char archive : 1; // Has changed since backup
+		unsigned char unused : 1; // 0
+		unsigned char unused2 : 1; // 0
 	} bits;
 } file_attribute;
 
@@ -90,7 +92,7 @@ typedef struct {
 
 typedef struct {
 	unsigned char name[11]; // Offset; 0x00 - (11 bytes)
-	file_attribute attribute; // Offset: 0x0B
+	unsigned char attribute; // Offset: 0x0B
 	unsigned char reserved; // Reserved for Windows NT (Supposedly this tells us about the casing)
 	unsigned char creation_time_in_tenths; // Creation time in tenths of a second. Note: Only 24 bits used
 	unsigned short create_time; // 5 bits Hour, 6 bits minutes, 5 bits seconds
@@ -121,7 +123,6 @@ typedef struct {
 	unsigned short reserved; // Always zero
 	unsigned char name3[4]; // The final 2, 2-byte characters of this entry
 } dir_entry_long;
-
 
 // NOTE: Only 28 bits used for cluster number, clear upper 4 before reading
 

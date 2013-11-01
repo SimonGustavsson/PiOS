@@ -79,9 +79,9 @@ unsigned int fat32_read_boot_sector(unsigned int block_number)
 	gFs->boot_sector.root_start_sector = gFs->mbr.boot_sector_block + gFs->boot_sector.num_reserved_sectors + 
 		(gFs->boot_sector.num_fats * gFs->boot_sector.sectors_per_fat);
 
-	unsigned int cluster_count = 2 + (gFs->boot_sector.large_sectors - gFs->boot_sector.root_start_sector - 2) * gFs->boot_sector.sectors_per_cluster;
-	printf("fat32 - Root start: %d.\n", gFs->boot_sector.root_start_sector);
-	printf("fat32 - Cluster count: %d.\n", cluster_count);
+	//unsigned int cluster_count = 2 + (gFs->boot_sector.large_sectors - gFs->boot_sector.root_start_sector - 2) * gFs->boot_sector.sectors_per_cluster;
+	//printf("fat32 - Root start: %d.\n", gFs->boot_sector.root_start_sector);
+	//printf("fat32 - Cluster count: %d.\n", cluster_count);
 
 	// TODO: Make sure we properly read the extended FAT32 part of the boot sector (See osdev/FAT)
 	
@@ -108,89 +108,188 @@ unsigned int unicode16_to_asci(long_entry* dest, unsigned short* src, int srcLen
 	return i;
 }
 
-unsigned int parse_dir_block(char* buf, int buflen, dir_entry* entries)
-{
-	int root_dir_entry_index;
-	char tmp[26]; // Temporary buffer for storing the long file name when converting
-	long_entry long_entries[63];
-	unsigned int num_long_entries;
-	unsigned int i;
-	int last_long;
+//
+//unsigned int parse_dir_block(char* buf, int buflen, dir_entry* entries)
+//{
+//	int root_dir_entry_index;
+//	char tmp[26]; // Temporary buffer for storing the long file name when converting
+//	long_entry long_entries[63];
+//	unsigned int num_long_entries;
+//	unsigned int i;
+//	int last_long;
+//
+//	last_long = 0;
+//	root_dir_entry_index = 0;
+//	num_long_entries = 0;
+//
+//	for(i = 0; i < buflen; i++)
+//	{
+//		if(*buf == 0) break; // no more entries
+//
+//		// If the entry exists
+//		if(*buf != 0xE5)
+//		{
+//			if(buf[11] == 0x0F) // Long entry
+//			{
+//				unsigned char index = buf[0] - 1; // 1 based
+//
+//				if(index & 0x40)
+//					index &= ~0x40; // Last long entry for this file
+//
+//				// Copy name to buffer so it's all in one block
+//				memcpy(&tmp[0], &buf[1], 10);
+//				memcpy(&tmp[0 + 10], &buf[14], 12);
+//				memcpy(&tmp[0 + 10 + 12], &buf[28], 4);
+//
+//				// Store it as ASCI
+//				unicode16_to_asci(&long_entries[index], (unsigned short*)tmp, 13);
+//
+//				num_long_entries++;
+//				last_long = 1;
+//			}
+//			else
+//			{
+//				if(last_long)
+//				{
+//					// Concatenate all long entries into one block
+//					unsigned int j;
+//					unsigned int offset = 0;
+//					char full_name[255];
+//					for(j = 0; j < num_long_entries; j++)
+//					{
+//						memcpy(&full_name[offset], long_entries[j].name, long_entries[j].length);
+//					
+//						offset += long_entries[j].length;
+//					}
+//
+//					memcpy(entries[root_dir_entry_index].long_name, full_name, offset + 1);
+//					
+//					entries[root_dir_entry_index].has_long_name = 1;
+//
+//					last_long = 0;
+//				}
+//
+//				// Copy the 8.3 data over to a struct for convenient access
+//				memcpy(&entries[root_dir_entry_index], &buf[0], 32);
+//
+//				root_dir_entry_index++;
+//			}
+//		}
+//
+//		buf += 32; // Parse next entry
+//	}
+//
+//	return root_dir_entry_index;
+//}
 
-	last_long = 0;
-	root_dir_entry_index = 0;
-	num_long_entries = 0;
+static unsigned int parse_directory_block(char* buf, int buflen, dir_entry* entries, unsigned int max_entries)
+{
+	unsigned int i;
+
+	long_entry long_entries[19]; // Max 19 entries @ 13 asci chars each = 247byte max filename length
+	unsigned int lfn_count = 0;
+	unsigned int last_lfn = 0;
+	unsigned int file_index = 0;
 
 	for(i = 0; i < buflen; i++)
 	{
-		if(*buf == 0) break; // no more entries
-
-		// If the entry exists
-		if(*buf != 0xE5)
+		if(buf[0] == 0) break; // Done reading
+		if(*buf == 0xE5) continue; // Doesn't exist
+		
+		if(LONG_FILE_ENTRY_SIG == buf[11])
 		{
-			if(buf[11] == 0x0F) // Long entry
+			unsigned char lfn_index = ((buf[0] - 1) & ~0x40); // Just ignore the "last lfn entry" flag
+
+			// Read the file name into a block
+			unsigned short tmp[26];
+			memcpy(&tmp[0], &buf[1], 10);
+			memcpy(&tmp[0 + 10], &buf[14], 12);
+			memcpy(&tmp[0 + 10 + 12], &buf[28], 4);
+
+			// Convert from Unicode16 and store it as ASCI
+			unicode16_to_asci(&long_entries[lfn_index], tmp, 13);
+
+			lfn_count++;
+
+			last_lfn = 1;
+		}
+		else
+		{
+			if(last_lfn)
 			{
-				unsigned char index = buf[0] - 1; // 1 based
-
-				if(index & 0x40)
-					index &= ~0x40; // Last long entry for this file
-
-				// Copy name to buffer so it's all in one block
-				memcpy(&tmp[0], &buf[1], 10);
-				memcpy(&tmp[0 + 10], &buf[14], 12);
-				memcpy(&tmp[0 + 10 + 12], &buf[28], 4);
-
-				// Store it as ASCI
-				unicode16_to_asci(&long_entries[index], (unsigned short*)tmp, 13);
-
-				num_long_entries++;
-				last_long = 1;
-			}
-			else
-			{
-				if(last_long)
+				// Concatenate all long file entry values into the full name
+				char lfn[255];
+				unsigned int offset = 0;
+				unsigned int lfn_index;
+				for(lfn_index = 0; lfn_index < lfn_count; lfn_index++)
 				{
-					// Concatenate all long entries into one block
-					unsigned int j;
-					unsigned int offset = 0;
-					char full_name[255];
-					for(j = 0; j < num_long_entries; j++)
-					{
-						memcpy(&full_name[offset], long_entries[j].name, long_entries[j].length);
-					
-						offset += long_entries[j].length;
-					}
+					memcpy(&lfn[offset], long_entries[lfn_index].name, long_entries[lfn_index].length);
 
-					memcpy(entries[root_dir_entry_index].long_name, full_name, offset + 1);
-					
-					entries[root_dir_entry_index].has_long_name = 1;
-
-					last_long = 0;
+					offset += long_entries[lfn_index].length;
 				}
 
-				// Copy the 8.3 data over to a struct for convenient access
-				memcpy(&entries[root_dir_entry_index], &buf[0], 32);
-
-				root_dir_entry_index++;
+				// Store the name in the file entry
+				memcpy(entries[file_index].long_name, lfn, offset + 1); // Null terminated
+				entries[file_index].has_long_name = 1;
+				
+				last_lfn = 0;
 			}
+
+			// Copy 8.3 data to the file entry
+			memcpy(&entries[file_index], &buf[0], 32);
+
+			file_index++;
 		}
 
-		buf += 32; // Parse next entry
+		buf += 32; // Advance to the next entry
 	}
 
-	return root_dir_entry_index;
+	return file_index; // Was 0 indexed
 }
 
-unsigned int read_dir_at_cluster(char* buf, int buflen, dir_entry* entries, unsigned int cluster)
+unsigned int read_dir_at_cluster(char* buf, unsigned int buflen, dir_entry* entries, unsigned int max_entries, unsigned int cluster)
 {
 	unsigned int cluster_lba = gFs->boot_sector.root_start_sector + (cluster * gFs->boot_sector.sectors_per_cluster);
-	
-	return -1; // Not implemented
+
+	unsigned int cur_block;
+	unsigned int max_block = gFs->boot_sector.sectors_per_cluster;
+	unsigned int files_read = 0;
+	dir_entry* entries_ptr;
+
+	for(cur_block = 0; cur_block < max_block; cur_block++)
+	{
+		unsigned int block_lba = cluster_lba + cur_block;
+		
+		if(!EmmcReadBlock(buf, buflen, block_lba))
+		{
+			printf("fat32 - Could not read block: %d of cluster: %d.\n", block_lba, cluster);
+
+			return -1;
+		}
+
+		unsigned int num_files = parse_directory_block(buf, buflen, entries, max_entries - files_read);
+
+		if(num_files < 1)
+		{
+			// Couldn't read any files, we must be at the end of the directory
+			break;
+		}
+		
+		files_read += num_files;
+
+		// Increment the entries ptr so that the next call places the entries after the ones we just found
+		entries_ptr += num_files;
+	}
+
+	return files_read;
 }
 
 unsigned int fat32_initialize(void) // Pass in device?
 {
 	printf("fat32 - Initializing...\n");
+
+
+	printf("Attribute is: %d\n", sizeof(file_attribute));
 	
 	// Read MBR
 	if(!EmmcReadBlock(gBlock_buf, 512, 0))
@@ -239,34 +338,34 @@ unsigned int fat32_initialize(void) // Pass in device?
 		printf("fat32 - Failed to read boot sector.\n");
 		return -1;
 	}
-
-	unsigned int root_dir_lba = gFs->mbr.boot_sector_block + (gFs->boot_sector.sectors_per_fat * gFs->boot_sector.num_fats) + gFs->boot_sector.num_reserved_sectors;
-	printf("ROOT DIR LBA: %d.\n", root_dir_lba);
-	if(!EmmcReadBlock(gBlock_buf, 512, root_dir_lba))
-	{
-		printf("Failed to read root dir block %d.\n", root_dir_lba);
-		return -1;
-	}
-
-	char* rd = (char*)&gBlock_buf[0];
-
-	// Read file table
-	printf("Files in root/:\n");
+		
+	// Read root directory
 	dir_entry rootDirEntries[50];
 
-	unsigned int entries_found = parse_dir_block(rd, 512, rootDirEntries);
-
-	for(i = 0; i < entries_found; i++)
+	unsigned int root_entries = read_dir_at_cluster(gBlock_buf, 512, rootDirEntries, 50, gFs->boot_sector.root_dir_start - 2);
+	
+	printf("%d files in root/:\n", root_entries);
+	for(i = 0; i < root_entries; i++)
 	{
 		dir_entry* e = &rootDirEntries[i];
 
 		if(e->has_long_name)
 			printf((char*)e->long_name);
 		else
-			print((char*)e->name, 8);
+			print((char*)e->name, 11);
 		
-		unsigned int cluster_of_file = (e->first_cluster_high << 16) + e->first_cluster_low;
-		printf(" Cluster(high): %d, cluster(Low): %d.\n", e->first_cluster_high, e->first_cluster_low, cluster_of_file);
+		printf(" A: %h, R: %h, CT: %h, time: %h, acce: %h, clush: %h, modt: %h, modd: %h, clusl: %d, size: %d .\n", 
+			e->attribute,
+			e->reserved,
+			e->creation_time_in_tenths,
+			e->create_time,
+			e->create_date,
+			e->last_access_date,
+			e->first_cluster_high,
+			e->last_modified_time,
+			e->last_modified_date,
+			e->first_cluster_low,
+			e->size);
 	}
 	
 	printf("\nfat32 - Initialize success.\n");
