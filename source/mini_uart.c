@@ -1,7 +1,5 @@
 #include "mini_uart.h"
 #include "gpio.h"
-#include "timer.h"
-#include "stringutil.h"
 
 static gpio_reg *gGpio;
 static MiniUart *gUart;
@@ -27,7 +25,8 @@ unsigned int mini_uart_initialize(void)
 	gGpio->gpfsel1.bits.fsel14 = 2; // Pin 14 - Alt 5 (TXD1)
 	gGpio->gpfsel1.bits.fsel15 = 2; // Pin 15 - Alt 5 (RXD1)
 
-	wait(5);
+	unsigned volatile int i;
+	for(i = 0; i < 150000; i++) { }
 
 	gGpio->gppud.raw = 0;
 
@@ -36,8 +35,8 @@ unsigned int mini_uart_initialize(void)
 	gGpio->gppudclk0.bits.pin14 = 1;
 	gGpio->gppudclk0.bits.pin15 = 1;
 
-	wait(5);
-	
+	for(i = 0; i < 150000; i++) { }
+
 	// Disable pull down/up clocks
 	gGpio->gppudclk0.raw = 0;
 	
@@ -52,8 +51,6 @@ unsigned int mini_uart_read_char(unsigned int block)
 {
 	if(block)
 	{
-		printf("UART - Blocking waiting for first bit in register at 0x%h to set.\n", &gUart->mu_lsr);
-
 		while(gUart->mu_lsr.bits.data_ready == 0) { /* Do nothing */ }
 	}
 	
