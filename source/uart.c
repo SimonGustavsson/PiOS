@@ -15,12 +15,15 @@ unsigned int uart_initialize(void)
 	
 	// Disable pull up/down for all GPIO pins
 	gpio->gppud.raw = 0;
+
 	volatile unsigned int i;
-	for(i = 0; i < 150; i++) { /* Do Nothing */ } 
+
+	for(i = 0; i < 150000; i++) { /* Do Nothing */ } 
 
 	// Disable pull up/down for pin 14 and 15
 	gpio->gppudclk0.raw = ((1 << 14) | (1 << 15));
-	for(i = 0; i < 150; i++) { /* Do Nothing */ } 
+
+	for (i = 0; i < 150000; i++) { /* Do Nothing */ }
 
 	// Write 0 to make it take effect
 	gpio->gppudclk0.raw = 0;
@@ -38,8 +41,8 @@ unsigned int uart_initialize(void)
 	gUart->ibrd = 1;
 	gUart->fbrd = 40;
 
-	// Enable FIFO and 8 bit transmission (1 stop bit, no parity)
-	gUart->lcrh = ((1 << 4) | (1 << 5) | (1 << 6));
+	// DON'T Enable FIFO and 8 bit transmission (1 stop bit, no parity)
+	gUart->lcrh = ((1 << 5) | (1 << 6)); // FIFO: (1 << 4)
 
 	// Mask all interrupts
 	gUart->imsc = ((1 << 1) | (1 << 4) | (1 << 5) | (1 << 6) | (1 << 7) | (1 << 8) | (1 << 9) | (1 << 10));
@@ -50,12 +53,18 @@ unsigned int uart_initialize(void)
 	return 0;
 }
 
+void uart_enable_interrupts(void)
+{
+	// Only mask out CTSMIM interrupts, allow the rest
+	gUart->imsc = 0x2;
+}
+
 void uart_send(unsigned int c)
 {
 	while(1)
 	{
 		// Wait for the uart to become ready for transmission
-		if(!(gUart->fr & (1 << 5)))
+		if((gUart->fr & (1 << 5)) == 0)
 			break;
 	}
 
@@ -67,7 +76,7 @@ unsigned int uart_read()
 	while(1)
 	{
 		// Wait for the uart to receive some data
-		if(!(gUart->fr & (1 << 4)))
+		if((gUart->fr & (1 << 4)) == 1)
 			break;
 	}
 	
