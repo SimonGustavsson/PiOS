@@ -48,20 +48,10 @@ void c_irq_handler (void)
 	//timer_sp_setinterval(TIMER_INTERRUPT_INTERVAL);
 }
 
-unsigned int system_initialize(void)
+void system_initialize_serial(void)
 {
-	unsigned int result = 0;
-	
-	// Initialize terminal first so we can print error messages if any (Hah, unlikely!)
-	if((result = terminal_init()) != 0)
-		OnCriticalError(); // Critical error: Failed to initialize framebuffer :-(
-
-	// Note: Timer is not essential to system initialisation
-	if(timer_init() != 0)
-		printf("Failed to initialise timer.\n");
-
 	uart_init();
-	
+
 	uart_irpt_enable();
 
 	arm_interrupt_init();
@@ -70,6 +60,24 @@ unsigned int system_initialize(void)
 	arm_irq_enable(interrupt_source_uart);
 
 	enable_irq();
+}
+
+unsigned int system_initialize(void)
+{
+	unsigned int result = 0;
+	
+	// Initialize terminal first so we can print error messages if any (Hah, unlikely!)
+	if ((result = terminal_init()) != 0)
+	{
+		uart_puts("Failed to initialize terminal.\n");
+		OnCriticalError(); // Critical error: Failed to initialize framebuffer :-(
+	}
+	// Note: Timer is not essential to system initialisation
+	if (timer_init() != 0)
+	{
+		uart_puts("Failed to initialize timer.\n");
+		printf("Failed to initialise timer.\n");
+	}
 	
 	// Note: Usb & Keyboard is essential to the system
 	if((result = UsbInitialise()) != 0)
@@ -83,31 +91,35 @@ unsigned int system_initialize(void)
 
 	if(fat32_initialize() != 0)
 		printf("Failed to initialize fat32.\n");
+	
+	printf("System initialization complete, result: %d\n", result);
 
 	return result;
 }
 
 void WaitForUartAlive(void)
 {
-	printf("Waiting for user to connect via uart...\n");
+	volatile unsigned int i;
+	while (!gUserConnected)
+	{
+		for (i = 0; i < 150000; i++) { /* Do Nothing */ }
+	}
 
-	while (!gUserConnected) { /* Just Wait */ }
-
-	printf("User connected, launching system.\n");
-
-	uart_puts("Welcome to PiOS!\n");
+	uart_puts("Welcome to PiOS!\n\r");
 }
 
 int cmain(void)
 {
 	gUserConnected = 0;
 
+	system_initialize_serial();
+
+	// System all up and running, wait for a alive sign from the uart before proceeding
+	// TODO: Conditionalize this - only use if no screen (keyboard?) is attached
+	WaitForUartAlive();
+
 	if(system_initialize() == 0)
 	{
-		// System all up and running, wait for a alive sign from the uart before proceeding
-		// TODO: Conditionalize this - only use if no screen (keyboard?) is attached
-		WaitForUartAlive();
-
 		// Kick off the terminal
 		terminal_printWelcome();
 		terminal_printPrompt();
