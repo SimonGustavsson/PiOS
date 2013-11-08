@@ -1,4 +1,9 @@
-#define UART_BASE 0x2020100
+/* uart.h - UART initialization & communication */
+
+#ifndef UART_H
+#define UART_H
+
+#define UART_BASE 0x20201000
 
 typedef volatile struct{
 	unsigned int dr;           // 0x00 Data Register
@@ -24,8 +29,10 @@ typedef volatile struct{
 	unsigned int tdr;          // 0x8C Test data reg
 } Uart;
 
-unsigned int uart_initialize(void);
-void uart_enable_interrupts(void);
-void uart_send(unsigned int);
-unsigned int uart_read();
-void uart_send_string(char*);
+void uart_init();
+void uart_irpt_enable(void);
+void uart_putc(unsigned char byte);
+unsigned char uart_getc();
+void uart_puts(const char *str);
+
+#endif // #ifndef UART_H

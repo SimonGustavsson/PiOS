@@ -6,23 +6,26 @@
 #include "terminal.h"
 #include "timer.h"
 #include "usbd/usbd.h"
-#include "mini_uart.h"
+#include "uart.h"
 #include "fat32.h"
 
-volatile unsigned int irq_counter;
+extern void enable_irq(void);
+
+//volatile unsigned int irq_counter;
 volatile extern Emmc* gEmmc;
+volatile unsigned int gUserConnected;
 
 void OnCriticalError(void)
 {
 	while(1)
 	{
-		LedOff();
+		//LedOff();
 
-		wait(1000);		
+		//wait(1000);		
 
-		LedOn();		
+		//LedOn();		
 
-		wait(1000);
+		//wait(1000);
 	}
 }
 
@@ -35,12 +38,11 @@ void LogPrint(char* message, unsigned int length)
 
 void c_irq_handler (void)
 {
-	irq_counter++;
+	unsigned char read = uart_getc();
 
-	// TODO: Determine source of IRQ - for now this will always be the timer (?)
-	printf_i("IRQ no. %d\n", irq_counter);
+	gUserConnected = 1;
 
-
+	// If this was triggered by the timer
 	// Reset the system periodic timer
 	//timer_sp_clearmatch();
 	//timer_sp_setinterval(TIMER_INTERRUPT_INTERVAL);
@@ -49,25 +51,26 @@ void c_irq_handler (void)
 unsigned int system_initialize(void)
 {
 	unsigned int result = 0;
-
-	// First and foremost: The LED so we can flash it to signal errors if FB init fails
-	gpio_initialize();
 	
 	// Initialize terminal first so we can print error messages if any (Hah, unlikely!)
 	if((result = terminal_init()) != 0)
 		OnCriticalError(); // Critical error: Failed to initialize framebuffer :-(
-	
-	//if(mini_uart_initialize() != 0)
-	//	printf("Failed to initialize uart.\n");
 
 	// Note: Timer is not essential to system initialisation
 	if(timer_init() != 0)
 		printf("Failed to initialise timer.\n");
 
-	// Note: Interrupts are not essential to system initialisation
-	if(interrupts_init() != 0)
-		printf("Failed to initialize interrupts.\n");
+	uart_init();
+	
+	uart_irpt_enable();
 
+	arm_interrupt_init();
+
+	arm_irq_disableall();
+	arm_irq_enable(interrupt_source_uart);
+
+	enable_irq();
+	
 	// Note: Usb & Keyboard is essential to the system
 	if((result = UsbInitialise()) != 0)
 		printf("Usb initialise failed, error code: %d\n", result);
@@ -88,23 +91,22 @@ void WaitForUartAlive(void)
 {
 	printf("Waiting for user to connect via uart...\n");
 
-	// Block until a char is read
-	mini_uart_read_char(1);
+	while (!gUserConnected) { /* Just Wait */ }
 
 	printf("User connected, launching system.\n");
 
-	mini_uart_send_string("Welcome, user!\n");
+	uart_puts("Welcome to PiOS!\n");
 }
 
 int cmain(void)
 {
-	irq_counter = 0;
+	gUserConnected = 0;
 
 	if(system_initialize() == 0)
 	{
 		// System all up and running, wait for a alive sign from the uart before proceeding
-		// TODO: Conditionalize this - only use if no screen attached
-		//WaitForUartAlive();
+		// TODO: Conditionalize this - only use if no screen (keyboard?) is attached
+		WaitForUartAlive();
 
 		// Kick off the terminal
 		terminal_printWelcome();
@@ -114,7 +116,7 @@ int cmain(void)
 		{
 			terminal_update();
 
-			wait(5);
+			wait(20);
 		}
 	}	
 

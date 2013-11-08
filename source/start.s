@@ -120,7 +120,10 @@ irq:
 	;@ saved so we can go back to the previous state once the interrupt has been handled
 	;@ TODO: Use STMFD?
     push {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,lr}
+
+	;@ Jump to C Handler
     bl c_irq_handler
+
 	;@ TODO: Use LDMFD?
     pop  {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,lr}
 	
