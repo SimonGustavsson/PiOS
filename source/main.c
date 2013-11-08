@@ -38,7 +38,7 @@ void LogPrint(char* message, unsigned int length)
 
 void c_irq_handler (void)
 {
-	unsigned char read = uart_getc();
+	uart_getc();
 
 	gUserConnected = 1;
 
