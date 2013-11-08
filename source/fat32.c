@@ -315,7 +315,7 @@ unsigned int fat32_initialize(void) // Pass in device?
 
 				if (gBlock_buf[index] == 0)
 					printf("0");
-				else if (gBlock_buf > 126)
+				else if (gBlock_buf[index] > 126)
 					printf(".");
 				else
 					printf("%h ", gBlock_buf[(i * 32) + j]);
