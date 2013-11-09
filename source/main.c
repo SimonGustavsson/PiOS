@@ -15,6 +15,19 @@ extern void enable_irq(void);
 volatile extern Emmc* gEmmc;
 volatile unsigned int gUserConnected;
 
+void reboot()
+{
+   static const int PM_RSTC = 0x2010001c;
+   static const int PM_WDOG = 0x20100024;
+   static const int PM_PASSWORD = 0x5a000000;
+   static const int PM_RSTC_WRCFG_FULL_RESET = 0x00000020;
+   
+   *(unsigned int*)(PM_WDOG) = (PM_PASSWORD | 1); // timeout = 1/16th of a second? (whatever)
+   *(unsigned int*)(PM_RSTC) = (PM_PASSWORD | PM_RSTC_WRCFG_FULL_RESET);
+
+   while(1);
+}
+
 void OnCriticalError(void)
 {
 	while(1)
@@ -38,9 +51,19 @@ void LogPrint(char* message, unsigned int length)
 
 void c_irq_handler (void)
 {
-	uart_getc();
-
-	gUserConnected = 1;
+	// if(uart_read_irpt_pending())
+	unsigned char read = uart_getc();
+	if(gUserConnected)
+	{
+		if(read == 'x')
+			reboot();
+		else
+			uart_putc(read);
+	}
+	else
+	{
+		gUserConnected = 1;
+	}
 
 	// If this was triggered by the timer
 	// Reset the system periodic timer
