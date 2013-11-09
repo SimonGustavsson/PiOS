@@ -238,10 +238,6 @@ static unsigned int parse_directory_block(char* buf, int buflen, dir_entry* entr
 			// Copy 8.3 data to the file entry
 			memcpy(&entries[file_index], &buf[0], 32);
 
-			// switcheroo
-			printf("cluster low(%d): << 8: %d, >> 8: %d\n", entries[file_index].first_cluster_low, (entries[file_index].first_cluster_low << 8), (entries[file_index].first_cluster_low >> 8));
-			entries[file_index].first_cluster_low = (entries[file_index].first_cluster_low << 8 | entries[file_index].first_cluster_low >> 8);
-
 			file_index++;
 		}
 

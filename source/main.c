@@ -14,6 +14,7 @@ extern void enable_irq(void);
 //volatile unsigned int irq_counter;
 volatile extern Emmc* gEmmc;
 volatile unsigned int gUserConnected;
+volatile unsigned int gSystemInitialized;
 
 void reboot()
 {
@@ -28,20 +29,6 @@ void reboot()
    while(1);
 }
 
-void OnCriticalError(void)
-{
-	while(1)
-	{
-		//LedOff();
-
-		//wait(1000);		
-
-		//LedOn();		
-
-		//wait(1000);
-	}
-}
-
 // Log function for CSUD
 void LogPrint(char* message, unsigned int length)
 {
@@ -53,12 +40,19 @@ void c_irq_handler (void)
 {
 	// if(uart_read_irpt_pending())
 	unsigned char read = uart_getc();
+
+	uart_putc(read);
+
 	if(gUserConnected)
 	{
-		if(read == 'x')
+		if (gSystemInitialized)
+			print((char*)&read, 1);
+
+		if (read == 'x')
+		{
+			uart_puts("\r\n* * * Rebooting. * * *\r\n");
 			reboot();
-		else
-			uart_putc(read);
+		}
 	}
 	else
 	{
@@ -93,8 +87,8 @@ unsigned int system_initialize(void)
 	if ((result = terminal_init()) != 0)
 	{
 		uart_puts("Failed to initialize terminal.\n");
-		OnCriticalError(); // Critical error: Failed to initialize framebuffer :-(
 	}
+
 	// Note: Timer is not essential to system initialisation
 	if (timer_init() != 0)
 	{
@@ -103,10 +97,10 @@ unsigned int system_initialize(void)
 	}
 	
 	// Note: Usb & Keyboard is essential to the system
-	if((result = UsbInitialise()) != 0)
-		printf("Usb initialise failed, error code: %d\n", result);
-	else if((result = KeyboardInitialise()) != 0)
-		printf("Keyboard initialise failed, error code: %d\n", result);
+	//if((result = UsbInitialise()) != 0)
+	//	printf("Usb initialise failed, error code: %d\n", result);
+	//else if((result = KeyboardInitialise()) != 0)
+	//	printf("Keyboard initialise failed, error code: %d\n", result);
 
 	// Note: EMMC is not essential to system initialisation
 	if(EmmcInitialise() != 0)
@@ -116,6 +110,8 @@ unsigned int system_initialize(void)
 		printf("Failed to initialize fat32.\n");
 	
 	printf("System initialization complete, result: %d\n", result);
+
+	gSystemInitialized = 1;
 
 	return result;
 }
@@ -146,7 +142,7 @@ int cmain(void)
 		// Kick off the terminal
 		terminal_printWelcome();
 		terminal_printPrompt();
-		
+
 		while(1)
 		{
 			terminal_update();
