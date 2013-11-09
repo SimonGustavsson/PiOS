@@ -187,7 +187,7 @@ typedef enum {
 
 typedef union {
 	unsigned int raw;
-	
+
 	struct {
 		pud_state pud : 2;
 		unsigned int reserved : 29;
@@ -195,12 +195,12 @@ typedef union {
 } gppud_reg;
 
 typedef volatile struct {
-	gpfsel0 gpfsel0;                // GPIO Function Select 0
-	gpfsel1 gpfsel1;                // GPIO Function Select 1
-	gpfsel2 gpfsel2;                // GPIO Function Select 2
-	gpfsel3 gpfsel3;                // GPIO Function Select 3
-	gpfsel4 gpfsel4;                // GPIO Function Select 4
-	gpfsel5 gpfsel5;                // GPIO Function Select 5
+	gpfsel0 gpfsel0;               // GPIO Function Select 0
+	gpfsel1 gpfsel1;               // GPIO Function Select 1
+	gpfsel2 gpfsel2;               // GPIO Function Select 2
+	gpfsel3 gpfsel3;               // GPIO Function Select 3
+	gpfsel4 gpfsel4;               // GPIO Function Select 4
+	gpfsel5 gpfsel5;               // GPIO Function Select 5
 	unsigned int reserved;         // -
 	gp_pin_reg0 gpset0;            // GPIO Pin Output Set 0
 	gp_pin_reg1 gpset1;            // GPIO Pin Output Set 1
@@ -211,35 +211,32 @@ typedef volatile struct {
 	const gp_pin_reg0 gplev0;      // GPIO Pin Level 0 (Read-only)
 	const gp_pin_reg1 gplev1;      // GPIO Pin Level 1 (Read-only)
 	unsigned int reserved4;        // -
-	gp_pin_reg0 gpeds0;           // GPIO Pin Event Detect Status 0
-	gp_pin_reg1 gpeds1;           // GPIO Pin Event Detect Status 1
+	gp_pin_reg0 gpeds0;            // GPIO Pin Event Detect Status 0
+	gp_pin_reg1 gpeds1;            // GPIO Pin Event Detect Status 1
 	unsigned int reserved5;        // -
-	gp_pin_reg0 gpren0;           // GPIO Pin Rising Edge Detect Enable 0
-	gp_pin_reg1 gpren1;           // GPIO Pin Rising Edge Detect Enable 1
+	gp_pin_reg0 gpren0;            // GPIO Pin Rising Edge Detect Enable 0
+	gp_pin_reg1 gpren1;            // GPIO Pin Rising Edge Detect Enable 1
 	unsigned int reserved6;        // -
-	gp_pin_reg0 gpfen0;           // GPIO Pin Falling Edge Detect Enable 0
-	gp_pin_reg1 gpfen1;           // GPIO Pin Falling Edge Detect Enable 1
+	gp_pin_reg0 gpfen0;            // GPIO Pin Falling Edge Detect Enable 0
+	gp_pin_reg1 gpfen1;            // GPIO Pin Falling Edge Detect Enable 1
 	unsigned int reserved7;        // -
-	gp_pin_reg0 gphen0;           // GPIO Pin High Detect Enable 0
-	gp_pin_reg1 gphen1;           // GPIO Pin High Detect Enable 1
+	gp_pin_reg0 gphen0;            // GPIO Pin High Detect Enable 0
+	gp_pin_reg1 gphen1;            // GPIO Pin High Detect Enable 1
 	unsigned int reserved8;        // -
-	gp_pin_reg0 gplen0;           // GPIO Pin Low Detect Enable 0
-	gp_pin_reg1 gplen1;           // GPIO Pin Low Detect Enable 1
+	gp_pin_reg0 gplen0;            // GPIO Pin Low Detect Enable 0
+	gp_pin_reg1 gplen1;            // GPIO Pin Low Detect Enable 1
 	unsigned int reserved9;        // -
-	gp_pin_reg0 gparen0;          // GPIO Pin Async. Rising Edge Detect 0
-	gp_pin_reg1 gparen1;          // GPIO Pin Async. Rising Edge Detect 1
+	gp_pin_reg0 gparen0;           // GPIO Pin Async. Rising Edge Detect 0
+	gp_pin_reg1 gparen1;           // GPIO Pin Async. Rising Edge Detect 1
 	unsigned int reserved10;       // -
-	gp_pin_reg0 gpafen0;         //
-	gp_pin_reg1 gpafen1;         //
+	gp_pin_reg0 gpafen0;           //
+	gp_pin_reg1 gpafen1;           //
 	unsigned int reserved11;       // -
-	gppud_reg gppud;            // GPIO Pin Pull-up/Down Enable
-	gp_pin_reg0 gppudclk0;        // GPIO Pin Pull-up/Down clock 0
-	gp_pin_reg1 gppudclk1;        // GPIO Pin Pull-up/Down clock 1
+	gppud_reg gppud;               // GPIO Pin Pull-up/Down Enable
+	gp_pin_reg0 gppudclk0;         // GPIO Pin Pull-up/Down clock 0
+	gp_pin_reg1 gppudclk1;         // GPIO Pin Pull-up/Down clock 1
 	unsigned char reserved12[10];  // -
-	unsigned char test;      // Test
+	unsigned char test;            // Test
 } gpio_reg;
 
-void LedOn(void);
-void LedOff(void);
-
-unsigned int gpio_initialize(void);
+void gpio_enable_uart(void);

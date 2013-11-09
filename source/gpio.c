@@ -1,28 +1,24 @@
 #include "gpio.h"
 
-static volatile gpio_reg* gGpio;
 
-unsigned int gpio_initialize(void)
+static void delay(unsigned int count)
 {
-	gGpio = (gpio_reg*)(GPIO_BASE);
-
-	// Enable output on the LED
-	unsigned int ra = gGpio->gpfsel1.raw;
-
-	ra &= ~(7 << 18);
-	ra |= 1 << 18;
-	
-	gGpio->gpfsel1.raw = ra;
-
-	return 0;
+	volatile unsigned int i;
+	for (i = 0; i < count; i++){ /* Do Nothing */ }
 }
 
-void LedOn()
+void gpio_enable_uart(void)
 {
-	gGpio->gpclr0.raw = (1 << 16); // On
-}
+	gpio_reg* gpio = (gpio_reg*)(GPIO_BASE);
 
-void LedOff()
-{
-	gGpio->gpset0.raw = (1 << 16); // Off
+	// Disable pull up/down for all GPIO pins & delay for 150 cycles.
+	gpio->gppud.raw = 0x00000000;
+	delay(150);
+
+	// Disable pull up/down for pin 14,15 & delay for 150 cycles.
+	gpio->gppudclk0.raw = (1 << 14) | (1 << 15);
+	delay(150);
+
+	// Write 0 to GPPUDCLK0 to make it take effect.
+	gpio->gppudclk0.raw = 0x00000000;
 }

@@ -291,21 +291,38 @@ unsigned int read_dir_at_cluster(char* buf, unsigned int buflen, dir_entry* entr
 unsigned int fat32_initialize(void) // Pass in device?
 {
 	printf("fat32 - Initializing...\n");
-
-
-	printf("Attribute is: %d\n", sizeof(file_attribute));
 	
 	// Read MBR
 	if(!EmmcReadBlock(gBlock_buf, 512, 0))
 	{
-		printf("fat32 - Failed to read mbr sector 0\n");
+		printf("fat32 - Failed to read mbr sector.\n");
 		return -1;
 	}
 	
 	// Verify signature
 	if(gBlock_buf[510] != 0x55 || gBlock_buf[511] != 0xAA)
 	{
-		printf("fat32 - Invalid mbr signature.\n");
+		printf("fat32 - Invalid mbr signature, dumping first block:\n");
+
+		unsigned int index;
+		unsigned int i;
+		for (i = 0; i < 16; i++)
+		{
+			unsigned int j;
+			for (j = 0; j < 32; j++)
+			{
+				index = (i * 32) + j;
+
+				if (gBlock_buf[index] == 0)
+					printf("0");
+				else if (gBlock_buf[index] > 126)
+					printf(".");
+				else
+					printf("%h ", gBlock_buf[(i * 32) + j]);
+			}
+			printf("\n");
+		}
+
 		return -1; // Invalid mbr signature
 	}
 

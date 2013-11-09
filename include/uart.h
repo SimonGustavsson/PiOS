@@ -1,28 +1,38 @@
-#define UART_BASE 0x2020100
+/* uart.h - UART initialization & communication */
+
+#ifndef UART_H
+#define UART_H
+
+#define UART_BASE 0x20201000
 
 typedef volatile struct{
-	unsigned int dr;   // Data Register
-	unsigned int rsrecr; // ?
-	unsigned int reserved[4]; 
-	unsigned int fr;   // Flag Register
-	unsigned int ilpr; // Not used
-	unsigned int ibrd; // Integer baud rate divisor
-	unsigned int fbrd; // Fractional baud rate divisor
-	unsigned int lcrh; // Line control register
-	unsigned int cr;   // Control Register
-	unsigned int ifls; // Interrupt FIFO Level Select Register
-	unsigned int imsc; // Interrupt mask set clear register
-	unsigned int ris;  // Raw interrupt status register
-	unsigned int mis;  // Masked interrupt status register
-	unsigned int icr;  // Interrupt clear Register
-	unsigned int dmacr;// DMA control register
-	unsigned int itcr; // Test control register
-	unsigned int itip; // Integration test input reg
-	unsigned int itop; // Integration test output reg
-	unsigned int tdr;  // Test data reg
+	unsigned int dr;           // 0x00 Data Register
+	unsigned int rsrecr;       // 0x04 ?
+	unsigned int reserved[4];  // -
+	unsigned int fr;           // 0x18 Flag Register
+	unsigned int reserved2;    // -
+	unsigned int ilpr;         // 0x20 Not used
+	unsigned int ibrd;         // 0x24 Integer baud rate divisor
+	unsigned int fbrd;         // 0x28 Fractional baud rate divisor
+	unsigned int lcrh;         // 0x2C Line control register
+	unsigned int cr;           // 0x30 Control Register
+	unsigned int ifls;         // 0x34 Interrupt FIFO Level Select Register
+	unsigned int imsc;         // 0x38 Interrupt mask set clear register
+	unsigned int ris;          // 0x3C Raw interrupt status register
+	unsigned int mis;          // 0x40 Masked interrupt status register
+	unsigned int icr;          // 0x44 Interrupt clear Register
+	unsigned int dmacr;        // 0x48 DMA control register
+	unsigned int reserved3[13];// -
+	unsigned int itcr;         // 0x80 Test control register
+	unsigned int itip;         // 0x84 Integration test input reg
+	unsigned int itop;         // 0x88 Integration test output reg
+	unsigned int tdr;          // 0x8C Test data reg
 } Uart;
 
-unsigned int uart_initialize(void);
-void uart_send(unsigned int);
-unsigned int uart_read();
-void uart_send_string(char*);
+void uart_init();
+void uart_irpt_enable(void);
+void uart_putc(unsigned char byte);
+unsigned char uart_getc();
+void uart_puts(const char *str);
+
+#endif // #ifndef UART_H

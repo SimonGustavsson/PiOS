@@ -12,6 +12,7 @@
 #include "keyboard.h"
 #include "stringutil.h"
 #include "terminal_commands.h"
+#include "uart.h"
 
 // Forward declare
 void PresentBufferToScreen(void);
@@ -233,6 +234,8 @@ void terminal_back(void)
 
 void print_internal(char* string, unsigned int length, unsigned int important)
 {
+	// TODO: This should first construct the string, THEN Send it off to a print function
+
 	// 0. If we're currently showing the prompt (and potentially user input)
 	// we overwrite this, and rewrite it again after this print
 	if(gShowingTerminalPrompt && important)
@@ -259,6 +262,9 @@ void print_internal(char* string, unsigned int length, unsigned int important)
 	{	
 		if(string[i] == '\n')
 		{
+			uart_putc('\n');
+			uart_putc('\r');
+
 			gBuffer[gBufferCaretRow][gBufferCaretCol] = ' ';
 			gBufferCaretRow++;
 			gBufferCaretCol = 0;
@@ -283,9 +289,17 @@ void print_internal(char* string, unsigned int length, unsigned int important)
 					gBufferCaretRow++;
 				}
 			}
+			uart_puts("    ");
 		}
-		else if(gBuffer[gBufferCaretRow][gBufferCaretCol] != string[i])
+		else if (gBuffer[gBufferCaretRow][gBufferCaretCol] != string[i])
+		{
+			uart_putc(string[i]);
 			gBuffer[gBufferCaretRow][gBufferCaretCol] = string[i];
+		}
+		else
+		{
+			uart_putc(string[i]);
+		}
 		
 		if(gBufferCaretCol < BUFFER_WIDTH - 1)
 		{
