@@ -6,7 +6,7 @@ unsigned long long __aeabi_uidivmod(unsigned int value, unsigned int divisor) {
                 if ((divisor << (31 - i)) >> (31 - i) == divisor) {
                         if (value >= divisor << (31 - i)) {
                                 value -= divisor << (31 - i);
-                                answer |= 1 << (31 - i);
+                                answer |= (unsigned long long)(1 << (31 - i));
                                 if (value == 0) break;
                         } 
                 }
@@ -17,5 +17,5 @@ unsigned long long __aeabi_uidivmod(unsigned int value, unsigned int divisor) {
 };
 
 unsigned int __aeabi_uidiv(unsigned int value, unsigned int divisor) {
-        return __aeabi_uidivmod(value, divisor);
+        return (unsigned int)__aeabi_uidivmod(value, divisor);
 };
