@@ -65,52 +65,52 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\source\emmc.c">
+    <CustomBuild Include="..\source\main.c">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\framebuffer.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\gpio.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\interrupts.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\keyboard.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\mailbox.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\main.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\stdio.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\stringutil.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\terminal.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\terminal_commands.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\timer.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\uart.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\fat32.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
+    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\source\start.s">
+    <Text Include="..\source\emmc.c">
       <Filter>Source Files</Filter>
-    </None>
+    </Text>
+    <Text Include="..\source\fat32.c">
+      <Filter>Source Files</Filter>
+    </Text>
+    <Text Include="..\source\framebuffer.c">
+      <Filter>Source Files</Filter>
+    </Text>
+    <Text Include="..\source\gpio.c">
+      <Filter>Source Files</Filter>
+    </Text>
+    <Text Include="..\source\interrupts.c">
+      <Filter>Source Files</Filter>
+    </Text>
+    <Text Include="..\source\keyboard.c">
+      <Filter>Source Files</Filter>
+    </Text>
+    <Text Include="..\source\mailbox.c">
+      <Filter>Source Files</Filter>
+    </Text>
+    <Text Include="..\source\start.s">
+      <Filter>Source Files</Filter>
+    </Text>
+    <Text Include="..\source\stdio.c">
+      <Filter>Source Files</Filter>
+    </Text>
+    <Text Include="..\source\stringutil.c">
+      <Filter>Source Files</Filter>
+    </Text>
+    <Text Include="..\source\terminal.c">
+      <Filter>Source Files</Filter>
+    </Text>
+    <Text Include="..\source\terminal_commands.c">
+      <Filter>Source Files</Filter>
+    </Text>
+    <Text Include="..\source\timer.c">
+      <Filter>Source Files</Filter>
+    </Text>
+    <Text Include="..\source\uart.c">
+      <Filter>Source Files</Filter>
+    </Text>
   </ItemGroup>
 </Project>
