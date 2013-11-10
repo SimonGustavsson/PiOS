@@ -1,6 +1,6 @@
 #include "types.h"
-#include "usbd/usbd.h"
-#include "device/hid/keyboard.h"
+//#include "usbd/usbd.h"
+//#include "device/hid/keyboard.h"
 #include "terminal.h"
 #include "stringutil.h"
 #include "keyboard.h"
@@ -320,21 +320,21 @@ const char gVirtualTable[] =
 bool gHaveKeyboard;
 unsigned int gKeyboardAddr;
 unsigned short gLastKeystate[6];
-struct KeyboardModifiers gLastModifiers;
+//struct KeyboardModifiers gLastModifiers;
 
 bool KeyboardCtrlDown(void)
 {
-	return gLastModifiers.LeftControl || gLastModifiers.RightControl;
+	return -1;//gLastModifiers.LeftControl || gLastModifiers.RightControl;
 }
 
 bool KeyboardShiftDown(void)
 {
-	return gLastModifiers.LeftShift || gLastModifiers.RightShift;
+	return -1;//gLastModifiers.LeftShift || gLastModifiers.RightShift;
 }
 
 virtualkey ScanToVirtual(unsigned int scanCode)
 {
-	if(scanCode < 0) return -1;
+	if(scanCode < 0) return VK_INVALID;
 	
 	return (virtualkey)(scanCode - 4);
 }
@@ -366,15 +366,15 @@ bool EnsureKeyboard(void)
 	if(gHaveKeyboard) 
 		return true;
 	
-	UsbCheckForChange();
+	//UsbCheckForChange();
 	
-	if(KeyboardCount() == 0)
+	if(1)//KeyboardCount() == 0)
 	{
 		gHaveKeyboard = false;
 		return false;
 	}
 	
-	gKeyboardAddr = KeyboardGetAddress(0);
+	gKeyboardAddr = 0;//KeyboardGetAddress(0);
 	gHaveKeyboard = true;
 	
 	return true;
@@ -395,7 +395,7 @@ unsigned short KeyboardGetChar(void)
 	unsigned int i;
 	for(i = 0; i < 6; i++)
 	{
-		unsigned short key = KeyboardGetKeyDown(gKeyboardAddr, i);
+		unsigned short key = 0;//KeyboardGetKeyDown(gKeyboardAddr, i);
 		
 		if(key == 0) return 0;
 		if(KeyWasDown(key)) continue;
@@ -429,8 +429,8 @@ void KeyboardUpdate(void)
 	
 	unsigned int i;
 	for(i = 0; i < 6; i++)
-		gLastKeystate[i] = KeyboardGetKeyDown(gKeyboardAddr, i);
+		gLastKeystate[i] = 0;//KeyboardGetKeyDown(gKeyboardAddr, i);
 		
-	gHaveKeyboard = KeyboardPoll(gKeyboardAddr) == 0;
-	gLastModifiers = KeyboardGetModifiers(gKeyboardAddr);
+	//gHaveKeyboard = KeyboardPoll(gKeyboardAddr) == 0;
+	//gLastModifiers = KeyboardGetModifiers(gKeyboardAddr);
 }

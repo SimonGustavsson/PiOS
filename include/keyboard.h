@@ -101,7 +101,8 @@ typedef enum
 	VK_NUM0, 
 	VK_NUM_DEL,
 	VK_BACKSLASH2,
-	VK_RMENU 
+	VK_RMENU,
+	VK_INVALID
 } virtualkey;
 
 unsigned int KeyboardInitialise(void);

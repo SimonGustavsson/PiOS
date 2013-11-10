@@ -5,7 +5,7 @@
 #include "stringutil.h"
 #include "terminal.h"
 #include "timer.h"
-#include "usbd/usbd.h"
+//#include "usbd/usbd.h"
 #include "uart.h"
 #include "fat32.h"
 
