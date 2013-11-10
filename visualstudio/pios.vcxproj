@@ -97,13 +97,13 @@
   <ItemGroup>
     <Text Include="..\source\emmc.c">
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CALL ..\BuildAndDeploy.bat "..\PiOSLoader\deployer\bin\Debug\PiOSDeployer.exe" bin\kernel.img</Command>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">PiOS Build and deploy script</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">PiOS build and deploy script</Message>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</DeploymentContent>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">stuff;%(Outputs)</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</LinkObjects>
     </Text>
     <Text Include="..\source\fat32.c">
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">PiOS Build and deploy script</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">PiOS build and deploy script</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CALL ..\BuildAndDeploy.bat "..\PiOSLoader\deployer\bin\Debug\PiOSDeployer.exe" bin\kernel.img</Command>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</DeploymentContent>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">stuff;%(Outputs)</Outputs>
@@ -111,84 +111,84 @@
     </Text>
     <Text Include="..\source\framebuffer.c">
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CALL ..\BuildAndDeploy.bat "..\PiOSLoader\deployer\bin\Debug\PiOSDeployer.exe" bin\kernel.img</Command>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">PiOS Build and deploy script</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">PiOS build and deploy script</Message>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</DeploymentContent>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">stuff;%(Outputs)</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</LinkObjects>
     </Text>
     <Text Include="..\source\gpio.c">
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CALL ..\BuildAndDeploy.bat "..\PiOSLoader\deployer\bin\Debug\PiOSDeployer.exe" bin\kernel.img</Command>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">PiOS Build and deploy script</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">PiOS build and deploy script</Message>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</DeploymentContent>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">stuff;%(Outputs)</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</LinkObjects>
     </Text>
     <Text Include="..\source\interrupts.c">
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CALL ..\BuildAndDeploy.bat "..\PiOSLoader\deployer\bin\Debug\PiOSDeployer.exe" bin\kernel.img</Command>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">PiOS Build and deploy script</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">PiOS build and deploy script</Message>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</DeploymentContent>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">stuff;%(Outputs)</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</LinkObjects>
     </Text>
     <Text Include="..\source\keyboard.c">
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CALL ..\BuildAndDeploy.bat "..\PiOSLoader\deployer\bin\Debug\PiOSDeployer.exe" bin\kernel.img</Command>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">PiOS Build and deploy script</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">PiOS build and deploy script</Message>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</DeploymentContent>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">stuff;%(Outputs)</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</LinkObjects>
     </Text>
     <Text Include="..\source\mailbox.c">
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CALL ..\BuildAndDeploy.bat "..\PiOSLoader\deployer\bin\Debug\PiOSDeployer.exe" bin\kernel.img</Command>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">PiOS Build and deploy script</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">PiOS build and deploy script</Message>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</DeploymentContent>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">stuff;%(Outputs)</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</LinkObjects>
     </Text>
     <CustomBuild Include="..\source\main.c">
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CALL ..\BuildAndDeploy.bat "..\..\PiOSLoader\deployer\bin\Debug" "..\bin"</Command>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">PiOS Build and deploy script</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">PiOS build and deploy script</Message>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</DeploymentContent>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">stuff;%(Outputs)</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</LinkObjects>
     </CustomBuild>
     <Text Include="..\source\stdio.c">
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CALL ..\BuildAndDeploy.bat "..\PiOSLoader\deployer\bin\Debug\PiOSDeployer.exe" bin\kernel.img</Command>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">PiOS Build and deploy script</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">PiOS build and deploy script</Message>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</DeploymentContent>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">stuff;%(Outputs)</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</LinkObjects>
     </Text>
     <Text Include="..\source\stringutil.c">
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CALL ..\BuildAndDeploy.bat "..\PiOSLoader\deployer\bin\Debug\PiOSDeployer.exe" bin\kernel.img</Command>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">PiOS Build and deploy script</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">PiOS build and deploy script</Message>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</DeploymentContent>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">stuff;%(Outputs)</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</LinkObjects>
     </Text>
     <Text Include="..\source\terminal.c">
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CALL ..\BuildAndDeploy.bat "..\PiOSLoader\deployer\bin\Debug\PiOSDeployer.exe" bin\kernel.img</Command>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">PiOS Build and deploy script</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">PiOS build and deploy script</Message>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</DeploymentContent>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">stuff;%(Outputs)</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</LinkObjects>
     </Text>
     <Text Include="..\source\terminal_commands.c">
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CALL ..\BuildAndDeploy.bat "..\PiOSLoader\deployer\bin\Debug\PiOSDeployer.exe" bin\kernel.img</Command>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">PiOS Build and deploy script</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">PiOS build and deploy script</Message>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</DeploymentContent>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">stuff;%(Outputs)</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</LinkObjects>
     </Text>
     <Text Include="..\source\timer.c">
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CALL ..\BuildAndDeploy.bat "..\PiOSLoader\deployer\bin\Debug\PiOSDeployer.exe" bin\kernel.img</Command>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">PiOS Build and deploy script</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">PiOS build and deploy script</Message>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</DeploymentContent>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">stuff;%(Outputs)</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</LinkObjects>
     </Text>
     <Text Include="..\source\uart.c">
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CALL ..\BuildAndDeploy.bat "..\PiOSLoader\deployer\bin\Debug\PiOSDeployer.exe" bin\kernel.img</Command>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">PiOS Build and deploy script</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">PiOS build and deploy script</Message>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</DeploymentContent>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">stuff;%(Outputs)</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</LinkObjects>
@@ -197,7 +197,7 @@
   <ItemGroup>
     <Text Include="..\source\start.s">
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CALL ..\BuildAndDeploy.bat "..\PiOSLoader\deployer\bin\Debug\PiOSDeployer.exe" bin\kernel.img</Command>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">PiOS Build and deploy script</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">PiOS build and deploy script</Message>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</DeploymentContent>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">stuff;%(Outputs)</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</LinkObjects>

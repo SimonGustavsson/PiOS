@@ -17,12 +17,12 @@ SET KERNELPATH=%CD%
 popd
 
 REM Build
-echo Building...
+echo Building
 c:/cygwin64/bin/bash.exe --login -c "cd f:;cd git/pios;make"
 
-echo Deploying kernel...
+echo Deploying kernel
 start "Deployer" %DEPLOYERPATH%\PiOSDeployer.exe %KERNELPATH%\kernel.img
-echo Waiting for Deployer...
+echo Running...
 
 GOTO DONE
 
