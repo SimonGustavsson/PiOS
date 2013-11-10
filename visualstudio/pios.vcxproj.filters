@@ -112,10 +112,8 @@
     <Text Include="..\source\uart.c">
       <Filter>Source Files</Filter>
     </Text>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\source\platform.c">
+    <Text Include="..\source\platform.c">
       <Filter>Source Files</Filter>
-    </ClCompile>
+    </Text>
   </ItemGroup>
 </Project>

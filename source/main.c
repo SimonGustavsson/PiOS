@@ -45,9 +45,6 @@ void c_irq_handler (void)
 
 	if(gUserConnected)
 	{
-		if (gSystemInitialized)
-			print((char*)&read, 1);
-
 		if (read == 'x')
 		{
 			uart_puts("\r\n* * * Rebooting. * * *\r\n");
@@ -124,7 +121,7 @@ void WaitForUartAlive(void)
 		for (i = 0; i < 150000; i++) { /* Do Nothing */ }
 	}
 
-	uart_puts("Welcome to PiOS!\n\r");
+	uart_puts("\n\rWelcome to PiOS!\n\r");
 }
 
 int cmain(void)
@@ -135,8 +132,8 @@ int cmain(void)
 
 	// System all up and running, wait for a alive sign from the uart before proceeding
 	// TODO: Conditionalize this - only use if no screen (keyboard?) is attached
-	WaitForUartAlive();
-
+	//WaitForUartAlive();
+	uart_puts("Welcome to PiOS!\n\r");
 	if(system_initialize() == 0)
 	{
 		// Kick off the terminal
