@@ -1,0 +1,100 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{C99F3786-0FAF-45D4-B4F9-2B73E4C7AC44}</ProjectGuid>
+    <Keyword>PiOSVisualStudio</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <NMakeBuildCommandLine>c:/cygwin64/bin/bash.exe --login -c "cd d:;cd simon/dev/git/pios;make"</NMakeBuildCommandLine>
+    <NMakeOutput>MyMakefileProj.exe</NMakeOutput>
+    <NMakeCleanCommandLine>c:/cygwin64/bin/bash.exe --login -c "cd d:;cd simon/dev/git/pios;make clean"</NMakeCleanCommandLine>
+    <NMakeReBuildCommandLine>c:/cygwin64/bin/bash.exe --login -c "cd d:;cd simon/dev/git/pios;make rebuild"</NMakeReBuildCommandLine>
+    <NMakePreprocessorDefinitions>WIN32;_DEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
+    <NMakeIncludeSearchPath>..\include;$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
+    <IncludePath>..\include;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <!-- START: Manual project file hacking to remove unnecessary steps -->
+  <PropertyGroup>
+    <BuildDependsOn>
+    </BuildDependsOn>
+  </PropertyGroup>
+  <Target Name="Clean">
+    <Exec Command="$(NMakeCleanCommandLine)" Condition="'$(NMakeCleanCommandLine)'!=''" />
+  </Target>
+  <Target Name="Build" Returns="$(NMakeManagedOutput)">
+    <Exec Command="$(NMakeBuildCommandLine)" Condition="'$(NMakeBuildCommandLine)'!=''" />
+  </Target>
+  <Target Name="Rebuild" DependsOnTargets="Clean">
+    <Exec Command="$(NMakeReBuildCommandLine)" Condition="'$(NMakeReBuildCommandLine)'!=''" />
+  </Target>
+  <!-- END: Manual project file hacking to remove unnecessary steps -->
+  <ItemDefinitionGroup>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <Text Include="readme.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\include\emmc.h" />
+    <ClInclude Include="..\include\fat32.h" />
+    <ClInclude Include="..\include\framebuffer.h" />
+    <ClInclude Include="..\include\gpio.h" />
+    <ClInclude Include="..\include\interrupts.h" />
+    <ClInclude Include="..\include\keyboard.h" />
+    <ClInclude Include="..\include\mailbox.h" />
+    <ClInclude Include="..\include\memory.h" />
+    <ClInclude Include="..\include\mini_uart.h" />
+    <ClInclude Include="..\include\mmio.h" />
+    <ClInclude Include="..\include\myfont.h" />
+    <ClInclude Include="..\include\stdio.h" />
+    <ClInclude Include="..\include\stringutil.h" />
+    <ClInclude Include="..\include\terminal.h" />
+    <ClInclude Include="..\include\terminal_commands.h" />
+    <ClInclude Include="..\include\timer.h" />
+    <ClInclude Include="..\include\uart.h" />
+    <ClInclude Include="..\include\utilities.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\source\emmc.c" />
+    <ClCompile Include="..\source\fat32.c" />
+    <ClCompile Include="..\source\framebuffer.c" />
+    <ClCompile Include="..\source\gpio.c" />
+    <ClCompile Include="..\source\interrupts.c" />
+    <ClCompile Include="..\source\keyboard.c" />
+    <ClCompile Include="..\source\mailbox.c" />
+    <ClCompile Include="..\source\main.c" />
+    <ClCompile Include="..\source\memory.c" />
+    <ClCompile Include="..\source\mini_uart.c" />
+    <ClCompile Include="..\source\platform.c" />
+    <ClCompile Include="..\source\stdio.c" />
+    <ClCompile Include="..\source\stringutil.c" />
+    <ClCompile Include="..\source\terminal.c" />
+    <ClCompile Include="..\source\terminal_commands.c" />
+    <ClCompile Include="..\source\timer.c" />
+    <ClCompile Include="..\source\uart.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\source\start.s" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
