@@ -73,4 +73,6 @@ void uart_puts(const char *str)
 	{
 		uart_putc(*str++);
 	}
+
+	uart_putc(0);
 }

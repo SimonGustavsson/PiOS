@@ -43,16 +43,11 @@ void c_irq_handler (void)
 
 	uart_putc(read);
 
-	//if(gUserConnected)
-	//{
-		if (read == 'x')
-		{
-			uart_puts("\r\n* * * Rebooting. * * *\r\n");
-			reboot();
-		}
-	//}
-	//else
-	//	gUserConnected = 1;
+	if (read == 'x')
+	{
+		uart_puts("\r\n* * * Rebooting. * * *\r\n");
+		reboot();
+	}
 
 	// If this was triggered by the timer
 	// Reset the system periodic timer
@@ -111,36 +106,13 @@ unsigned int system_initialize(void)
 	return result;
 }
 
-void WaitForUartAlive(void)
-{
-	//volatile unsigned int i;
-	//while (!gUserConnected)
-	//{
-	//	for (i = 0; i < 150000; i++) { /* Do Nothing */ }
-	//}
-
-	uart_puts("\n\rWelcome to PiOS!\n\r");
-}
-
 int cmain(void)
 {
 	//gUserConnected = 0;
 
 	system_initialize_serial();
 
-	// System all up and running, wait for a alive sign from the uart before proceeding
-	// TODO: Conditionalize this - only use if no screen (keyboard?) is attached
-	//WaitForUartAlive();
 	uart_puts("Welcome to PiOS!\n\r");
-	uart_puts("First 20 bytes at 0x000:\n\r");
-
-	char* zero = (char*)(0x0000);
-
-	unsigned int i;
-	for (i = 0; i < 20; i++)
-		uart_putc(*zero++);
-
-	uart_puts("\n\rThat was it.\n\r");
 
 	if(system_initialize() == 0)
 	{

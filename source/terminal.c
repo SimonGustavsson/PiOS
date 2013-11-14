@@ -318,6 +318,8 @@ void print_internal(char* string, unsigned int length, unsigned int important)
 			gBufferCaretRow = 0;
 		}
 	}
+
+	uart_putc(0); // String over
 	
 	// Write the prompt back again - but only if we wrote an important message.
 	// as we want multiple print() calls to be able to write to the same row
