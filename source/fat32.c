@@ -294,6 +294,8 @@ unsigned int fat32_initialize(void) // Pass in device?
 		printf("fat32 - Failed to read mbr sector.\n");
 		return -1;
 	}
+
+	return 0;
 	
 	// Verify signature
 	if(gBlock_buf[510] != 0x55 || gBlock_buf[511] != 0xAA)
