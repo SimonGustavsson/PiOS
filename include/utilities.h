@@ -1,3 +1,11 @@
+#ifndef UTILITIES_H
+#define UTILITIES_H
+
+#define assert(expression) (!expression ? printf("Assertion failed at %s(%d), expression: " #expression, __FILE__, __LINE__) : (void)0)
+#define assert2(expression, message) (!expression ? printf("Assertion failed at %s(%d), expression: " #expression "%s", __FILE__, __LINE__, message) : (void)0)
+
+typedef int bool;
+enum { false, true };
 
 // Support for unaligned data access
 static inline void write_word(unsigned int val, unsigned char* buf, int offset)
@@ -50,3 +58,5 @@ static inline unsigned int byte_to_short(char* buf)
 {
 	return (buf[0] + ((int)buf[1] << 8));
 }
+
+#endif

@@ -24,10 +24,10 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <NMakeBuildCommandLine>c:/cygwin64/bin/bash.exe --login -c "cd d:;cd simon/dev/git/pios;make"</NMakeBuildCommandLine>
+    <NMakeBuildCommandLine>c:/cygwin64/bin/bash.exe --login -c "cd d:;cd '$(ProjectDir)..\';make"</NMakeBuildCommandLine>
     <NMakeOutput>MyMakefileProj.exe</NMakeOutput>
-    <NMakeCleanCommandLine>c:/cygwin64/bin/bash.exe --login -c "cd d:;cd simon/dev/git/pios;make clean"</NMakeCleanCommandLine>
-    <NMakeReBuildCommandLine>c:/cygwin64/bin/bash.exe --login -c "cd d:;cd simon/dev/git/pios;make rebuild"</NMakeReBuildCommandLine>
+    <NMakeCleanCommandLine>c:/cygwin64/bin/bash.exe --login -c "cd d:;cd '$(ProjectDir)..\';make clean"</NMakeCleanCommandLine>
+    <NMakeReBuildCommandLine>c:/cygwin64/bin/bash.exe --login -c "cd d:;cd '$(ProjectDir)..\';make rebuild"</NMakeReBuildCommandLine>
     <NMakePreprocessorDefinitions>WIN32;_DEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
     <NMakeIncludeSearchPath>..\include;$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
     <IncludePath>..\include;$(IncludePath)</IncludePath>
