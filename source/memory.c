@@ -25,7 +25,7 @@ void memory_init(void)
 	// Zero out the bitmap to start with
 	unsigned int i;
 	for (i = 0; i < MAX_ALLOCATED_SLICES / 8; i++)
-		gBitmap[0] = 0;
+		gBitmap[i] = 0;
 }
 
 static void mark_slices(unsigned int start, unsigned int count, bool used)
