@@ -63,6 +63,7 @@
     <ClInclude Include="..\include\memory.h" />
     <ClInclude Include="..\include\mini_uart.h" />
     <ClInclude Include="..\include\mmio.h" />
+    <ClInclude Include="..\include\mmu.h" />
     <ClInclude Include="..\include\myfont.h" />
     <ClInclude Include="..\include\stdio.h" />
     <ClInclude Include="..\include\stringutil.h" />
@@ -83,6 +84,7 @@
     <ClCompile Include="..\source\main.c" />
     <ClCompile Include="..\source\memory.c" />
     <ClCompile Include="..\source\mini_uart.c" />
+    <ClCompile Include="..\source\mmu.c" />
     <ClCompile Include="..\source\platform.c" />
     <ClCompile Include="..\source\stdio.c" />
     <ClCompile Include="..\source\stringutil.c" />

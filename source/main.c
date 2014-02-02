@@ -6,6 +6,7 @@
 #include "terminal.h"
 #include "timer.h"
 //#include "usbd/usbd.h"
+#include "mmu.h"
 #include "uart.h"
 #include "fat32.h"
 
@@ -34,6 +35,26 @@ void LogPrint(char* message, unsigned int length)
 {
 	// Disabled usb driver output for now, it's not interesting enough!
 	//print(message, length);
+}
+
+void c_prefetch_handler(void)
+{
+	printf("Prefetch abort!\n");
+}
+
+void c_data_abort_handler(void)
+{
+	printf("Data abort!\n");
+}
+
+void c_swi_handler(void)
+{
+	printf("SWI exception.\n");
+}
+
+void c_undefined_handler(void)
+{
+	printf("Undefined exception\n");
 }
 
 void c_irq_handler (void)
@@ -72,13 +93,19 @@ void system_initialize_serial(void)
 unsigned int system_initialize(void)
 {
 	unsigned int result = 0;
-	
+
 	// Initialize terminal first so we can print error messages if any (Hah, unlikely!)
 	if ((result = terminal_init()) != 0)
 	{
 		uart_puts("Failed to initialize terminal.\n");
 	}
 
+	unsigned int* basePageTable = (unsigned int *)0x00A08000;
+
+	printf("Base page table address: %d\n", basePageTable);
+
+	initMmu(basePageTable);
+	
 	// Note: Timer is not essential to system initialisation
 	if (timer_init() != 0)
 	{
@@ -120,11 +147,18 @@ int cmain(void)
 		terminal_printWelcome();
 		terminal_printPrompt();
 
+		// Test memory protection by accessing non-mapped memory
+		printf("About to access forbidden memory! Uh-uh...\n");
+
+		unsigned int* abortMe = (unsigned int*)0x10E00000;
+
+		*abortMe = 2;
+
+		printf("Test success!\n");
+
 		while(1)
 		{
 			terminal_update();
-
-			uart_putc('a');
 
 			wait(200);
 		}

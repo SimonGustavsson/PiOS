@@ -12,10 +12,10 @@ _start:
 
 	;@ Route handlers to the appropriate function
 	reset_handler:      .word reset
-	undefined_handler:  .word hang
-	swi_handler:        .word hang
-	prefetch_handler:   .word hang
-	data_handler:       .word hang
+	undefined_handler:  .word undefined
+	swi_handler:        .word swi
+	prefetch_handler:   .word prefetch
+	data_handler:       .word data
 	unused_handler:     .word hang
 	irq_handler:        .word irq
 	fiq_handler:        .word hang
@@ -114,7 +114,7 @@ disable_fiq:
 	orr r0, r0, #0x40
 	msr cpsr_c, r0
 	bx lr
-	
+
 irq:
 	;@ We have no idea what might be in these registers, so make sure they're
 	;@ saved so we can go back to the previous state once the interrupt has been handled
@@ -131,3 +131,32 @@ irq:
 	;@ The value stored in LR will include an offset which we need to subtract
 	;@ Offset: FIQ=4, IRQ=4, Pre-Fetch=4, SWI=0, Undefined=0, DataAbort=8, Reset=n/a
     subs pc,lr,#4
+
+prefetch:	
+	push {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,lr}
+
+	bl c_prefetch_handler
+	
+	pop  {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,lr}
+	
+	subs PC, lr, #4
+
+data:
+	push {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,lr}
+	bl c_data_abort_handler
+	pop  {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,lr}
+	subs PC, lr, #4
+	
+undefined:
+	push {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,lr}
+	bl c_undefined_handler
+	pop  {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,lr}
+	subs PC, lr, #4
+
+
+swi:
+	push {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,lr}
+	bl c_swi_handler
+	pop  {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,lr}
+	subs PC, lr, #4
+

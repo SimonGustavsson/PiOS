@@ -805,6 +805,10 @@ static void Emmc_HandleInterrupt()
 	if(irpt & (1 << 8))
 	{
 		printf("ssed - Interrupt: Card interrupt.\n");
+		volatile unsigned int wait = 0;
+		while (wait < 2000000){
+			wait++;
+		}
 		Emmc_HandleCardInterrupt();
 		reset_mask = (1 << 8);
 	}
