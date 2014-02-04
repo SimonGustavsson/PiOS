@@ -1,8 +1,3 @@
-// Nasty stuff to get intellisense to stop moaning when editing in Visual Studio
-#ifdef _MSC_VER
-#define asm __asm
-#endif
-
 #include "mmu.h"
 #include "stringutil.h"
 
