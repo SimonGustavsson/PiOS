@@ -60,7 +60,7 @@ reset:
 	;@ SVC
     mov r0,#0xD3 ;@ PSR_SVC_MODE (0x13) PSR_FIQ_DIS (0x40) | PSR_IRQ_DIS (0x80)
     msr cpsr_c,r0
-    mov sp,#0x8000000
+    ldr sp, =0xC08000
 		
 	;@ Clear out bss
 		ldr	r4, =_bss_start
