@@ -37,24 +37,53 @@ void LogPrint(char* message, unsigned int length)
 	//print(message, length);
 }
 
-void c_prefetch_handler(void)
+void c_undefined_handler(void* addr)
 {
-	printf("Prefetch abort!\n");
+	printf("Undefined instruction at 0x%h.\n", addr);
 }
 
-void c_data_abort_handler(void)
+void print_abort_error(unsigned int errorType)
 {
-	printf("Data abort!\n");
+	switch (errorType)
+	{
+	case 0x5:
+		printf("Translation fault.\n");
+		break;
+	case 0x8:
+		printf("External abort on noncachable.\n");
+		break;
+	case 0x9:
+		printf("Failed to access memory, domain error.\n");
+		break;
+	case 0xD:
+		printf("Permission denied accessing memory\n");
+		break;
+	default:
+		if ((errorType >> 0x2) == 0)
+			printf("Abort misaligned memory access.\n");
+		else
+			printf("Unknown abort exception error code: %d.\n", errorType);
+		break;
+	}
+}
+
+void c_abort_data_handler(unsigned int address, unsigned int errorType, unsigned int accessedAddr)
+{
+	printf("Instruction at 0x%h caused a data abort accessing memory at 0x%h, ", address, accessedAddr);
+
+	print_abort_error(errorType);
+}
+
+void c_abort_instruction_handler(unsigned int address, unsigned int errorType)
+{
+	printf("Instruction at 0x%h caused instruction abort ", address);
+
+	print_abort_error(errorType);
 }
 
 void c_swi_handler(void)
 {
 	printf("SWI exception.\n");
-}
-
-void c_undefined_handler(void)
-{
-	printf("Undefined exception\n");
 }
 
 void c_irq_handler (void)
@@ -135,8 +164,6 @@ unsigned int system_initialize(void)
 
 int cmain(void)
 {
-	//gUserConnected = 0;
-
 	system_initialize_serial();
 
 	uart_puts("Welcome to PiOS!\n\r");
@@ -148,13 +175,12 @@ int cmain(void)
 		terminal_printPrompt();
 
 		// Test memory protection by accessing non-mapped memory
-		printf("About to access forbidden memory! Uh-uh...\n");
-
+		printf("Testing translation fault by accessing unmapped memory.\n");
+		
 		unsigned int* abortMe = (unsigned int*)0x10E00000;
-
 		*abortMe = 2;
 
-		printf("Test success!\n");
+		printf("Test success! Entering main loop...\n");
 
 		while(1)
 		{

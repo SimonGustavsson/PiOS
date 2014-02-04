@@ -14,8 +14,8 @@ _start:
 	reset_handler:      .word reset
 	undefined_handler:  .word undefined
 	swi_handler:        .word swi
-	prefetch_handler:   .word prefetch
-	data_handler:       .word data
+	prefetch_handler:   .word instruction_abort
+	data_handler:       .word data_abort
 	unused_handler:     .word hang
 	irq_handler:        .word irq
 	fiq_handler:        .word hang
@@ -42,6 +42,21 @@ reset:
     msr cpsr_c,r0
     mov sp,#0x4000
 
+	;@ ABORT (Disable FIQ/IRQ)
+	mov r0, #0xD7
+	msr cpsr_c,r0
+	ldr sp, =0x1208000
+
+	;@ SYSTEM (Disable FIQ/IRQ)
+	mov r0, #0xDF
+	msr cpsr_c, r0
+	ldr sp, =0x1108000
+
+	;@ UNDEFINED (Disable FIQ/IRQ)
+	mov r0, #0xDB
+	msr cpsr_c, r0
+	ldr sp, =0x1008000
+	        
 	;@ SVC
     mov r0,#0xD3 ;@ PSR_SVC_MODE (0x13) PSR_FIQ_DIS (0x40) | PSR_IRQ_DIS (0x80)
     msr cpsr_c,r0
@@ -115,6 +130,40 @@ disable_fiq:
 	msr cpsr_c, r0
 	bx lr
 
+.globl enable_mmu_and_cache ;@ enable_mmu_and_cache(unsigned int* pageTableBase)
+enable_mmu_and_cache:
+	;@ Restrict cache size to 16K (no page colouring)
+	mrc p15, 0, r1, c1, c0, 1
+	orr r1, #0x40
+	mcr p15, 0, r1, c1, c0, 1
+
+	;@ Set all domains to 'client'
+	ldr r1, =0x55555555
+	mcr p15, 0, r1, c3, c0, 0
+
+	;@ Always use TTBR0
+	mov r1, #0
+	mcr p15, 0, r1, c2, c0, 2
+
+	;@ Set TTBR0 (Page table walk, inner  cacheable, outer non-cacheable)
+	orr r0, #1
+	mcr p15, 0, r0, c2, c0, 0
+	
+	;@ Invalidate datacache and flush prefetch buffer
+	mov r1, #0
+	mcr p15, 0, r1, c7, c5, 4
+	mcr p15, 0, r1, c7, c6, 0
+	
+	;@ Enable MMU, L1 and instruction cache, L2 cache, write buffer
+	;@ Branch prediction and extended page table on
+	mov r1, #0
+	mrc p15, 0, r1, c1, c0, 0
+	ldr r2, =0x0480180D
+	orr r1, r2 
+	mcr p15, 0, r1, c1, c0, 0
+
+	bx lr
+
 irq:
 	;@ We have no idea what might be in these registers, so make sure they're
 	;@ saved so we can go back to the previous state once the interrupt has been handled
@@ -132,31 +181,51 @@ irq:
 	;@ Offset: FIQ=4, IRQ=4, Pre-Fetch=4, SWI=0, Undefined=0, DataAbort=8, Reset=n/a
     subs pc,lr,#4
 
-prefetch:	
+data_abort:	
 	push {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,lr}
 
-	bl c_prefetch_handler
+	;@ Address where it happened
+	subs r0, lr, #8
+
+	;@ Get the error type
+	mrc p15, 0, r1, c5, c0, 0
+	and r1, r1, #0xF
+	
+	;@ Get address that was accessed
+	mrc p15, 0, r2, c6, c0, 0
+	bl c_abort_data_handler
 	
 	pop  {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,lr}
 	
 	subs PC, lr, #4
 
-data:
+instruction_abort:
 	push {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,lr}
-	bl c_data_abort_handler
-	pop  {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,lr}
-	subs PC, lr, #4
+
+	;@ Get the address that caused it
+	subs r0, lr, #4
+
+	;@ Get the error type
+	mrc p15, 0, r1, c5, c0, 0
+	and r1, r1, #0xF
+
+	bl c_abort_instruction_handler
 	
+	pop  {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,lr}
+	
+	subs PC, lr, #4
+
 undefined:
 	push {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,lr}
-	bl c_undefined_handler
-	pop  {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,lr}
-	subs PC, lr, #4
 
+	bl c_undefined_handler
+	mov r0, lr
+	pop  {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,lr}
+	
+	subs PC, lr, #4
 
 swi:
 	push {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,lr}
 	bl c_swi_handler
 	pop  {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,lr}
 	subs PC, lr, #4
-
