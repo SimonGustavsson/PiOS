@@ -9,6 +9,13 @@ SECTIONS
     .text : { *(.text*) } > ram
     . = ALIGN(4096); /* align to page size */
 	
+	_user_start = .;
+	
+	.user : { *(.user*) } > ram
+	. = ALIGN(4096); /* align to page size */
+	
+	_user_end = .;
+	
 	_bss_start = .;
 	
     .bss : { *(.bss*) } > ram
