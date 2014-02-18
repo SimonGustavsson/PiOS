@@ -2,8 +2,8 @@
 
 volatile timer* gTimer = (timer*)TIMER_BASE;
 
-// The timer has 4 channels, we use the second channel for period interrupts
-const unsigned int TIMER_PERIODIC_CHANNEL = 1;
+// The timer has 4 channels, we use the forth channel for period interrupts
+const unsigned int TIMER_PERIODIC_CHANNEL = 3;
 
 extern unsigned int GET32(unsigned int);
 
@@ -17,24 +17,24 @@ unsigned int timer_init(void)
 }
 
 // Set the interval for the system period timer
-void timer_sp_setinterval(unsigned int interval)
+void timer_sp_setinterval(unsigned int milliSeconds)
 {
 	unsigned int currentCounter = gTimer->clo;
 	
-	currentCounter += interval;
+	// Convert to micro seconds
+	currentCounter += (milliSeconds * 1000);
 
-	// Note: SP uses channel 1
-	gTimer->c1 = currentCounter;
+	// Note: SP uses channel 3
+	gTimer->c3 = currentCounter;
 }
 
 void timer_sp_clearmatch(void)
 {
 	// Setting the channels bit in the status registers clears this match
 	// (Note: SP uses channel 1)
-	gTimer->cs.bits.m1 = 1;
+	gTimer->cs.bits.m3 = 1;
 }
 
-// TODO: user timer* instead of GET32
 void wait(unsigned int milliSeconds)
 {
 	unsigned int ttw = 1048 * milliSeconds;

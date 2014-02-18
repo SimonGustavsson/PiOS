@@ -24,8 +24,21 @@ typedef struct {
 	volatile unsigned int c3;       // Compare 3 /
 } timer;
 
+//
+// The timer on the Pi has four channels
+// Sources vary on which channels are in use, but
+// Channel 1 is definitely free and the one PiOS uses
+//
+
+//
+// The timer ticks at 1MHz
+// 1 MHz = 1 000 000 hz (cycles/second)
+// Which means the free running timer increments every
+// microsecond and there are 1 000 000 microseconds per second
+//
+
 unsigned int timer_init(void);
-void timer_sp_setinterval(unsigned int interval);
+void timer_sp_setinterval(unsigned int milliSeconds);
 void timer_sp_clearmatch(void);
 void wait(unsigned int milliSeconds);
 
