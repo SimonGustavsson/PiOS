@@ -1091,7 +1091,7 @@ int Emmc_IssueCommandInt(unsigned int command, unsigned int argument)
 			{
 				printf("ssed - SDMA transfer complete.\n");
 
-				memcpy(gDevice.receive_buffer, (const void*)SDMA_BUFFER, gDevice.block_size);
+				my_memcpy(gDevice.receive_buffer, (const void*)SDMA_BUFFER, gDevice.block_size);
 			}
 			else
 			{
