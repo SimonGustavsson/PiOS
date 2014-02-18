@@ -10,15 +10,26 @@ void arm_interrupt_init(void)
 void arm_irq_enable(interrupt_source source)
 {
 	if (source < 32)
-		gInterrupts->irq_enable1.raw = (1 << source);
+		gInterrupts->irq_enable1.raw |= (1 << source);
 	else
-		gInterrupts->irq_enable2.raw = (1 << (source - 32));
+		gInterrupts->irq_enable2.raw |= (1 << (source - 32));
 }
 
 void arm_irq_disableall(void)
 {
 	gInterrupts->irq_disable1.raw = 0xFFFFFFFF;
 	gInterrupts->irq_disable2.raw = 0xFFFFFFFF;
+}
+
+interrupt_source arm_irq_getPending(void)
+{
+	if (gInterrupts->irq_pending1.bits.system_timer)
+		return interrupt_source_system_timer;
+	else if (gInterrupts->irq_pending2.bits.uart)
+		return interrupt_source_uart;
+
+	// Unknown
+	return gInterrupts->irq_pending1.raw;
 }
 
 void arm_fiq_enable(interrupt_source source)

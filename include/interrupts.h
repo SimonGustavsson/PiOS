@@ -40,7 +40,7 @@ typedef union {
 		unsigned int reserved0 : 1;
 		unsigned int reserved1 : 1;
 		unsigned int reserved2 : 1;
-		unsigned int reserved3 : 1;
+		unsigned int system_timer : 1;
 		unsigned int reserved4 : 1;
 		unsigned int reserved5 : 1;
 		unsigned int reserved6 : 1;
@@ -115,7 +115,7 @@ typedef enum {
 	unused_interrupt_source0,
 	unused_interrupt_source1,
 	unused_interrupt_source2,
-	unused_interrupt_source3,
+	interrupt_source_system_timer,
 	unused_interrupt_source4,
 	unused_interrupt_source5,
 	unused_interrupt_source6,
@@ -236,6 +236,7 @@ typedef volatile struct {
 void arm_interrupt_init(void);
 void arm_irq_enable(interrupt_source source);
 void arm_irq_disableall(void);
+interrupt_source arm_irq_getPending(void);
 
 void arm_fiq_enable(interrupt_source source);
 void arm_fiq_disableall(void);
