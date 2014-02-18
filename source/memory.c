@@ -49,9 +49,9 @@ static void mark_slices(unsigned int start, unsigned int count, bool used)
 		unsigned int bitsToSetAsBits = (1 << count) - 1; // Bit magic: 127
 
 		if (used)
-			gBitmap[start_byte] |= bitsToSetAsBits << (8 - start_remainder);
+			gBitmap[start_byte] |= bitsToSetAsBits << (8 - start_remainder - count);
 		else
-			gBitmap[start_byte] &= ~(((char)bitsToSetAsBits << (8 - start_remainder)));
+			gBitmap[start_byte] &= ~(((char)bitsToSetAsBits << (8 - start_remainder - count)));
 	}
 	else if (last_byte == start_byte + 1 && start_remainder == 0 && last_remainder == 0)
 	{
