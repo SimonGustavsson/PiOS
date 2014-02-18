@@ -18,26 +18,26 @@ unsigned int fat32_read_boot_sector(unsigned int block_number)
 	// Read Partition boot sector ("volume ID")
 	char* vi = &gBlock_buf[0];
 
-	memcpy(&gFs->boot_sector.partition_type_name[0], &vi[0x3], 8); 
+	my_memcpy(&gFs->boot_sector.partition_type_name[0], &vi[0x3], 8); 
 	gFs->boot_sector.partition_type_name[8] = '\0'; // Make oem name print friendly
-	memcpy(&gFs->boot_sector.bytes_per_sector, &vi[0x0B], 2);
-	memcpy(&gFs->boot_sector.sectors_per_cluster, &vi[0x0D], 1);
-	memcpy(&gFs->boot_sector.num_reserved_sectors, &vi[0x0E], 2);
-	memcpy(&gFs->boot_sector.num_fats, &vi[0x10], 1);
-	memcpy(&gFs->boot_sector.root_entries, &vi[0x11], 2);
-	memcpy(&gFs->boot_sector.small_sectors, &vi[0x13], 2);
-	memcpy(&gFs->boot_sector.media_type, &vi[0x15], 1);
-	memcpy(&gFs->boot_sector.sectors_per_fat, &vi[0x24], 2);
-	memcpy(&gFs->boot_sector.sectors_per_head, &vi[0x18], 2);
-	memcpy(&gFs->boot_sector.number_of_heads, &vi[0x1A], 2); // heads per cylinder
-	memcpy(&gFs->boot_sector.hidden_sectors, &vi[0x1C], 4);
-	memcpy(&gFs->boot_sector.large_sectors, &vi[0x20], 4);
-	memcpy(&gFs->boot_sector.large_sectors_per_fat, &vi[0x24], 4);
-	memcpy(&gFs->boot_sector.flags, &vi[0x28], 2);
-	memcpy(&gFs->boot_sector.version, &vi[0x2A], 2);
-	memcpy(&gFs->boot_sector.root_dir_start, &vi[0x2C], 4);
-	memcpy(&gFs->boot_sector.info_sector, &vi[0x30], 2);
-	memcpy(&gFs->boot_sector.backup_sector, &vi[0x32], 2);
+    my_memcpy(&gFs->boot_sector.bytes_per_sector, &vi[0x0B], 2);
+    my_memcpy(&gFs->boot_sector.sectors_per_cluster, &vi[0x0D], 1);
+    my_memcpy(&gFs->boot_sector.num_reserved_sectors, &vi[0x0E], 2);
+    my_memcpy(&gFs->boot_sector.num_fats, &vi[0x10], 1);
+    my_memcpy(&gFs->boot_sector.root_entries, &vi[0x11], 2);
+    my_memcpy(&gFs->boot_sector.small_sectors, &vi[0x13], 2);
+    my_memcpy(&gFs->boot_sector.media_type, &vi[0x15], 1);
+    my_memcpy(&gFs->boot_sector.sectors_per_fat, &vi[0x24], 2);
+    my_memcpy(&gFs->boot_sector.sectors_per_head, &vi[0x18], 2);
+    my_memcpy(&gFs->boot_sector.number_of_heads, &vi[0x1A], 2); // heads per cylinder
+    my_memcpy(&gFs->boot_sector.hidden_sectors, &vi[0x1C], 4);
+    my_memcpy(&gFs->boot_sector.large_sectors, &vi[0x20], 4);
+    my_memcpy(&gFs->boot_sector.large_sectors_per_fat, &vi[0x24], 4);
+    my_memcpy(&gFs->boot_sector.flags, &vi[0x28], 2);
+    my_memcpy(&gFs->boot_sector.version, &vi[0x2A], 2);
+    my_memcpy(&gFs->boot_sector.root_dir_start, &vi[0x2C], 4);
+    my_memcpy(&gFs->boot_sector.info_sector, &vi[0x30], 2);
+    my_memcpy(&gFs->boot_sector.backup_sector, &vi[0x32], 2);
 
 	//printf("fat32 - Root partition: OEM name: '%s'.\n", gFs->boot_sector.partition_type_name);	
 	//printf("fat32 - Root partition: Bytes per sector: %d.\n", gFs->boot_sector.bytes_per_sector);
@@ -202,9 +202,9 @@ static unsigned int parse_directory_block(char* buf, int buflen, dir_entry* entr
 
 			// Read the file name into a block
 			unsigned short tmp[26];
-			memcpy(&tmp[0], &buf[1], 10);
-			memcpy(&tmp[0 + 10], &buf[14], 12);
-			memcpy(&tmp[0 + 10 + 12], &buf[28], 4);
+			my_memcpy(&tmp[0], &buf[1], 10);
+            my_memcpy(&tmp[0 + 10], &buf[14], 12);
+            my_memcpy(&tmp[0 + 10 + 12], &buf[28], 4);
 
 			// Convert from Unicode16 and store it as ASCI
 			unicode16_to_asci(&long_entries[lfn_index], tmp, 13);
@@ -223,20 +223,20 @@ static unsigned int parse_directory_block(char* buf, int buflen, dir_entry* entr
 				unsigned int lfn_index;
 				for(lfn_index = 0; lfn_index < lfn_count; lfn_index++)
 				{
-					memcpy(&lfn[offset], long_entries[lfn_index].name, long_entries[lfn_index].length);
+					my_memcpy(&lfn[offset], long_entries[lfn_index].name, long_entries[lfn_index].length);
 
 					offset += long_entries[lfn_index].length;
 				}
 
 				// Store the name in the file entry
-				memcpy(entries[file_index].long_name, lfn, offset + 1); // Null terminated
+				my_memcpy(entries[file_index].long_name, lfn, offset + 1); // Null terminated
 				entries[file_index].has_long_name = 1;
 				
 				last_lfn = 0;
 			}
 
 			// Copy 8.3 data to the file entry
-			memcpy(&entries[file_index], &buf[0], 32);
+			my_memcpy(&entries[file_index], &buf[0], 32);
 
 			file_index++;
 		}
@@ -327,7 +327,7 @@ unsigned int fat32_initialize(void) // Pass in device?
 	// Save partition information in our global struct
 	unsigned int i;
 	for(i = 0; i < 4; i++)
-		memcpy(&gFs->mbr.partitions[i], &gBlock_buf[446 + (i * 16)], 16);
+		my_memcpy(&gFs->mbr.partitions[i], &gBlock_buf[446 + (i * 16)], 16);
 
 	// Find first FAT32 partition
 	unsigned int part_index;
