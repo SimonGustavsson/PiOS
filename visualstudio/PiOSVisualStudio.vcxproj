@@ -65,6 +65,9 @@
     <ClInclude Include="..\include\mmio.h" />
     <ClInclude Include="..\include\mmu.h" />
     <ClInclude Include="..\include\myfont.h" />
+    <ClInclude Include="..\include\pqueue.h" />
+    <ClInclude Include="..\include\task.h" />
+    <ClInclude Include="..\include\taskScheduler.h" />
     <ClInclude Include="..\include\stdio.h" />
     <ClInclude Include="..\include\stringutil.h" />
     <ClInclude Include="..\include\terminal.h" />
@@ -86,12 +89,16 @@
     <ClCompile Include="..\source\mini_uart.c" />
     <ClCompile Include="..\source\mmu.c" />
     <ClCompile Include="..\source\platform.c" />
+    <ClCompile Include="..\source\pqueue.c" />
+    <ClCompile Include="..\source\task.c" />
+    <ClCompile Include="..\source\taskScheduler.c" />
     <ClCompile Include="..\source\stdio.c" />
     <ClCompile Include="..\source\stringutil.c" />
     <ClCompile Include="..\source\terminal.c" />
     <ClCompile Include="..\source\terminal_commands.c" />
     <ClCompile Include="..\source\timer.c" />
     <ClCompile Include="..\source\uart.c" />
+    <ClCompile Include="..\source\utilities.c" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\source\start.s" />
