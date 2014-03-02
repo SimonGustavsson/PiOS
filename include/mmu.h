@@ -47,7 +47,25 @@ typedef enum {
 	APReadWrite = 3
 } AccessPermission;
 
-void mmuMapSection(unsigned int*, unsigned int, unsigned int, unsigned int, unsigned int, unsigned int , unsigned int);
+// We only store the top 12 bits as that's
+// What the page table needs
+typedef struct {
+	short int virtAddr;
+	short int phyAddr;
+	unsigned int active;
+} MemoryMapping;
+
+typedef struct {
+	MemoryMapping* mappings;
+	unsigned int* startAddr;
+} Pfa;
+
 void initMmu(unsigned int*);
+void mmuMapSection(unsigned int physicalAddressStart, unsigned int virtualAddressStart, 
+unsigned int numSections, unsigned int ap, unsigned int cacheable, unsigned int bufferable);
+void mmuUnmapSection(unsigned int virtualAddr);
+
+//void mmu_AllocateUserPage(unsigned int physicalAddr, unsigned int virtualAddr);
+//void mmu_DeallocateUserPage(unsigned int virtualAddr);
 
 #endif
