@@ -35,24 +35,24 @@ reset:
 	;@ IRQ
     mov r0,#0xD2 ;@ PSR_IRQ_MODE (0x12) | PSR_FIQ_DIS(0x40) | PSR_IRQ_DIS (0x80)
     msr cpsr_c,r0
-    mov sp,#0x8000
+    mov sp,#0x7900
 
 	;@ FIQ
     mov r0,#0xD1 ;@ PSR_FIQ_MODE (0x11) |PSR_FIQ_DIS (0x40) | PSR_IRQ_DIS (0x80)
     msr cpsr_c,r0
     mov sp,#0x4000
 
-	;@ ABORT (Disable FIQ/IRQ)
+	;@ ABORT PSR_ABORT_MODE (0x17) | PSR_FIQ_DIS (0x40) | PSR_IRQ_DIS (0x80)
 	mov r0, #0xD7
 	msr cpsr_c,r0
 	ldr sp, =0x1208000
 
-	;@ SYSTEM (Disable FIQ/IRQ)
-	mov r0, #0xDF
+	;@ SYSTEM PSR_SYSTEM_MODE (0x1F) | PSR_FIQ_DIS(0x40) | PSR_IRQ_DIS (0x80)
+	mov r0, #0xDF ;@ 001 1111
 	msr cpsr_c, r0
-	ldr sp, =0x1108000
+	ldr sp, =0x0A827000
 
-	;@ UNDEFINED (Disable FIQ/IRQ)
+	;@ UNDEFINED PSR_UNDEFINED_MODE (0x1B) | PSR_FIQ_DIS (0x40) | PSR_IRQ_DIS (0x80)
 	mov r0, #0xDB
 	msr cpsr_c, r0
 	ldr sp, =0x1008000
@@ -100,6 +100,11 @@ GET32:
 	
 .globl dummy ;@ void dummy(void)
 dummy:
+	bx lr
+
+.globl get_sp
+get_sp:
+	mov r0, sp
 	bx lr
 	
 .globl enable_irq ;@ void enable_irq(void)
@@ -165,10 +170,13 @@ enable_mmu_and_cache:
 	bx lr
 
 irq:
-	;@ We have no idea what might be in these registers, so make sure they're
+    ;@ We have no idea what might be in these registers, so make sure they're
 	;@ saved so we can go back to the previous state once the interrupt has been handled
 	;@ TODO: Use STMFD?
     push {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,lr}
+
+    ;@ Pass in a pointer to the registers as a param to the irq handler
+    mov r0, sp
 
 	;@ Jump to C Handler
     bl c_irq_handler
@@ -216,16 +224,29 @@ instruction_abort:
 	subs PC, lr, #4
 
 undefined:
-	push {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,lr}
+    push {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,lr}
+    
+	mov r0, lr
+    mov r1, r14
 
 	bl c_undefined_handler
-	mov r0, lr
-	pop  {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,lr}
+	
+    pop  {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,lr}
 	
 	subs PC, lr, #4
 
 swi:
-	push {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,lr}
+	;@ Save registers and LR onto stack
+    mov r2, r14
+	stmfd sp!, {r0-r12,lr}
+
+	;@ SWI number is stored in top 8 bits the instruction
+	ldr r0, [lr, #-4]
+	bic r0, r0, #0xFF000000
+
+	mov r1, sp
+
 	bl c_swi_handler
-	pop  {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,lr}
-	subs PC, lr, #4
+
+	;@ Restore registers and return
+	LDMFD sp!,{r0-r12,pc}^
