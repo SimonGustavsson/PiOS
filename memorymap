@@ -9,17 +9,21 @@ SECTIONS
     .text : { *(.text*) } > ram
     . = ALIGN(4096); /* align to page size */
 	
-	_user_start = .;
-	
-	.user : { *(.user*) } > ram
-	. = ALIGN(4096); /* align to page size */
-	
-	_user_end = .;
-	
 	_bss_start = .;
 	
     .bss : { *(.bss*) } > ram
     . = ALIGN(4096); /* align to page size */
 	
-	_bss_end = .;
+	_bss_end = .;	
+	
+	.data : { *(.data) } > ram
+	.rodata : { *(.rodata) } > ram
+	.rodata.str1.4 : { *(.rodata.str1.4) } > ram
+	
+	_user_start = .;
+	
+	.user : { *(.user*) } > ram
+    . = ALIGN(4); /* align to page size */
+	
+	_user_end = .;
 }
