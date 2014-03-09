@@ -28,8 +28,12 @@ COBJECT = $(addprefix $(OBJ_DIR)/, $(notdir $(_COBJECT)))
 PiOS: directories $(BUILD_DIR)/kernel.img
 
 # Create the final binary
-$(BUILD_DIR)/kernel.img: $(BUILD_DIR)/kernel.elf $(BUILD_DIR)/symbols.txt
+$(BUILD_DIR)/kernel.img: $(BUILD_DIR)/kernel.elf $(BUILD_DIR)/symbols.txt $(BUILD_DIR)/disassembly.txt
 	@$(TOOL)-objcopy $(BUILD_DIR)/kernel.elf -O binary $(BUILD_DIR)/kernel.img
+	
+# Create disassembly for ease of debugging
+$(BUILD_DIR)/disassembly.txt: $(BUILD_DIR)/kernel.elf
+	$(TOOL)-objdump -D $< > $@
 	
 # Dump symbol table for functions
 $(BUILD_DIR)/symbols.txt: $(BUILD_DIR)/kernel.elf
