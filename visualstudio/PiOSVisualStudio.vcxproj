@@ -53,6 +53,7 @@
     <Text Include="readme.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\include\debugging.h" />
     <ClInclude Include="..\include\emmc.h" />
     <ClInclude Include="..\include\fat32.h" />
     <ClInclude Include="..\include\framebuffer.h" />
@@ -77,6 +78,7 @@
     <ClInclude Include="..\include\utilities.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\source\debugging.c" />
     <ClCompile Include="..\source\emmc.c" />
     <ClCompile Include="..\source\fat32.c" />
     <ClCompile Include="..\source\framebuffer.c" />

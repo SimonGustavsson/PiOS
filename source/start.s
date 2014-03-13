@@ -55,7 +55,7 @@ reset:
 	;@ UNDEFINED PSR_UNDEFINED_MODE (0x1B) | PSR_FIQ_DIS (0x40) | PSR_IRQ_DIS (0x80)
 	mov r0, #0xDB
 	msr cpsr_c, r0
-	ldr sp, =0x1008000
+	ldr sp, =0x01008000
 	        
 	;@ SVC
     mov r0,#0xD3 ;@ PSR_SVC_MODE (0x13) PSR_FIQ_DIS (0x40) | PSR_IRQ_DIS (0x80)
@@ -88,6 +88,12 @@ reset:
 hang: 
 	b hang
 
+.align 2
+.globl get_frame_pointer ;@ int* get_frame_pointer(void)
+get_frame_pointer:
+    mov r0, fp
+    mov pc, lr
+
 .globl PUT32 ;@ void PUT32(unsigned int address, unsigned int value)
 PUT32:
 	str r1, [r0]
@@ -98,6 +104,17 @@ GET32:
 	ldr r0, [r0]
 	bx lr
 	
+.globl branchTo ;@ branchTo(unsigned int* addr)
+branchTo:
+    push {fp, lr}
+    add	fp, sp, #4
+
+    mov r2, r0
+    blx r2
+    pop {fp, lr}
+    
+    bx lr
+    
 .globl dummy ;@ void dummy(void)
 dummy:
 	bx lr
@@ -191,7 +208,7 @@ irq:
 
 data_abort:	
 	push {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,lr}
-
+    
 	;@ Address where it happened
 	subs r0, lr, #8
 
@@ -201,6 +218,10 @@ data_abort:
 	
 	;@ Get address that was accessed
 	mrc p15, 0, r2, c6, c0, 0
+
+    ;@ Throw in the stack pointer aswell for stack trace
+    mov r3, sp
+
 	bl c_abort_data_handler
 	
 	pop  {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,lr}
@@ -209,7 +230,7 @@ data_abort:
 
 instruction_abort:
 	push {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,lr}
-
+    
 	;@ Get the address that caused it
 	subs r0, lr, #4
 
@@ -225,26 +246,23 @@ instruction_abort:
 
 undefined:
     push {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,lr}
-    
-	mov r0, lr
-    mov r1, r14
+	
+    mov r0, lr
 
 	bl c_undefined_handler
 	
     pop  {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,lr}
-	
+
 	subs PC, lr, #4
 
 swi:
-	;@ Save registers and LR onto stack
-    mov r2, r14
+    ;@ Save registers and LR onto stack
+
 	stmfd sp!, {r0-r12,lr}
 
-	;@ SWI number is stored in top 8 bits the instruction
+	;@ SWI number is stored in top 8 bits of the instruction
 	ldr r0, [lr, #-4]
 	bic r0, r0, #0xFF000000
-
-	mov r1, sp
 
 	bl c_swi_handler
 

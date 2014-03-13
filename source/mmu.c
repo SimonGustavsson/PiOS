@@ -28,11 +28,11 @@ void initMmu(unsigned int* pageTableBase)
 	// The remaining 312 MB is all usermode
 	// To map user mode (Note that the physical address will probably change based on proc id)
 	// mmuMapSection(0x008C00000, 0xB0000000, 5, ReadWrite, true, true);
-	mmuMapSection(0x0A827000, 0xC0000000, 5, APReadWrite, 1, 1);
+    mmuMapSection(0x0A827000, 0xC0000000, 5, APReadWrite, 1, 1);
 
 	enable_mmu_and_cache(pageTableBase);
 
-	printf("mmu - Initializing complete");
+	printf("mmu - Initializing complete\n");
 }
 
 void mmuMapSection(unsigned int physicalAddressStart, unsigned int virtualAddressStart,
