@@ -1,0 +1,18 @@
+MEMORY
+{
+	/* Hardcoded 1 MB max application size */
+    ram : ORIGIN = 0x0000, LENGTH = 1M
+}
+
+SECTIONS
+{
+    .text : { *(.text*) } > ram
+    . = ALIGN(4096); /* align to page size */
+	
+    .bss : { *(.bss*) } > ram
+    . = ALIGN(4096); /* align to page size */
+	
+	.data : { *(.data) } > ram
+	.rodata : { *(.rodata) } > ram
+	.rodata.str1.4 : { *(.rodata.str1.4) } > ram
+}
