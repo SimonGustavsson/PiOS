@@ -18,8 +18,8 @@ void initMmu(unsigned int* pageTableBase)
 	for (i = 0; i < 4096; i++)
 		*(pageTableBase + i) = 0; // STMIA?
 
-	printf("Setting up kernel mappings for first 200MB (SVC only).\n");
-	printf("Setting up kernel mappings for peripherals at 0x20000000 (SVC only).\n");
+    printf("mmu - Kernel: 0x000 -> C800000 (200MB)\n");
+    printf("mmu - Peripherals: 0x20000000 -> 0x10000000(256MB)\n");
 
 	// The first 200 MB is all kernel data (including memory allocator), do a 1:1 mapping
 	mmuMapSection(0x00000000, 0x00000000, 200, APNoneSvcRw, 1, 1);
