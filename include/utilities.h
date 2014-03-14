@@ -38,6 +38,7 @@ extern "C" {
     }
 
     void* my_memcpy(const void* dest, const void* src, unsigned int bytesToCopy);
+    void reboot(void);
 
     static inline unsigned int byte_to_int(unsigned char* buf)
     {

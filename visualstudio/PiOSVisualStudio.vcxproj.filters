@@ -87,6 +87,9 @@
     <ClInclude Include="..\include\debugging.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\interruptHandlers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\emmc.c">
@@ -156,6 +159,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\source\debugging.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\interruptHandlers.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

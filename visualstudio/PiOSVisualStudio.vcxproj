@@ -58,6 +58,7 @@
     <ClInclude Include="..\include\fat32.h" />
     <ClInclude Include="..\include\framebuffer.h" />
     <ClInclude Include="..\include\gpio.h" />
+    <ClInclude Include="..\include\interruptHandlers.h" />
     <ClInclude Include="..\include\interrupts.h" />
     <ClInclude Include="..\include\keyboard.h" />
     <ClInclude Include="..\include\mailbox.h" />
@@ -83,6 +84,7 @@
     <ClCompile Include="..\source\fat32.c" />
     <ClCompile Include="..\source\framebuffer.c" />
     <ClCompile Include="..\source\gpio.c" />
+    <ClCompile Include="..\source\interruptHandlers.c" />
     <ClCompile Include="..\source\interrupts.c" />
     <ClCompile Include="..\source\keyboard.c" />
     <ClCompile Include="..\source\mailbox.c" />
