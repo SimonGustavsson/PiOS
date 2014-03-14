@@ -44,6 +44,10 @@ unsigned int system_initialize(void)
 {
 	unsigned int result = 0;
 
+    system_initialize_serial();
+
+    uart_puts("Welcome to PiOS!\n\r");
+
 	// Initialize terminal first so we can print error messages if any (Hah, unlikely!)
 	if ((result = terminal_init()) != 0)
 	{
@@ -51,8 +55,6 @@ unsigned int system_initialize(void)
 	}
 
 	unsigned int* basePageTable = (unsigned int *)0x00A08000;
-
-	printf("Base page table address: %d\n", basePageTable);
 
 	initMmu(basePageTable);
 	
@@ -66,17 +68,12 @@ unsigned int system_initialize(void)
 	//if(fat32_initialize() != 0)
 		//printf("Failed to initialize fat32.\n");
 	
-	//printf("System initialization complete, result: %d\n", result);
+	printf("System initialization complete, result: %d\n", result);
 	return result;
 }
 
 int cmain(void)
 {
-    // Init UART first so we can send boot messages to deployer
-	system_initialize_serial();
-
-	uart_puts("Welcome to PiOS!\n\r");
-
 	if(system_initialize() == 0)
 	{
 		terminal_printWelcome();
