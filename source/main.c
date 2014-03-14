@@ -74,33 +74,33 @@ unsigned int system_initialize(void)
 
 int cmain(void)
 {
-	if(system_initialize() == 0)
-	{
-		terminal_printWelcome();
-		terminal_printPrompt();
+    if (system_initialize() != 0)
+    {
+        print("\n * * * System Halting * * *\n", 29);
 
-		printf("Testing translation fault by accessing unmapped memory.\n");
-		*((unsigned int*)0x10E00000) = 2;
-		printf("If you can see this, the data abort was successful.\n");
+        while (1);
+    }
+
+	terminal_printWelcome();
+	terminal_printPrompt();
+
+	printf("Testing translation fault by accessing unmapped memory.\n");
+	*((unsigned int*)0x10E00000) = 2;
+	printf("If you can see this, the data abort was successful.\n");
                 
-        printf("Calling loaded program img, should trigger SVC!\n");
-        //branchTo((unsigned int *)(FINAL_USER_START_VA));
-        printf("It worked!? :-)\n");
+    printf("Calling loaded program img, should trigger SVC!\n");
+    //branchTo((unsigned int *)(FINAL_USER_START_VA));
+    printf("It worked!? :-)\n");
 
-        // Timer temporarily disabled as it messes with execution of relocated code
-		// Enable timer intterrupts and set up timer
-        /*timer_sp_clearmatch();
-        timer_sp_setinterval(TASK_SCHEDULER_TICK_MS);
-		arm_irq_enable(interrupt_source_system_timer); */
-        while (1)
-        {
-            terminal_update();
+    // Timer temporarily disabled as it messes with execution of relocated code
+	// Enable timer intterrupts and set up timer
+    /*timer_sp_clearmatch();
+    timer_sp_setinterval(TASK_SCHEDULER_TICK_MS);
+	arm_irq_enable(interrupt_source_system_timer); */
+    while (1)
+    {
+        terminal_update();
 
-            wait(200);
-        }
-	}	
-
-	print("\n * * * System Halting * * *\n", 29); 
-
-	while(1);
+        wait(200);
+    }
 }
