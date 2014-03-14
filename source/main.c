@@ -1,19 +1,13 @@
 #include "emmc.h"
-#include "gpio.h"
 #include "interrupts.h"
-//#include "keyboard.h"
 #include "stringutil.h"
 #include "terminal.h"
 #include "timer.h"
-//#include "usbd/usbd.h"
 #include "mmu.h"
 #include "uart.h"
 #include "fat32.h"
-#include "memory.h"
 #include "utilities.h"
 #include "taskScheduler.h"
-#include "debugging.h"
-#include "interruptHandlers.h"
 
 // Windows doesn't have __attribute__ :(
 #ifdef _MSC_VER
@@ -31,10 +25,6 @@ extern void enable_irq(void);
 extern void branchTo(unsigned int*);
 
 volatile extern Emmc* gEmmc;
-volatile unsigned int gSystemInitialized;
-volatile unsigned int gTaskSchedulerTick;
-volatile extern unsigned int _bss_start;
-volatile extern unsigned int _bss_end;
 
 // Log function for CSUD
 void LogPrint(char* message, unsigned int length)
@@ -75,12 +65,6 @@ unsigned int system_initialize(void)
 	
 	//taskScheduler_Init();
 
-	// Note: Usb & Keyboard is essential to the system
-	//if((result = UsbInitialise()) != 0)
-	//	printf("Usb initialise failed, error code: %d\n", result);
-	//else if((result = KeyboardInitialise()) != 0)
-	//	printf("Keyboard initialise failed, error code: %d\n", result);
-
 	// Note: EMMC is not essential to system initialisation
 	//if(EmmcInitialise() != 0)
 	//	printf("Failed to intialise emmc.\n");
@@ -90,21 +74,18 @@ unsigned int system_initialize(void)
 		//printf("Failed to initialize fat32.\n");
 	
 	//printf("System initialization complete, result: %d\n", result);
-
-	gSystemInitialized = 1;
-
 	return result;
 }
 
 int cmain(void)
 {
+    // Init UART first so we can send boot messages to deployer
 	system_initialize_serial();
 
 	uart_puts("Welcome to PiOS!\n\r");
 
 	if(system_initialize() == 0)
 	{
-		// Kick off the terminal
 		terminal_printWelcome();
 		terminal_printPrompt();
 

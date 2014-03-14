@@ -5,6 +5,9 @@
 #include "utilities.h"
 #include "timer.h"
 
+// Imported via extern in taskScheduler
+volatile unsigned int gTaskSchedulerTick;
+
 void c_undefined_handler(void* lr)
 {
     printf("Undefined instruction at 0x%h. (instruction: %d).\n", lr, *((unsigned int*)lr));
