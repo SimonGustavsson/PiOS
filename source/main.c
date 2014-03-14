@@ -26,13 +26,6 @@ extern void branchTo(unsigned int*);
 
 volatile extern Emmc* gEmmc;
 
-// Log function for CSUD
-void LogPrint(char* message, unsigned int length)
-{
-	// Disabled usb driver output for now, it's not interesting enough!
-	//print(message, length);
-}
-
 void system_initialize_serial(void)
 {
 	uart_init();
