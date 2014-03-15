@@ -2,8 +2,8 @@
 #define MAX_COMMAND_ARGUMENT_COUNT 10
 #include "terminalCommands.h"
 #include "terminal.h"
-#include "string.h"
-#include "types.h"
+#include "types/string.h"
+#include "types/types.h"
 #include "hardware/mailbox.h"
 #include "hardware/emmc.h"
 

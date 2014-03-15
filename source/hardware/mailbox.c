@@ -1,6 +1,6 @@
 #include "hardware/mailbox.h"
 #include "memory.h"
-#include "string.h"
+#include "types/string.h"
 #include "hardware/timer.h"
 
 static volatile unsigned int *gMailbox0Read = (unsigned int *)(0x2000b880);

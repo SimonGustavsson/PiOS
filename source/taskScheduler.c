@@ -1,10 +1,10 @@
 #include "taskScheduler.h"
 #include "memory.h"
-#include "string.h"
+#include "types/string.h"
 #include "util/utilities.h"
 #include "hardware/mmu.h"
 #include "hardware/timer.h"
-#include "queue.h"
+#include "types/queue.h"
 
 // This is really the heart of PiOS - this is where PiOS sits constantly
 volatile extern unsigned int gTaskSchedulerTick;

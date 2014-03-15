@@ -1,7 +1,7 @@
 #include "hardware/emmc.h"
 #include "hardware/mailbox.h"
 #include "hardware/timer.h"
-#include "string.h"
+#include "types/string.h"
 #include "util/utilities.h"
 
 #define SDMA_BUFFER     0x6000

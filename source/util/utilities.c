@@ -1,8 +1,8 @@
+#include "util/utilities.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "util/utilities.h"
 
     void* my_memcpy(const void *dest, const void *src, unsigned int bytesToCopy)
     {

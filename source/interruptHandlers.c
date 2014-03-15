@@ -2,7 +2,7 @@
 #include "hardware/interrupts.h"
 #include "hardware/timer.h"
 #include "hardware/uart.h"
-#include "string.h"
+#include "types/string.h"
 #include "util/utilities.h"
 
 // Imported via extern in taskScheduler

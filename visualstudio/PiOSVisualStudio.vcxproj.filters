@@ -31,6 +31,12 @@
     <Filter Include="Source Files\fs">
       <UniqueIdentifier>{42091e25-d349-4809-a4ac-9a1d0c93fa3d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\types">
+      <UniqueIdentifier>{a4ac3e36-3fc8-4f13-92bc-6fb44daf3544}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\types">
+      <UniqueIdentifier>{cf523b7c-5030-43cf-8bc4-b48ee425ca19}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="readme.txt" />
@@ -96,14 +102,17 @@
     <ClInclude Include="..\include\hardware\miniUart.h">
       <Filter>Header Files\hardware</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\string.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\queue.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\terminalCommands.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\types\queue.h">
+      <Filter>Header Files\types</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\types\string.h">
+      <Filter>Header Files\types</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\types\types.h">
+      <Filter>Header Files\types</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -170,11 +179,11 @@
     <ClCompile Include="..\source\hardware\miniUart.c">
       <Filter>Source Files\hardware</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\string.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\source\types\queue.c">
+      <Filter>Source Files\types</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\queue.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\source\types\string.c">
+      <Filter>Source Files\types</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -4,7 +4,7 @@
 #include "hardware/timer.h"
 #include "hardware/mmu.h"
 #include "hardware/uart.h"
-#include "string.h"
+#include "types/string.h"
 #include "util/utilities.h"
 #include "terminal.h"
 #include "taskScheduler.h"

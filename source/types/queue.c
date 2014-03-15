@@ -1,4 +1,4 @@
-#include "queue.h"
+#include "types/queue.h"
 #include "memory.h"
 
 void Queue_Enqueue(Queue* queue, void* data)

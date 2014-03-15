@@ -64,9 +64,10 @@
     <ClInclude Include="..\include\hardware\keyboard.h" />
     <ClInclude Include="..\include\hardware\mailbox.h" />
     <ClInclude Include="..\include\memory.h" />
-    <ClInclude Include="..\include\queue.h" />
-    <ClInclude Include="..\include\string.h" />
     <ClInclude Include="..\include\terminalCommands.h" />
+    <ClInclude Include="..\include\types\queue.h" />
+    <ClInclude Include="..\include\types\string.h" />
+    <ClInclude Include="..\include\types\types.h" />
     <ClInclude Include="..\include\util\mmio.h" />
     <ClInclude Include="..\include\hardware\mmu.h" />
     <ClInclude Include="..\include\myfont.h" />
@@ -92,14 +93,14 @@
     <ClCompile Include="..\source\memory.c" />
     <ClCompile Include="..\source\hardware\mmu.c" />
     <ClCompile Include="..\source\platform.c" />
-    <ClCompile Include="..\source\queue.c" />
-    <ClCompile Include="..\source\string.c" />
     <ClCompile Include="..\source\task.c" />
     <ClCompile Include="..\source\taskScheduler.c" />
     <ClCompile Include="..\source\terminalCommands.c" />
     <ClCompile Include="..\source\terminal.c" />
     <ClCompile Include="..\source\hardware\timer.c" />
     <ClCompile Include="..\source\hardware\uart.c" />
+    <ClCompile Include="..\source\types\queue.c" />
+    <ClCompile Include="..\source\types\string.c" />
     <ClCompile Include="..\source\util\utilities.c" />
   </ItemGroup>
   <ItemGroup>

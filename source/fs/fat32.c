@@ -1,7 +1,7 @@
 #include "fs/fat32.h"
 #include "util/utilities.h"
 #include "hardware/emmc.h"
-#include "string.h"
+#include "types/string.h"
 #include "terminal.h"
 #include "memory.h"
 
