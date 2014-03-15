@@ -1,7 +1,7 @@
-#include "mailbox.h"
+#include "hardware/mailbox.h"
 #include "memory.h"
-#include "stringutil.h"
-#include "timer.h"
+#include "util/stringutil.h"
+#include "hardware/timer.h"
 
 static volatile unsigned int *gMailbox0Read = (unsigned int *)(0x2000b880);
 static volatile unsigned int *gMailbox0Status = (unsigned int *)(0x2000b898);
@@ -113,7 +113,7 @@ unsigned int Mailbox_GetPowerState(unsigned int deviceId)
 	return mailbuffer[6];
 }
 
-unsigned int Mailbox_SetDevicePowerState(unsigned int deviceId, unsigned int powerState)
+int Mailbox_SetDevicePowerState(unsigned int deviceId, unsigned int powerState)
 {
 	volatile unsigned int mailbuffer[256] __attribute__ ((aligned (16)));
 

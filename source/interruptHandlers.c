@@ -1,9 +1,9 @@
 #include "interruptHandlers.h"
-#include "interrupts.h"
-#include "stringutil.h"
-#include "uart.h"
-#include "utilities.h"
-#include "timer.h"
+#include "hardware/interrupts.h"
+#include "hardware/timer.h"
+#include "hardware/uart.h"
+#include "util/stringutil.h"
+#include "util/utilities.h"
 
 // Imported via extern in taskScheduler
 volatile unsigned int gTaskSchedulerTick;

@@ -578,9 +578,9 @@ typedef struct { // 48-Bit
 
 int EmmcInitialise(void);
 unsigned int EmmcGetClockSpeed(void);
-unsigned int EmmcPowerOn(void);
-unsigned int EmmcPowerOff(void);
-unsigned int EmmcPowerCycle(void);
+int EmmcPowerOn(void);
+int EmmcPowerOff(void);
+int EmmcPowerCycle(void);
 unsigned int EmmcSetClockRate(unsigned int clock, unsigned int targetRate);
 unsigned int EmmcRead(unsigned char* buf, unsigned int bufLen, unsigned int blockToReadFrom);
 unsigned int EmmcWrite(unsigned char* buf, unsigned int bufLEn, unsigned int blockToWriteTo);

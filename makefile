@@ -11,11 +11,16 @@ export C_INCLUDE_PATH
 LIBRARIES = csud
 BUILD_DIR = bin
 SOURCE_DIR = source
+INCLUDE_DIR = include
 OBJ_DIR = $(BUILD_DIR)/obj
 
-# TODO, include all include directories in CHEADERS
-CHEADERS := $(wildcard include/*.h)
-CSOURCE := $(wildcard $(SOURCE_DIR)/*.c)
+# When building C files, look in all subdirectories of source
+VPATH := $(shell find $(SOURCE_DIR)/ -type d)
+# (And headers too!)
+VPATH += $(shell find $(INCLUDE_DIR)/ -type d)
+
+CHEADERS := $(shell find $(INCLUDE_DIR)/ -name '*.h')
+CSOURCE := $(shell find $(SOURCE_DIR)/ -name '*.c')
 ASOURCE := $(wildcard $(SOURCE_DIR)/*.s)
 
 _COBJECT := $(patsubst %.c,%.o, $(CSOURCE))
@@ -30,7 +35,7 @@ PiOS: directories $(BUILD_DIR)/kernel.img
 # Create the final binary
 $(BUILD_DIR)/kernel.img: $(BUILD_DIR)/kernel.elf $(BUILD_DIR)/symbols.txt $(BUILD_DIR)/disassembly.txt
 	@$(TOOL)-objcopy $(BUILD_DIR)/kernel.elf -O binary $(BUILD_DIR)/kernel.img
-	
+
 # Create disassembly for ease of debugging
 $(BUILD_DIR)/disassembly.txt: $(BUILD_DIR)/kernel.elf
 	@$(TOOL)-objdump -D $< > $@
@@ -44,7 +49,7 @@ $(BUILD_DIR)/kernel.elf: $(AOBJECT) $(COBJECT) libcsud.a
 	@$(TOOL)-ld $(LINKER_FLAGS) $(AOBJECT) $(COBJECT) -Map $(BUILD_DIR)/kernel.map -T memorymap -o $(BUILD_DIR)/kernel.elf
 
 #build c files
-$(OBJ_DIR)/%.o: $(SOURCE_DIR)/%.c $(CHEADERS)
+$(OBJ_DIR)/%.o: %.c $(CHEADERS)
 	@$(TOOL)-gcc -c $< -o $@ $(CFLAGS) 
 
 #build s files (Assembly)
@@ -55,5 +60,5 @@ directories:
 	@mkdir -p $(OBJ_DIR)
 	
 .PHONY: clean
-clean:
+    clean:
 	@rm -rf $(BUILD_DIR)/*

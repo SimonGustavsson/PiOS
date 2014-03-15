@@ -1,5 +1,5 @@
-#include "mini_uart.h"
-#include "gpio.h"
+#include "hardware/mini_uart.h"
+#include "hardware/gpio.h"
 
 static gpio_reg *gGpio;
 static MiniUart *gUart;

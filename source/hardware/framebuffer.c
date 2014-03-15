@@ -1,8 +1,8 @@
 #define CHAR_HEIGHT 10
 #define CHAR_WIDTH 6
 
-#include "framebuffer.h"
-#include "mailbox.h"
+#include "hardware/framebuffer.h"
+#include "hardware/mailbox.h"
 #include "myfont.h"
 
 unsigned int gPitch;

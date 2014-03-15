@@ -1,4 +1,4 @@
-#include "stringutil.h"
+#include "util/stringutil.h"
 #include "terminal.h"
 
 int strlen(char* str)

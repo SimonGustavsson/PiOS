@@ -1,8 +1,9 @@
-#include "fat32.h"
-#include "utilities.h"
-#include "emmc.h"
-#include "stringutil.h"
+#include "fs/fat32.h"
+#include "util/utilities.h"
+#include "hardware/emmc.h"
+#include "util/stringutil.h"
 #include "terminal.h"
+#include "memory.h"
 
 static char gBlock_buf[512];
 filesystem* gFs;
@@ -295,8 +296,8 @@ unsigned int fat32_initialize(void) // Pass in device?
 		return -1;
 	}
 
-	return 0;
-	
+    //return 0;
+
 	// Verify signature
 	if(gBlock_buf[510] != 0x55 || gBlock_buf[511] != 0xAA)
 	{
@@ -324,10 +325,14 @@ unsigned int fat32_initialize(void) // Pass in device?
 		return -1; // Invalid mbr signature
 	}
 
+    gFs = (filesystem*)palloc(sizeof(filesystem));
+
 	// Save partition information in our global struct
 	unsigned int i;
 	for(i = 0; i < 4; i++)
 		my_memcpy(&gFs->mbr.partitions[i], &gBlock_buf[446 + (i * 16)], 16);
+
+    return 0;
 
 	// Find first FAT32 partition
 	unsigned int part_index;
@@ -343,6 +348,7 @@ unsigned int fat32_initialize(void) // Pass in device?
 		}
 	}
 
+    
 	// Read the boot sector
 	gFs->mbr.boot_sector_block = byte_to_int((unsigned char*)&gFs->mbr.partitions[part_index].lba_begin[0]);
 	if(gFs->mbr.boot_sector_block < 1)

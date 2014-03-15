@@ -1,8 +1,8 @@
-#include "emmc.h"
-#include "mailbox.h"
-#include "timer.h"
-#include "stringutil.h"
-#include "utilities.h"
+#include "hardware/emmc.h"
+#include "hardware/mailbox.h"
+#include "hardware/timer.h"
+#include "util/stringutil.h"
+#include "util/utilities.h"
 
 #define SDMA_BUFFER     0x6000
 #define SDMA_BUFFER_PA  (SDMA_BUFFER + 0xC0000000)
@@ -254,12 +254,12 @@ unsigned int EmmcSwitchClockRate(unsigned int base_clock, unsigned int target_ra
 
 int EmmcInitialise(void)
 {
+    printf("ssed - Initialising...\n");
+
 	gEmmc = (Emmc*)EMMC_BASE;
 	gDevice.rca = 0;
 	gDevice.blocks_to_transfer = 0;
 	gEmmcUseDMA = 0;
-
-	printf("ssed - Initialising...\n");
 
 	// Power cycle to ensure initial state
 	// TODO: Add error checking
@@ -663,7 +663,7 @@ int EmmcInitialise(void)
 	}
 
 	
-	printf("ssed - Found a valid %s SD card, using %d-bit transfer mode.\n", gSdVersionStrings[gDevice.scr.sd_version], data_mode);
+    printf("ssed - Found a valid %s (~%d~) SD card, using %d-bit transfer mode.\n", gSdVersionStrings[gDevice.scr.sd_version], gDevice.scr.sd_version, data_mode);
 
 	gEmmc->Interrupt.raw = 0xFFFFFFFF;
 
@@ -672,12 +672,12 @@ int EmmcInitialise(void)
 	return 0;
 }
 
-unsigned int EmmcPowerOff(void)
+int EmmcPowerOff(void)
 {
 	return Mailbox_SetDevicePowerState(HwId_Emmc, 0);
 }
 
-unsigned int EmmcPowerOn(void)
+int EmmcPowerOn(void)
 {
 	return Mailbox_SetDevicePowerState(HwId_Emmc, 1);
 }
@@ -694,9 +694,9 @@ void Emmc_SD_PowerOff(void)
 	gEmmc->Control0.raw = control0;
 }
 
-unsigned int EmmcPowerCycle(void)
+int EmmcPowerCycle(void)
 {
-	printf("ssed - Power cycling: ");
+	printf("ssed - Power cycling:\n");
 	
 	unsigned int res = 0;
 	if((res = EmmcPowerOff()) < 0)
@@ -711,7 +711,7 @@ unsigned int EmmcPowerCycle(void)
 	else
 		printf("Success!\n");
 	
-	return EmmcPowerOn();
+	return res;
 }
 
 //static int Emmc_ResetCommandLine()
@@ -792,7 +792,7 @@ static void Emmc_HandleInterrupt()
 
 	if(irpt & (1 << 6))
 	{
-		printf("ssed - SD Card inserted.\n");
+		//printf("ssed - SD Card inserted.\n");
 		reset_mask |= (1 << 6);
 	}
 

@@ -1,12 +1,12 @@
-#include "emmc.h"
-#include "interrupts.h"
-#include "stringutil.h"
+#include "fs/fat32.h"
+#include "hardware/emmc.h"
+#include "hardware/interrupts.h"
+#include "hardware/timer.h"
+#include "hardware/mmu.h"
+#include "hardware/uart.h"
+#include "util/stringutil.h"
+#include "util/utilities.h"
 #include "terminal.h"
-#include "timer.h"
-#include "mmu.h"
-#include "uart.h"
-#include "fat32.h"
-#include "utilities.h"
 #include "taskScheduler.h"
 
 // Windows doesn't have __attribute__ :(
@@ -61,15 +61,15 @@ unsigned int system_initialize(void)
 	//taskScheduler_Init();
 
 	// Note: EMMC is not essential to system initialisation
-	//if(EmmcInitialise() != 0)
-	//	printf("Failed to intialise emmc.\n");
-	printf("NOTE: NOT Initializing emmc and FAT32.\n");
+	if(EmmcInitialise() != 0)
+		printf("Failed to intialise emmc.\n");
 
-	//if(fat32_initialize() != 0)
-		//printf("Failed to initialize fat32.\n");
+	if(fat32_initialize() != 0)
+		printf("Failed to initialize fat32.\n");
 	
 	printf("System initialization complete, result: %d\n", result);
-	return result;
+
+    return result;
 }
 
 int cmain(void)

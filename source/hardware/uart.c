@@ -4,8 +4,8 @@
 * Chapter 13: UART
 */
 
-#include <uart.h>
-#include "gpio.h"
+#include "hardware/uart.h"
+#include "hardware/gpio.h"
 
 Uart* gUart;
 

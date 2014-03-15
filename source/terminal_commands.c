@@ -2,10 +2,10 @@
 #define MAX_COMMAND_ARGUMENT_COUNT 10
 #include "terminal_commands.h"
 #include "terminal.h"
-#include "stringutil.h"
+#include "util/stringutil.h"
 #include "types.h"
-#include "mailbox.h"
-#include "emmc.h"
+#include "hardware/mailbox.h"
+#include "hardware/emmc.h"
 
 extern char gPrompt[TERMINAL_PROMPT_MAX_LENGTH];
 TerminalCommand gCommands[MAX_COMMAND_COUNT];

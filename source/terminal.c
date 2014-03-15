@@ -8,11 +8,11 @@
 #define BUFFER_WIDTH TERMINAL_WIDTH
 #define INPUT_BUFFER_SIZE 256
 
-#include "framebuffer.h"
-#include "keyboard.h"
-#include "stringutil.h"
+#include "hardware/framebuffer.h"
+#include "hardware/keyboard.h"
+#include "util/stringutil.h"
 #include "terminal_commands.h"
-#include "uart.h"
+#include "hardware/uart.h"
 
 // Forward declare
 void PresentBufferToScreen(void);

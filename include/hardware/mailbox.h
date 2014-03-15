@@ -36,6 +36,6 @@ typedef enum {
 void Mailbox_Write(unsigned int channel, unsigned int data);
 unsigned int Mailbox_Read(unsigned int channel);
 unsigned int Mailbox_GetPowerState(unsigned int deviceId);
-unsigned int Mailbox_SetDevicePowerState(unsigned int deviceId, unsigned int powerState);
+int Mailbox_SetDevicePowerState(unsigned int deviceId, unsigned int powerState);
 
 unsigned int Mailbox_SD_GetBaseFrequency(void);

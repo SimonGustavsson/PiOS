@@ -1,5 +1,5 @@
 #include "debugging.h"
-#include "stringutil.h" // printf(...)
+#include "util/stringutil.h" // printf(...)
 
 extern int* get_frame_pointer(void); // defined in start.s
 

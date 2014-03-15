@@ -1,9 +1,9 @@
-#include "types.h"
+//#include "types.h"
 //#include "usbd/usbd.h"
 //#include "device/hid/keyboard.h"
 #include "terminal.h"
-#include "stringutil.h"
-#include "keyboard.h"
+#include "util/stringutil.h"
+#include "hardware/keyboard.h"
 
 char* gKeynames[] =
 {

@@ -1,7 +1,7 @@
 #ifndef TASK_H
 #define TASK_H
 
-#include "mmu.h"
+#include "hardware/mmu.h"
 
 #define MAX_TASK_MEMORY_MB 10
 typedef enum {

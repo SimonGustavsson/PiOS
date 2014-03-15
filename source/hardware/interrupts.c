@@ -1,4 +1,4 @@
-#include "interrupts.h"
+#include "hardware/interrupts.h"
 
 static ArmInterrupts* gInterrupts;
 

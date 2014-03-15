@@ -2,7 +2,7 @@
 extern "C" {
 #endif
 
-#include "utilities.h"
+#include "util/utilities.h"
 
     void* my_memcpy(const void *dest, const void *src, unsigned int bytesToCopy)
     {
