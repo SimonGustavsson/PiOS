@@ -1,6 +1,6 @@
 #include "taskScheduler.h"
 #include "memory.h"
-#include "util/stringutil.h"
+#include "string.h"
 #include "util/utilities.h"
 #include "hardware/mmu.h"
 #include "hardware/timer.h"

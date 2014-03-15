@@ -96,9 +96,6 @@
     <ClInclude Include="..\include\fs\fat32.h">
       <Filter>Header Files\fs</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\util\stringutil.h">
-      <Filter>Header Files\util</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\util\utilities.h">
       <Filter>Header Files\util</Filter>
     </ClInclude>
@@ -107,6 +104,9 @@
     </ClInclude>
     <ClInclude Include="..\include\hardware\miniUart.h">
       <Filter>Header Files\hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\string.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -164,9 +164,6 @@
     <ClCompile Include="..\source\hardware\gpio.c">
       <Filter>Source Files\hardware</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\util\stringutil.c">
-      <Filter>Source Files\util</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\util\utilities.c">
       <Filter>Source Files\util</Filter>
     </ClCompile>
@@ -178,6 +175,9 @@
     </ClCompile>
     <ClCompile Include="..\source\hardware\miniUart.c">
       <Filter>Source Files\hardware</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\string.c">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

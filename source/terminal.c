@@ -10,7 +10,7 @@
 
 #include "hardware/framebuffer.h"
 #include "hardware/keyboard.h"
-#include "util/stringutil.h"
+#include "string.h"
 #include "terminal_commands.h"
 #include "hardware/uart.h"
 

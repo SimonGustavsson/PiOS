@@ -2,7 +2,7 @@
 //#include "usbd/usbd.h"
 //#include "device/hid/keyboard.h"
 #include "terminal.h"
-#include "util/stringutil.h"
+#include "string.h"
 #include "hardware/keyboard.h"
 
 char* gKeynames[] =

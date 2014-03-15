@@ -1,5 +1,5 @@
 #include "hardware/mmu.h"
-#include "util/stringutil.h"
+#include "string.h"
 #include "memory.h"
 
 extern void enable_mmu_and_cache(unsigned int* pageTableBase);

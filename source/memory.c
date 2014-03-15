@@ -1,6 +1,6 @@
 #include "memory.h"
 #include "util/utilities.h"
-#include "util/stringutil.h"
+#include "string.h"
 
 static unsigned char* gBitmap = (unsigned char*)(0xA00000 + 0x8000); // 10 MB From the kernel at 0x8000
 static unsigned char* gMemory = (unsigned char*)((0xA00000 + 0x8000) + (MAX_ALLOCATED_SLICES / 8)); // Put after the bitmap (which size i 0x1900000)
