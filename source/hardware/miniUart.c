@@ -1,9 +1,10 @@
-#include "hardware/mini_uart.h"
+#include "hardware/miniUart.h"
 #include "hardware/gpio.h"
 
 static gpio_reg *gGpio;
 static MiniUart *gUart;
-unsigned int mini_uart_initialize(void)
+
+unsigned int MiniUart_Initialize(void)
 {
 	gGpio = (gpio_reg*)GPIO_BASE;
 	gUart = (MiniUart*)MINI_UART_BASE;
@@ -47,7 +48,7 @@ unsigned int mini_uart_initialize(void)
 	return 0;
 }
 
-unsigned int mini_uart_read_char(unsigned int block)
+unsigned int MiniUart_ReadChar(unsigned int block)
 {
 	if(block)
 	{
@@ -57,17 +58,17 @@ unsigned int mini_uart_read_char(unsigned int block)
 	return gUart->mu_io.bits.data;
 }
 
-void mini_uart_send_string(char* s)
+void MiniUart_SendString(char* s)
 {
 	while(*s != '\0')
 	{
-		mini_uart_send_char(*s);
+        MiniUart_SendChar(*s);
 
 		s++;
 	}
 }
 
-void mini_uart_send_char(unsigned int c)
+void MiniUart_SendChar(unsigned int c)
 {
 	while(1)
 	{
@@ -79,7 +80,7 @@ void mini_uart_send_char(unsigned int c)
 	{
 		gUart->mu_io.raw = '\n'; // LF
 
-		mini_uart_send_char('\r'); // Carriage return
+        MiniUart_SendChar('\r'); // Carriage return
 	}
 	else
 	{

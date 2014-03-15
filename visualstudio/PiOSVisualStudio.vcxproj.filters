@@ -84,9 +84,6 @@
     <ClInclude Include="..\include\hardware\mailbox.h">
       <Filter>Header Files\hardware</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\hardware\mini_uart.h">
-      <Filter>Header Files\hardware</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\hardware\mmu.h">
       <Filter>Header Files\hardware</Filter>
     </ClInclude>
@@ -107,6 +104,9 @@
     </ClInclude>
     <ClInclude Include="..\include\util\mmio.h">
       <Filter>Header Files\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\hardware\miniUart.h">
+      <Filter>Header Files\hardware</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -149,9 +149,6 @@
     <ClCompile Include="..\source\hardware\mailbox.c">
       <Filter>Source Files\hardware</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\hardware\mini_uart.c">
-      <Filter>Source Files\hardware</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\hardware\mmu.c">
       <Filter>Source Files\hardware</Filter>
     </ClCompile>
@@ -178,6 +175,9 @@
     </ClCompile>
     <ClCompile Include="..\source\terminalCommands.c">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\hardware\miniUart.c">
+      <Filter>Source Files\hardware</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

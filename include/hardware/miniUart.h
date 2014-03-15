@@ -230,7 +230,7 @@ typedef volatile struct { // Located at 0x20215000
 	aux_spi_cntl1_reg spi1_cntl1;  // SPI 2 Control register 1
 } MiniUart;
 
-unsigned int mini_uart_initialize(void);
-void mini_uart_send_string(char* s);
-void mini_uart_send_char(unsigned int c);
-unsigned int mini_uart_read_char(unsigned int block);
+unsigned int MiniUart_Initialize(void);
+void MiniUart_SendString(char* s);
+void MiniUart_SendChar(unsigned int c);
+unsigned int MiniUart_ReadChar(unsigned int block);
