@@ -12,7 +12,7 @@ volatile extern unsigned int* get_sp();
 
 static taskScheduler* gScheduler;
 
-void taskScheduler_Init(void)
+void TaskScheduler_Initialize(void)
 {
 	gScheduler = (taskScheduler*)palloc(sizeof(taskScheduler));
 	gScheduler->currentTask = 0;
@@ -23,7 +23,7 @@ void taskScheduler_Init(void)
 }
 
 // This is probably not going to be "task" but rather "StartInfo" or similar
-void taskScheduler_EnqueueTask(Task* task)
+void TaskScheduler_EnqueueTask(Task* task)
 {
 	// Initialize task
 
@@ -31,7 +31,7 @@ void taskScheduler_EnqueueTask(Task* task)
 	Queue_Enqueue(&gScheduler->tasks, task);
 }
 
-void taskScheduler_TimerTick(registers* regs)
+void TaskScheduler_TimerTick(registers* regs)
 {
     return;
 
@@ -72,7 +72,7 @@ void taskScheduler_TimerTick(registers* regs)
     //}
 }
 
-Task* taskScheduler_CreateTask(void(*mainFunction)(void))
+Task* TaskScheduler_CreateTask(void(*mainFunction)(void))
 {
 	Task* task = (Task*)palloc(sizeof(Task));
 
