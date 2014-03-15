@@ -116,9 +116,6 @@
     <ClCompile Include="..\source\memory.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\stdio.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\terminal.c">
       <Filter>Source Files</Filter>
     </ClCompile>
