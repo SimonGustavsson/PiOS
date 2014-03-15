@@ -3,7 +3,7 @@
 
 extern int* get_frame_pointer(void); // defined in start.s
 
-void debugPrintCallstack(void)
+void Debug_PrintCallstack(void)
 {
     printf("Stack trace: ");
     int lr = 0;
