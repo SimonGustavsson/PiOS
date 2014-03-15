@@ -96,9 +96,9 @@
     <ClCompile Include="..\source\pqueue.c" />
     <ClCompile Include="..\source\task.c" />
     <ClCompile Include="..\source\taskScheduler.c" />
+    <ClCompile Include="..\source\terminalCommands.c" />
     <ClCompile Include="..\source\util\stringutil.c" />
     <ClCompile Include="..\source\terminal.c" />
-    <ClCompile Include="..\source\terminal_commands.c" />
     <ClCompile Include="..\source\hardware\timer.c" />
     <ClCompile Include="..\source\hardware\uart.c" />
     <ClCompile Include="..\source\util\utilities.c" />

@@ -119,9 +119,6 @@
     <ClCompile Include="..\source\terminal.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\terminal_commands.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\task.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -178,6 +175,9 @@
     </ClCompile>
     <ClCompile Include="..\source\platform.c">
       <Filter>Source Files\hardware</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\terminalCommands.c">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
