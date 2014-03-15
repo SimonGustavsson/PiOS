@@ -1,4 +1,3 @@
-
 #define PAGE_TABLE_SIZE 4096 // 4 GB, map all of the addressesies
 #ifndef UTILITIES_H
 #define UTILITIES_H
@@ -60,10 +59,10 @@ typedef struct {
 	unsigned int* startAddr;
 } Pfa;
 
-void initMmu(unsigned int*);
-void mmuMapSection(unsigned int physicalAddressStart, unsigned int virtualAddressStart, 
-unsigned int numSections, unsigned int ap, unsigned int cacheable, unsigned int bufferable);
-void mmuUnmapSection(unsigned int virtualAddr);
+void Mmu_Initialize(unsigned int*);
+void Mmu_MapSection(unsigned int physicalAddressStart, unsigned int virtualAddressStart, 
+    unsigned int numSections, unsigned int ap, unsigned int cacheable, unsigned int bufferable);
+void Mmu_UnmapSection(unsigned int virtualAddr);
 
 //void mmu_AllocateUserPage(unsigned int physicalAddr, unsigned int virtualAddr);
 //void mmu_DeallocateUserPage(unsigned int virtualAddr);

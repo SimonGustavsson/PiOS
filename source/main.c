@@ -56,7 +56,7 @@ unsigned int system_initialize(void)
 
 	unsigned int* basePageTable = (unsigned int *)0x00A08000;
 
-	initMmu(basePageTable);
+	Mmu_Initialize(basePageTable);
 	
 	//taskScheduler_Init();
 

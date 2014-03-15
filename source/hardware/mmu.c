@@ -7,7 +7,7 @@ extern void enable_mmu_and_cache(unsigned int* pageTableBase);
 Pfa* gPfa;
 unsigned int* gPageTableBase;
 
-void initMmu(unsigned int* pageTableBase)
+void Mmu_Initialize(unsigned int* pageTableBase)
 {
 	printf("mmu - Initializing page table at 0x%h\n", pageTableBase);
 
@@ -22,20 +22,20 @@ void initMmu(unsigned int* pageTableBase)
     printf("mmu - Peripherals: 0x20000000 -> 0x10000000(256MB)\n");
 
 	// The first 200 MB is all kernel data (including memory allocator), do a 1:1 mapping
-	mmuMapSection(0x00000000, 0x00000000, 200, APNoneSvcRw, 1, 1);
-	mmuMapSection(0x20000000, 0x20000000, 256, APNoneSvcRw, 0, 0); //0xA0000000
+	Mmu_MapSection(0x00000000, 0x00000000, 200, APNoneSvcRw, 1, 1);
+	Mmu_MapSection(0x20000000, 0x20000000, 256, APNoneSvcRw, 0, 0); //0xA0000000
 
 	// The remaining 312 MB is all usermode
 	// To map user mode (Note that the physical address will probably change based on proc id)
 	// mmuMapSection(0x008C00000, 0xB0000000, 5, ReadWrite, true, true);
-    mmuMapSection(0x0A827000, 0xC0000000, 5, APReadWrite, 1, 1);
+    Mmu_MapSection(0x0A827000, 0xC0000000, 5, APReadWrite, 1, 1);
 
 	enable_mmu_and_cache(pageTableBase);
 
 	printf("mmu - Initializing complete\n");
 }
 
-void mmuMapSection(unsigned int physicalAddressStart, unsigned int virtualAddressStart,
+void Mmu_MapSection(unsigned int physicalAddressStart, unsigned int virtualAddressStart,
 	unsigned int numSections, unsigned int ap, unsigned int cacheable, unsigned int bufferable)
 {
 	// Top 12 bits of virtual address index into the page table directory
@@ -56,7 +56,7 @@ void mmuMapSection(unsigned int physicalAddressStart, unsigned int virtualAddres
 	}
 }
 
-void mmuUnmapSection(unsigned int virtualAddr)
+void Mmu_UnmapSection(unsigned int virtualAddr)
 {
 	// Reset the page completely
 	*(gPageTableBase + ((virtualAddr >> 20) & 0xFFF)) = 0;
