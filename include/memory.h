@@ -10,5 +10,6 @@ void DataMemoryBarrier(void);
 void DataSyncBarrier(void);
 void FlushCache(void);
 
+void Pallocator_Initialize(void);
 void* palloc(unsigned int size);
 void phree(void* pointer);
