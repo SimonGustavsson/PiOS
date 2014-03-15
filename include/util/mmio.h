@@ -5,7 +5,7 @@
 // C Function for the assembly instruction 
 // str val, [addr]
 // which stores the value of val in addr
-static inline void mmio_write(unsigned int addr, unsigned int data)
+static inline void Mmio_Write(unsigned int addr, unsigned int data)
 {
 	asm volatile("str %[data], [%[address]]" 
 		: : [address]"r"((unsigned int*)addr), [data]"r"(data));
@@ -14,7 +14,7 @@ static inline void mmio_write(unsigned int addr, unsigned int data)
 // C Function for the assembly instruction
 // ldr val, [addr]
 // Which loads the value at addr into val
-static inline void unsigned int mmio_read(unsigned int addr)
+static inline void unsigned int Mmio_Read(unsigned int addr)
 {
 	unsigned int data;
 	asm volatile("ldr %[data], [%[addr]]"
