@@ -165,7 +165,7 @@ void PresentBufferToScreen(void)
 			if(gTerminal[row][col] != gBuffer[row][col])
 			{
 				gTerminal[row][col] = gBuffer[row][col];
-				DrawCharacterAt(gTerminal[row][col], col * (CHAR_WIDTH + CHAR_HSPACING), row * (CHAR_HEIGHT + CHAR_VSPACING));
+				Fb_DrawCharacterAt(gTerminal[row][col], col * (CHAR_WIDTH + CHAR_HSPACING), row * (CHAR_HEIGHT + CHAR_VSPACING));
 			}
 		}
 	}
@@ -195,7 +195,7 @@ int terminal_init(void)
 {
 	gShowingTerminalPrompt = 0;
 	
-	if(InitializeFramebuffer() != 0)
+	if(Fb_Initialize() != 0)
 		return -1;
 	
 	unsigned int i;

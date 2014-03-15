@@ -9,7 +9,7 @@ unsigned int gPitch;
 unsigned int gFbAddr;
 unsigned int gScreenWidth, gScreenHeight;
 
-void DrawPixel(unsigned int x, unsigned int y, unsigned short int color)
+void Fb_DrawPixel(unsigned int x, unsigned int y, unsigned short int color)
 {
 	unsigned short int* ptr;
 	unsigned int offset;
@@ -19,12 +19,12 @@ void DrawPixel(unsigned int x, unsigned int y, unsigned short int color)
 	*ptr = color;
 }
 
-void DrawCharacterAt(unsigned int ch, unsigned int x, unsigned int y)
+void Fb_DrawCharacterAt(unsigned int ch, unsigned int x, unsigned int y)
 {
-	DrawColoredCharacterAt(ch, x, y, 0xFFFF);
+	Fb_DrawColoredCharacterAt(ch, x, y, 0xFFFF);
 }
 
-void DrawColoredCharacterAt(unsigned int ch, unsigned int x, unsigned int y, unsigned short color)
+void Fb_DrawColoredCharacterAt(unsigned int ch, unsigned int x, unsigned int y, unsigned short color)
 {
 	// Ensure valid char table lookup
 	ch = ch < 32 ? 0 : ch > 127 ? 0 : ch - 32;
@@ -38,11 +38,11 @@ void DrawColoredCharacterAt(unsigned int ch, unsigned int x, unsigned int y, uns
 		{
 			if(row < (CHAR_HEIGHT - 1) && (gKernelFont[ch][row] & (1 << col)))
 			{
-				DrawPixel(x + i, y + row, color);
+                Fb_DrawPixel(x + i, y + row, color);
 			}
 			else
 			{
-				DrawPixel(x + i, y + row, 0x0000);
+                Fb_DrawPixel(x + i, y + row, 0x0000);
 			}
 			i++;
 		}
@@ -50,7 +50,7 @@ void DrawColoredCharacterAt(unsigned int ch, unsigned int x, unsigned int y, uns
 }
 
 // 0: Success. 1: Invalid response to property request, 2: Invalid screen size returned
-int GetScreenSizeFromTags()
+static int GetScreenSizeFromTags()
 {
 	volatile unsigned int mailbuffer[256] __attribute__ ((aligned (16)));
 	unsigned int mailbufferAddr = (unsigned int)mailbuffer;
@@ -81,7 +81,7 @@ int GetScreenSizeFromTags()
 }
 
 // 0: Success, 1: Invalid response to Setup screen request, 2: Framebuffer setup failed, Invalid tags, 3: Invalid tag response, 4: Invalid tag data
-int SetupScreen()
+static int SetupScreen()
 {
 	volatile unsigned int mailbuffer[256] __attribute__ ((aligned (16)));
 	unsigned int mailbufferAddr = (unsigned int)mailbuffer;
@@ -150,7 +150,7 @@ int SetupScreen()
 }
 
 // 0: Success, 1: Invalid pitch response, 2: Invalid pitch response
-int GetPitch()
+static int GetPitch()
 {
 	volatile unsigned int mailbuffer[256] __attribute__ ((aligned (16)));
 	unsigned int mailbufferAddr = (unsigned int)mailbuffer;
@@ -181,7 +181,7 @@ int GetPitch()
 	return 0;
 }
 
-int InitializeFramebuffer()
+int Fb_Initialize()
 {	
 	unsigned int result = 0;
 	
