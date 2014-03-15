@@ -239,4 +239,4 @@ typedef volatile struct {
 	unsigned char test;            // Test
 } gpio_reg;
 
-void gpio_enable_uart(void);
+void Gpio_EnableUart(void);

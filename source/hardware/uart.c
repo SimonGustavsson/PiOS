@@ -17,7 +17,7 @@ void uart_init() {
 	gUart->cr = 0x00000000;
 
 	// Setup GPIO for uart use
-	gpio_enable_uart();
+    Gpio_EnableUart();
 
 	// Clear pending interrupts.
 	gUart->icr = 0x7FF;

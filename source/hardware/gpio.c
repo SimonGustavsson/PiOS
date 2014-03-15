@@ -6,7 +6,7 @@ static void delay(unsigned int count)
 	for (i = 0; i < count; i++){ /* Do Nothing */ }
 }
 
-void gpio_enable_uart(void)
+void Gpio_EnableUart(void)
 {
 	gpio_reg* gpio = (gpio_reg*)(GPIO_BASE);
 
