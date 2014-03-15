@@ -71,7 +71,6 @@
     <ClInclude Include="..\include\myfont.h" />
     <ClInclude Include="..\include\task.h" />
     <ClInclude Include="..\include\taskScheduler.h" />
-    <ClInclude Include="..\include\stdio.h" />
     <ClInclude Include="..\include\terminal.h" />
     <ClInclude Include="..\include\terminal_commands.h" />
     <ClInclude Include="..\include\hardware\timer.h" />
