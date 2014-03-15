@@ -11,7 +11,7 @@
 #include "hardware/framebuffer.h"
 #include "hardware/keyboard.h"
 #include "string.h"
-#include "terminal_commands.h"
+#include "terminalCommands.h"
 #include "hardware/uart.h"
 
 // Forward declare
@@ -32,7 +32,7 @@ char gPrompt[TERMINAL_PROMPT_MAX_LENGTH] = "PiOS->";
 unsigned int gPromptLength = 6;
 unsigned int gShowingTerminalPrompt;
 
-void terminal_printWelcome(void)
+void Terminal_PrintWelcome(void)
 {
 	printf("__/\\\\\\\\\\\\\\\\\\\\\\\\\\_______________/\\\\\\\\\\__________/\\\\\\\\\\\\\\\\\\\\\\___\n");
 	printf(" _\\/\\\\\\/////////\\\\\\___________/\\\\\\///\\\\\\______/\\\\\\/////////\\\\\\_\n");
@@ -47,7 +47,7 @@ void terminal_printWelcome(void)
 	printf("Type 'help' for a listing of a few commands.\n");
 }
 
-void terminal_printPrompt(void)
+void Terminal_PrintPrompt(void)
 {
 	// Make sure we print the prompt on a new row
 	if(gBufferCaretCol > 0)
@@ -74,12 +74,12 @@ void ExecuteCommand(char* cmd, unsigned int cmdLen)
 	
 	// TODO: Do something with the result of the command?
 	
-	terminal_printPrompt();
+	Terminal_PrintPrompt();
 	
 	// (Caller will present buffer)
 }
 
-void terminal_update(void)
+void Terminal_Update(void)
 {
 	KeyboardUpdate();
 		
@@ -171,7 +171,7 @@ void PresentBufferToScreen(void)
 	}
 }
 
-void terminal_clear(void)
+void Terminal_Clear(void)
 {
 	gFirstVisibleBufferRow = 0;
 	gBufferCaretRow = 0;
@@ -191,7 +191,7 @@ void terminal_clear(void)
 	PresentBufferToScreen();
 }
 
-int terminal_init(void)
+int Terminal_Initialize(void)
 {
 	gShowingTerminalPrompt = 0;
 	
@@ -205,15 +205,15 @@ int terminal_init(void)
 	gInputBufferIndex = 0;
 
 	// Initial setup of buffers etc
-	terminal_clear();
+	Terminal_Clear();
 	
 	// Setup default built in commands
-	TerminalInitCommands();
+    TerminalInitCommands();
 	
 	return 0;
 }
 
-void terminal_back(void)
+void Terminal_back(void)
 {
 	if(gBufferCaretCol == 0)
 	{
@@ -314,7 +314,7 @@ void print_internal(char* string, unsigned int length, unsigned int important)
 		
 		if(gBufferCaretRow >= BUFFER_HEIGHT)
 		{
-			terminal_clear();
+			Terminal_Clear();
 			gBufferCaretRow = 0;
 		}
 	}
@@ -325,7 +325,7 @@ void print_internal(char* string, unsigned int length, unsigned int important)
 	// as we want multiple print() calls to be able to write to the same row
 	if(gShowingTerminalPrompt && important)
 	{
-		terminal_printPrompt();
+		Terminal_PrintPrompt();
 		
 		// Add the user input + caret
 		unsigned int j;

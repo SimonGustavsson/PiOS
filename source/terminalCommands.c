@@ -1,6 +1,6 @@
 #define MAX_COMMAND_COUNT 20
 #define MAX_COMMAND_ARGUMENT_COUNT 10
-#include "terminal_commands.h"
+#include "terminalCommands.h"
 #include "terminal.h"
 #include "string.h"
 #include "types.h"
@@ -83,7 +83,7 @@ unsigned int Command_Test_Execute(char** args, unsigned int argCount)
 
 unsigned int Command_Cls_Execute(char** args, unsigned int argCount)
 {
-	terminal_clear();
+	Terminal_Clear();
 	
 	return 1;
 }

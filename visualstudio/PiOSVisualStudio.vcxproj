@@ -66,13 +66,13 @@
     <ClInclude Include="..\include\memory.h" />
     <ClInclude Include="..\include\queue.h" />
     <ClInclude Include="..\include\string.h" />
+    <ClInclude Include="..\include\terminalCommands.h" />
     <ClInclude Include="..\include\util\mmio.h" />
     <ClInclude Include="..\include\hardware\mmu.h" />
     <ClInclude Include="..\include\myfont.h" />
     <ClInclude Include="..\include\task.h" />
     <ClInclude Include="..\include\taskScheduler.h" />
     <ClInclude Include="..\include\terminal.h" />
-    <ClInclude Include="..\include\terminal_commands.h" />
     <ClInclude Include="..\include\hardware\timer.h" />
     <ClInclude Include="..\include\hardware\uart.h" />
     <ClInclude Include="..\include\util\utilities.h" />

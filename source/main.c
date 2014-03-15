@@ -49,7 +49,7 @@ unsigned int system_initialize(void)
     Uart_SendString("Welcome to PiOS!\n\r");
 
 	// Initialize terminal first so we can print error messages if any (Hah, unlikely!)
-	if ((result = terminal_init()) != 0)
+	if ((result = Terminal_Initialize()) != 0)
 	{
 		Uart_SendString("Failed to initialize terminal.\n");
 	}
@@ -81,8 +81,8 @@ int cmain(void)
         while (1);
     }
 
-	terminal_printWelcome();
-	terminal_printPrompt();
+	Terminal_PrintWelcome();
+	Terminal_PrintPrompt();
 
 	printf("Testing translation fault by accessing unmapped memory.\n");
 	*((unsigned int*)0x10E00000) = 2;
@@ -99,7 +99,7 @@ int cmain(void)
 	arm_irq_enable(interrupt_source_system_timer); */
     while (1)
     {
-        terminal_update();
+        Terminal_Update();
 
         wait(200);
     }
