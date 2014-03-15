@@ -50,7 +50,7 @@ void Mailbox_Write(unsigned int channel, unsigned int data)
 	*gMailbox0Write = (data | channel);
 }
 
-unsigned int Mailbox_SD_GetBaseFrequency(void)
+unsigned int Mailbox_SdGetBaseFrequency(void)
 {
 	volatile unsigned int mailbuffer[256] __attribute__ ((aligned (16)));
 	

@@ -306,7 +306,7 @@ int Emmc_Initialise(void)
 	gEmmc->Control2.raw = 0;
 
 	// Get base clock rate
-	unsigned int base_clock = Mailbox_SD_GetBaseFrequency();
+    unsigned int base_clock = Mailbox_SdGetBaseFrequency();
 	if(base_clock == -1)
 	{
 		printf("ssed - Invalid base clock, assuming 100MHz.\n");
@@ -684,7 +684,7 @@ int Emmc_powerOn(void)
 
 unsigned int Emmc_getBaseClockHz()
 {
-	return Mailbox_SD_GetBaseFrequency();
+    return Mailbox_SdGetBaseFrequency();
 }
 
 void Emmc_sdPowerOff(void)

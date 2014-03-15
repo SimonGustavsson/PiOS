@@ -38,4 +38,4 @@ unsigned int Mailbox_Read(unsigned int channel);
 unsigned int Mailbox_GetPowerState(unsigned int deviceId);
 int Mailbox_SetDevicePowerState(unsigned int deviceId, unsigned int powerState);
 
-unsigned int Mailbox_SD_GetBaseFrequency(void);
+unsigned int Mailbox_SdGetBaseFrequency(void);
