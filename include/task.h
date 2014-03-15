@@ -4,6 +4,7 @@
 #include "hardware/mmu.h"
 
 #define MAX_TASK_MEMORY_MB 10
+
 typedef enum {
 	Running, // Currently executing
 	Waiting, // Waiting for resource/IO etc
@@ -53,6 +54,7 @@ typedef struct {
 	taskState state;
 } Task;
 
-void task_StartupFunction(Task* task);
+void Task_StartupFunction(Task* task);
+Task* Task_Create(void(*mainFunction)(void));
 
 #endif TASK_H
