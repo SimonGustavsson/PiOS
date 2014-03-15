@@ -7,7 +7,7 @@ const unsigned int TIMER_PERIODIC_CHANNEL = 3;
 
 extern unsigned int GET32(unsigned int);
 
-unsigned int timer_init(void)
+unsigned int Timer_Initialize(void)
 {
 	// Setup period irq interval before enabling interrupts
 	//timer_sp_clearmatch();
@@ -17,7 +17,7 @@ unsigned int timer_init(void)
 }
 
 // Set the interval for the system period timer
-void timer_sp_setinterval(unsigned int milliSeconds)
+void Timer_SetInterval(unsigned int milliSeconds)
 {
 	unsigned int currentCounter = gTimer->clo;
 	
@@ -28,7 +28,7 @@ void timer_sp_setinterval(unsigned int milliSeconds)
 	gTimer->c3 = currentCounter;
 }
 
-void timer_sp_clearmatch(void)
+void Timer_Clear(void)
 {
 	// Setting the channels bit in the status registers clears this match
 	// (Note: SP uses channel 1)

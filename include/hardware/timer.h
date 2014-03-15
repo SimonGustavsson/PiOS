@@ -37,9 +37,9 @@ typedef struct {
 // microsecond and there are 1 000 000 microseconds per second
 //
 
-unsigned int timer_init(void);
-void timer_sp_setinterval(unsigned int milliSeconds);
-void timer_sp_clearmatch(void);
+unsigned int Timer_Initialize(void);
+void Timer_SetInterval(unsigned int milliSeconds);
+void Timer_Clear(void);
 void wait(unsigned int milliSeconds);
 
 #endif
