@@ -233,12 +233,12 @@ typedef volatile struct {
 
 #pragma pack()
 
-void arm_interrupt_init(void);
-void arm_irq_enable(interrupt_source source);
-void arm_irq_disableall(void);
-interrupt_source arm_irq_getPending(void);
+void Arm_InterruptInitialize(void);
+void Arm_IrqEnable(interrupt_source source);
+void Arm_IrqDisableall(void);
+interrupt_source Arm_IrqGetPending(void);
 
-void arm_fiq_enable(interrupt_source source);
-void arm_fiq_disableall(void);
+void Arm_FiqEnable(interrupt_source source);
+void Arm_FiqDisableall(void);
 
 #endif

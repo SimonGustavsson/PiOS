@@ -58,7 +58,7 @@ void c_swi_handler(unsigned int swi)
 
 void c_irq_handler(volatile unsigned int* r0)
 {
-    unsigned int pendingIrq = arm_irq_getPending();
+    unsigned int pendingIrq = Arm_IrqGetPending();
 
     switch (pendingIrq)
     {

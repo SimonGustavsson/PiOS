@@ -32,10 +32,10 @@ void system_initialize_serial(void)
 
 	uart_irpt_enable();
 
-	arm_interrupt_init();
+	Arm_InterruptInitialize();
 
-	arm_irq_disableall();
-	arm_irq_enable(interrupt_source_uart);
+	Arm_IrqDisableall();
+	Arm_IrqEnable(interrupt_source_uart);
 
 	enable_irq();
 }

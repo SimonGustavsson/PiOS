@@ -2,12 +2,12 @@
 
 static ArmInterrupts* gInterrupts;
 
-void arm_interrupt_init(void)
+void Arm_InterruptInitialize(void)
 {
 	gInterrupts = (ArmInterrupts*)(INTERRUPT_BASE);
 }
 
-void arm_irq_enable(interrupt_source source)
+void Arm_IrqEnable(interrupt_source source)
 {
 	if (source < 32)
 		gInterrupts->irq_enable1.raw |= (1 << source);
@@ -15,13 +15,13 @@ void arm_irq_enable(interrupt_source source)
 		gInterrupts->irq_enable2.raw |= (1 << (source - 32));
 }
 
-void arm_irq_disableall(void)
+void Arm_IrqDisableall(void)
 {
 	gInterrupts->irq_disable1.raw = 0xFFFFFFFF;
 	gInterrupts->irq_disable2.raw = 0xFFFFFFFF;
 }
 
-interrupt_source arm_irq_getPending(void)
+interrupt_source Arm_IrqGetPending(void)
 {
 	if (gInterrupts->irq_pending1.bits.system_timer)
 		return interrupt_source_system_timer;
@@ -32,7 +32,7 @@ interrupt_source arm_irq_getPending(void)
 	return gInterrupts->irq_pending1.raw;
 }
 
-void arm_fiq_enable(interrupt_source source)
+void Arm_FiqEnable(interrupt_source source)
 {
 	fiq_control_req r = gInterrupts->fiq_control;
 
@@ -42,7 +42,7 @@ void arm_fiq_enable(interrupt_source source)
 	gInterrupts->fiq_control.raw = r.raw;
 }
 
-void arm_fiq_disable(void)
+void Arm_FiqDisable(void)
 {
 	gInterrupts->fiq_control.raw = 0;
 }
