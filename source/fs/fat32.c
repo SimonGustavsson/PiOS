@@ -10,7 +10,7 @@ filesystem* gFs;
 
 unsigned int fat32_read_boot_sector(unsigned int block_number)
 {
-	if(!EmmcReadBlock(&gBlock_buf[0], 512, block_number))
+	if(!Emmc_ReadBlock(&gBlock_buf[0], 512, block_number))
 	{
 		printf("fat32 - Failed to read volume id block (%d).\n", block_number);
 		return -1;
@@ -261,7 +261,7 @@ unsigned int read_dir_at_cluster(char* buf, unsigned int buflen, dir_entry* entr
 	{
 		unsigned int block_lba = cluster_lba + cur_block;
 		
-		if(!EmmcReadBlock(buf, buflen, block_lba))
+		if(!Emmc_ReadBlock(buf, buflen, block_lba))
 		{
 			printf("fat32 - Could not read block: %d of cluster: %d.\n", block_lba, cluster);
 
@@ -290,7 +290,7 @@ unsigned int fat32_initialize(void) // Pass in device?
 	printf("fat32 - Initializing...\n");
 	
 	// Read MBR
-	if(!EmmcReadBlock(gBlock_buf, 512, 0))
+	if(!Emmc_ReadBlock(gBlock_buf, 512, 0))
 	{
 		printf("fat32 - Failed to read mbr sector.\n");
 		return -1;

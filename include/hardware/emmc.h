@@ -576,16 +576,15 @@ typedef struct { // 48-Bit
 	unsigned int end:1;
 } SdResponse7;
 
-int EmmcInitialise(void);
-unsigned int EmmcGetClockSpeed(void);
-int EmmcPowerOn(void);
-int EmmcPowerOff(void);
-int EmmcPowerCycle(void);
-unsigned int EmmcSetClockRate(unsigned int clock, unsigned int targetRate);
-unsigned int EmmcRead(unsigned char* buf, unsigned int bufLen, unsigned int blockToReadFrom);
-unsigned int EmmcWrite(unsigned char* buf, unsigned int bufLEn, unsigned int blockToWriteTo);
-int Emmc_IssueCommandInt(unsigned int command, unsigned int argument);
-int Emmc_IssueCommand(unsigned int command, unsigned int argument);
-int EmmcReadBlock(char* buf, unsigned int buflen, unsigned int block_number);
+int Emmc_Initialise(void);
+int Emmc_ReadBlock(char* buf, unsigned int buflen, unsigned int block_number);
 
-
+unsigned int Emmc_getClockSpeed(void);
+int Emmc_powerOn(void);
+int Emmc_powerOff(void);
+int Emmc_powerCycle(void);
+unsigned int Emmc_setClockRate(unsigned int clock, unsigned int targetRate);
+unsigned int Emmc_read(unsigned char* buf, unsigned int bufLen, unsigned int blockToReadFrom);
+unsigned int Emmc_write(unsigned char* buf, unsigned int bufLEn, unsigned int blockToWriteTo);
+int Emmc_issueCommandInt(unsigned int command, unsigned int argument);
+int Emmc_issueCommand(unsigned int command, unsigned int argument);

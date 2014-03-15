@@ -61,7 +61,7 @@ unsigned int system_initialize(void)
 	//taskScheduler_Init();
 
 	// Note: EMMC is not essential to system initialisation
-	if(EmmcInitialise() != 0)
+	if(Emmc_Initialise() != 0)
 		printf("Failed to intialise emmc.\n");
 
 	if(fat32_initialize() != 0)

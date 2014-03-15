@@ -159,7 +159,7 @@ void PrintErrorsInInterruptRegister(unsigned int reg)
 	printf("Unknown error. :-(\n");
 }
 	
-unsigned int Emmc_GetClockDivider(unsigned int base_clock, unsigned int target_rate)
+unsigned int Emmc_getClockDivider(unsigned int base_clock, unsigned int target_rate)
 {
 	// MATH - HOW DOES IT WORK!?
 	unsigned int targetted_divisor = 0;
@@ -216,9 +216,9 @@ unsigned int Emmc_GetClockDivider(unsigned int base_clock, unsigned int target_r
 	return ret;
 }
 
-unsigned int EmmcSwitchClockRate(unsigned int base_clock, unsigned int target_rate)
+unsigned int Emmc_switchClockRate(unsigned int base_clock, unsigned int target_rate)
 {
-	unsigned int divider = Emmc_GetClockDivider(base_clock, target_rate);
+	unsigned int divider = Emmc_getClockDivider(base_clock, target_rate);
 	if(divider == -1)
 	{
 		printf("ssed -  Failed to retrieve divider for target_rate: %d.\n", target_rate);
@@ -252,7 +252,7 @@ unsigned int EmmcSwitchClockRate(unsigned int base_clock, unsigned int target_ra
 	return 1;
 }
 
-int EmmcInitialise(void)
+int Emmc_Initialise(void)
 {
     printf("ssed - Initialising...\n");
 
@@ -263,7 +263,7 @@ int EmmcInitialise(void)
 
 	// Power cycle to ensure initial state
 	// TODO: Add error checking
-	if(EmmcPowerCycle() != 0)
+    if (Emmc_powerCycle() != 0)
 	{
 		printf("ssed - Controller did not successfully power cycle.\n");
 		return -1;
@@ -320,7 +320,7 @@ int EmmcInitialise(void)
 	control1 |= 1; // Enable clock
 
 
-	unsigned int id_freq = Emmc_GetClockDivider(base_clock, SdClockId);
+	unsigned int id_freq = Emmc_getClockDivider(base_clock, SdClockId);
 	if(id_freq == -1)
 	{
 		printf("ssed - Unable to get valid clock divider for ID frequency.\n");
@@ -352,7 +352,7 @@ int EmmcInitialise(void)
 	
 	wait(100);
 
-	if(!Emmc_IssueCommand(GoIdleState, 0)) // CMD0, should add timeout?
+	if(!Emmc_issueCommand(GoIdleState, 0)) // CMD0, should add timeout?
 	{
 		printf("ssed - No CMD0 response.\n");
 		return -1;
@@ -361,7 +361,7 @@ int EmmcInitialise(void)
 	// CMD8 Check if voltage is supported. 
 	// Voltage: 0001b (2.7-3.6V), Check pattern: 0xAA
 	int v2_later = 0;
-	if(!Emmc_IssueCommand(SendIfCond, 0x1AA))
+	if(!Emmc_issueCommand(SendIfCond, 0x1AA))
 	{	
 		printf("ssed - Send if cond failed.\n");
 		return -1;
@@ -376,7 +376,7 @@ int EmmcInitialise(void)
 	v2_later = 1;
 
 	// Send inquiry ACMD41 to get OCR
-	if(!Emmc_IssueCommand(ACMD(41), 0))
+	if(!Emmc_issueCommand(ACMD(41), 0))
 	{
 		printf("ssed - Inquiry ACMD41 failed.\n");
 		return -1;
@@ -399,7 +399,7 @@ int EmmcInitialise(void)
 			flags |= (1 << 28);
 		}
 
-		if(!Emmc_IssueCommand(ACMD(41), 0x00FF8000 | flags))
+		if(!Emmc_issueCommand(ACMD(41), 0x00FF8000 | flags))
 		{
 			printf("ssed - Error issuing ACMD41\n");
 			return -1;
@@ -429,7 +429,7 @@ int EmmcInitialise(void)
 	*/
 	
 	// We have an SD card which supports SDR12 mode at 25MHz - Set frequency
-	EmmcSwitchClockRate(base_clock, SdClockNormal);
+	Emmc_switchClockRate(base_clock, SdClockNormal);
 	
 	wait(100); // Wait for clock rate to change
 
@@ -437,16 +437,16 @@ int EmmcInitialise(void)
 	{
 		printf("ssed - Switching to 1.8V mode.\n");
 
-		if(!Emmc_IssueCommand(VoltageSwitch, 0))
+		if(!Emmc_issueCommand(VoltageSwitch, 0))
 		{
 			printf("ssed - CMD[VoltageSwitch] failed.\n");
 
 			// Power off
 			gDevice.failed_voltage_switch = 1;
 
-			EmmcPowerOff();
+			Emmc_powerOff();
 
-			return EmmcInitialise();
+			return Emmc_Initialise();
 		}
 
 		// Disable SD clock
@@ -461,9 +461,9 @@ int EmmcInitialise(void)
 			
 			gDevice.failed_voltage_switch = 1;
 
-			EmmcPowerOff();
+			Emmc_powerOff();
 
-			return EmmcInitialise();
+			return Emmc_Initialise();
 		}
 
 		// Set 1.8V signal enable to 1
@@ -478,9 +478,9 @@ int EmmcInitialise(void)
 			
 			gDevice.failed_voltage_switch = 1;
 
-			EmmcPowerOff();
+			Emmc_powerOff();
 
-			return EmmcInitialise();
+			return Emmc_Initialise();
 		}
 	
 		// Re enable sd clock
@@ -497,15 +497,15 @@ int EmmcInitialise(void)
             printf("ssed - DAT[3:0] did not settle to 1111b. Was: %d.\n", dat30);
 
 			gDevice.failed_voltage_switch = 1;
-			EmmcPowerOff();
+			Emmc_powerOff();
 
-			return EmmcInitialise();
+			return Emmc_Initialise();
 		}
 
 		printf("ssed - Voltage switch complete.\n");
 	}	
 
-	if(!Emmc_IssueCommand(AllSendCid, 0x0))
+	if(!Emmc_issueCommand(AllSendCid, 0x0))
 	{
 		printf("ssed - Error sending ALL_SEND_CID.\n");
 		return -1;
@@ -518,7 +518,7 @@ int EmmcInitialise(void)
 	gDevice.cid[3] = gDevice.last_resp3;
 
 	// Enter data state
-	if(!Emmc_IssueCommand(SendRelativeAddr, 0))
+	if(!Emmc_issueCommand(SendRelativeAddr, 0))
 	{
 		printf("ssed - Error sending SEND_RELATIVE_ADDR.\n");
 		return -1;
@@ -560,7 +560,7 @@ int EmmcInitialise(void)
 	}
 	
 	// Not select the card to toggle it to transfer state
-	if(!Emmc_IssueCommand(SelectCard, gDevice.rca << 16))
+	if(!Emmc_issueCommand(SelectCard, gDevice.rca << 16))
 	{
 		printf("ssed - Error sending SELECT_CARD.\n");
 		return -1;
@@ -577,7 +577,7 @@ int EmmcInitialise(void)
 
 	if(!gDevice.supports_sdhc)
 	{
-		if(!Emmc_IssueCommand(SetBlockLen, 512))
+		if(!Emmc_issueCommand(SetBlockLen, 512))
 		{
 			printf("ssed - Error sending SET_BLOCKLEN.\n");
 			return -1;
@@ -596,7 +596,7 @@ int EmmcInitialise(void)
 	gDevice.block_size = 8;
 	gDevice.blocks_to_transfer = 1;
 	
-	if(!Emmc_IssueCommand(ACMD(51), 0))
+	if(!Emmc_issueCommand(ACMD(51), 0))
 	{
 		printf("ssed -     Failed to send ACMD51.\n");
 		return -1;
@@ -646,7 +646,7 @@ int EmmcInitialise(void)
 		unsigned int new_interrupt_mask = old_interrupt_mask & ~(1 << 8);
 		gEmmc->IrptMask.raw = new_interrupt_mask;
 
-		if(Emmc_IssueCommand(ACMD(6), 0x2))
+		if(Emmc_issueCommand(ACMD(6), 0x2))
 		{
 			printf("ssed - failed to switch to 4-bit data mode.\n");
 		}
@@ -672,41 +672,41 @@ int EmmcInitialise(void)
 	return 0;
 }
 
-int EmmcPowerOff(void)
+int Emmc_powerOff(void)
 {
 	return Mailbox_SetDevicePowerState(HwId_Emmc, 0);
 }
 
-int EmmcPowerOn(void)
+int Emmc_powerOn(void)
 {
 	return Mailbox_SetDevicePowerState(HwId_Emmc, 1);
 }
 
-unsigned int Emmc_GetBaseClockHz()
+unsigned int Emmc_getBaseClockHz()
 {
 	return Mailbox_SD_GetBaseFrequency();
 }
 
-void Emmc_SD_PowerOff(void)
+void Emmc_sdPowerOff(void)
 {
 	unsigned int control0 = gEmmc->Control0.raw;
 	control0 &= ~(1 << 8);
 	gEmmc->Control0.raw = control0;
 }
 
-int EmmcPowerCycle(void)
+int Emmc_powerCycle(void)
 {
 	printf("ssed - Power cycling:\n");
 	
 	unsigned int res = 0;
-	if((res = EmmcPowerOff()) < 0)
+	if((res = Emmc_powerOff()) < 0)
 	{
 		return -1;
 	}	
 	
 	wait(100);
 	
-	if((res = EmmcPowerOn()) < 0)
+	if((res = Emmc_powerOn()) < 0)
 		printf("Failed!\n");
 	else
 		printf("Success!\n");
@@ -724,7 +724,7 @@ int EmmcPowerCycle(void)
 //	return 0;
 //}
 
-static int Emmc_ResetDatLine()
+static int Emmc_resetDatLine()
 {
 	gEmmc->Control1.raw |= (1 << 26);
 
@@ -733,7 +733,7 @@ static int Emmc_ResetDatLine()
 	return 0;
 }
 
-static void Emmc_HandleCardInterrupt(void)
+static void Emmc_handleCardInterrupt(void)
 {
 	unsigned int status = gEmmc->Status.raw;
 
@@ -742,14 +742,14 @@ static void Emmc_HandleCardInterrupt(void)
 
 	if(gDevice.rca)
 	{
-		if(!Emmc_IssueCommand(SendStatus, gDevice.rca << 16))
+		if(!Emmc_issueCommand(SendStatus, gDevice.rca << 16))
 		{
 			printf("Failed to send SendStatus command when handling interrupt.\n");
 		}
 	}
 }
 
-static void Emmc_HandleInterrupt()
+static void Emmc_handleInterrupt()
 {
 	unsigned int irpt = gEmmc->Interrupt.raw;
 	unsigned int reset_mask = 0;
@@ -809,7 +809,7 @@ static void Emmc_HandleInterrupt()
 		while (wait < 2000000){
 			wait++;
 		}
-		Emmc_HandleCardInterrupt();
+		Emmc_handleCardInterrupt();
 		reset_mask = (1 << 8);
 	}
 
@@ -822,17 +822,17 @@ static void Emmc_HandleInterrupt()
 	gEmmc->Interrupt.raw = reset_mask;
 }
 
-static int Emmc_EnsureDataMode(void)
+static int Emmc_ensureDataMode(void)
 {
 	if(gDevice.rca == 0)
 	{
-		int ret = EmmcInitialise();
+		int ret = Emmc_Initialise();
 
 		if(ret != 0)
 			return ret;
 	}
 
-	if(!Emmc_IssueCommand(SendStatus, gDevice.rca << 16))
+	if(!Emmc_issueCommand(SendStatus, gDevice.rca << 16))
 	{
 		printf("ssed - EnsureDataMode() error sending CMD13.\n");
 		gDevice.rca = 0;
@@ -845,7 +845,7 @@ static int Emmc_EnsureDataMode(void)
 	if(current_state == 3)
 	{
 		// Currently in stand-by state - Select it
-		if(!Emmc_IssueCommand(SelectCard, gDevice.rca << 16))
+		if(!Emmc_issueCommand(SelectCard, gDevice.rca << 16))
 		{
 			printf("ssed - EnsureDataMode() no response from CMD17.\n");
 			gDevice.rca = 0;
@@ -854,19 +854,19 @@ static int Emmc_EnsureDataMode(void)
 	}
 	else if(current_state == 5)
 	{
-		if(!Emmc_IssueCommand(StopTransmitting, 0))
+		if(!Emmc_issueCommand(StopTransmitting, 0))
 		{
 			printf("ssed - EnsureDataMode() no response from CMD12.\n");
 			gDevice.rca = 0;
 			return -1;
 		}
 
-		Emmc_ResetDatLine();
+		Emmc_resetDatLine();
 	}
 	else if(current_state != 4)
 	{
 		// not in transfer state - Re initialize
-		int ret = EmmcInitialise();
+		int ret = Emmc_Initialise();
 		if(ret != 0)
 			return ret;
 	}
@@ -875,7 +875,7 @@ static int Emmc_EnsureDataMode(void)
 	{
 		printf("ssed - EnsureDataMode() rechecking status: \n");
 
-		if(Emmc_IssueCommand(SendStatus, gDevice.rca << 16))
+		if(Emmc_issueCommand(SendStatus, gDevice.rca << 16))
 		{
 			printf("ssed - EnsureDataMode() no response from CMD13\n");
 			gDevice.rca = 0;
@@ -898,7 +898,7 @@ static int Emmc_EnsureDataMode(void)
 	return 0;
 }
 
-int Emmc_IssueCommandInt(unsigned int command, unsigned int argument)
+int Emmc_issueCommandInt(unsigned int command, unsigned int argument)
 {
 	// Check command inhibit
 	while(gEmmc->Status.raw & 0x1)
@@ -1121,9 +1121,9 @@ int Emmc_IssueCommandInt(unsigned int command, unsigned int argument)
 	return 1;
 }
 
-int Emmc_IssueCommand(unsigned int command, unsigned int argument)
+int Emmc_issueCommand(unsigned int command, unsigned int argument)
 {
-	Emmc_HandleInterrupt();
+	Emmc_handleInterrupt();
 
 	if(command & IS_APP_CMD)
 	{
@@ -1140,13 +1140,13 @@ int Emmc_IssueCommand(unsigned int command, unsigned int argument)
 		if(gDevice.rca)
 			rca = gDevice.rca << 16;
 
-		if(Emmc_IssueCommandInt(CMD[AppCmd], rca))
+		if(Emmc_issueCommandInt(CMD[AppCmd], rca))
 		{
 			//printf("ssed - APP_CMD Sent, sending ACMD%d.\n", command);
 
 			gLastCommand = command | IS_APP_CMD;
 
-			Emmc_IssueCommandInt(ACMD[command], argument);
+			Emmc_issueCommandInt(ACMD[command], argument);
 		}
 	}
 	else
@@ -1160,13 +1160,13 @@ int Emmc_IssueCommand(unsigned int command, unsigned int argument)
 
 		gLastCommand = command;
 
-		Emmc_IssueCommandInt(CMD[command], argument);
+		Emmc_issueCommandInt(CMD[command], argument);
 	}
 
 	return 1;
 }
 
-unsigned int Emmc_DoDataCommand(char* buf, unsigned int is_write, unsigned int buflen, unsigned int block_number)
+unsigned int Emmc_doDataCommand(char* buf, unsigned int is_write, unsigned int buflen, unsigned int block_number)
 {
 	if(!gDevice.supports_sdhc)
 		block_number *= 512;
@@ -1207,7 +1207,7 @@ unsigned int Emmc_DoDataCommand(char* buf, unsigned int is_write, unsigned int b
 	int max_retries = 3;
 	while(retry_count < max_retries)
 	{
-		if(Emmc_IssueCommand(command, block_number))
+		if(Emmc_issueCommand(command, block_number))
 			break;
 		else
 		{
@@ -1229,12 +1229,12 @@ unsigned int Emmc_DoDataCommand(char* buf, unsigned int is_write, unsigned int b
 	return 0;
 }
 
-int EmmcReadBlock(char* buf, unsigned int buflen, unsigned int block_number)
+int Emmc_ReadBlock(char* buf, unsigned int buflen, unsigned int block_number)
 {
-	if(Emmc_EnsureDataMode() != 0)
+	if(Emmc_ensureDataMode() != 0)
 		return -1;
 
-	if(Emmc_DoDataCommand(buf, 0, buflen, block_number) < 0)
+	if(Emmc_doDataCommand(buf, 0, buflen, block_number) < 0)
 		return -1;
 
 	return buflen;
