@@ -77,12 +77,14 @@ void c_irq_handler(volatile unsigned int* r0)
         }
         case interrupt_source_uart:
         {
-            unsigned char read = uart_getc();
-            uart_putc(read);
+            unsigned char read = Uart_Read();
+
+            // Echo it back
+            Uart_Send(read);
 
             if (read == 'x')
             {
-                uart_puts("\r\n* * * Rebooting. * * *\r\n");
+                Uart_SendString("\r\n* * * Rebooting. * * *\r\n");
                 reboot();
             }
             break;

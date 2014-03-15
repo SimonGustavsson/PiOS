@@ -262,8 +262,8 @@ void print_internal(char* string, unsigned int length, unsigned int important)
 	{	
 		if(string[i] == '\n')
 		{
-			uart_putc('\n');
-			uart_putc('\r');
+			Uart_Send('\n');
+            Uart_Send('\r');
 
 			gBuffer[gBufferCaretRow][gBufferCaretCol] = ' ';
 			gBufferCaretRow++;
@@ -289,16 +289,16 @@ void print_internal(char* string, unsigned int length, unsigned int important)
 					gBufferCaretRow++;
 				}
 			}
-			uart_puts("    ");
+            Uart_SendString("    ");
 		}
 		else if (gBuffer[gBufferCaretRow][gBufferCaretCol] != string[i])
 		{
-			uart_putc(string[i]);
+            Uart_Send(string[i]);
 			gBuffer[gBufferCaretRow][gBufferCaretCol] = string[i];
 		}
 		else
 		{
-			uart_putc(string[i]);
+            Uart_Send(string[i]);
 		}
 		
 		if(gBufferCaretCol < BUFFER_WIDTH - 1)
@@ -319,7 +319,7 @@ void print_internal(char* string, unsigned int length, unsigned int important)
 		}
 	}
 
-	uart_putc(0); // String over
+    Uart_Send(0); // String over
 	
 	// Write the prompt back again - but only if we wrote an important message.
 	// as we want multiple print() calls to be able to write to the same row

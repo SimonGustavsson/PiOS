@@ -28,9 +28,9 @@ volatile extern Emmc* gEmmc;
 
 void system_initialize_serial(void)
 {
-	uart_init();
+	Uart_Initialize();
 
-	uart_irpt_enable();
+	Uart_EnableInterrupts();
 
 	Arm_InterruptInitialize();
 
@@ -46,12 +46,12 @@ unsigned int system_initialize(void)
 
     system_initialize_serial();
 
-    uart_puts("Welcome to PiOS!\n\r");
+    Uart_SendString("Welcome to PiOS!\n\r");
 
 	// Initialize terminal first so we can print error messages if any (Hah, unlikely!)
 	if ((result = terminal_init()) != 0)
 	{
-		uart_puts("Failed to initialize terminal.\n");
+		Uart_SendString("Failed to initialize terminal.\n");
 	}
 
 	unsigned int* basePageTable = (unsigned int *)0x00A08000;

@@ -29,10 +29,10 @@ typedef volatile struct{
 	unsigned int tdr;          // 0x8C Test data reg
 } Uart;
 
-void uart_init();
-void uart_irpt_enable(void);
-void uart_putc(unsigned char byte);
-unsigned char uart_getc();
-void uart_puts(const char *str);
+void Uart_Initialize();
+void Uart_EnableInterrupts(void);
+void Uart_Send(unsigned char byte);
+unsigned char Uart_Read();
+void Uart_SendString(const char *str);
 
 #endif // #ifndef UART_H

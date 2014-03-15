@@ -9,7 +9,7 @@
 
 Uart* gUart;
 
-void uart_init() {
+void Uart_Initialize() {
 
 	gUart = (Uart*)(UART_BASE);
 
@@ -38,12 +38,12 @@ void uart_init() {
 	gUart->cr = (1 << 0) | (1 << 8) | (1 << 9);
 }
 
-void uart_irpt_enable(void)
+void Uart_EnableInterrupts(void)
 {
 	gUart->imsc = 0x0010;
 }
 
-void uart_putc(unsigned char byte)
+void Uart_Send(unsigned char byte)
 {
 	// wait for UART to become ready to transmit
 	while (1)
@@ -55,7 +55,7 @@ void uart_putc(unsigned char byte)
 	gUart->dr = byte;
 }
 
-unsigned char uart_getc()
+unsigned char Uart_Read()
 {
 	// wait for UART to have recieved something
 	while (1)
@@ -67,12 +67,12 @@ unsigned char uart_getc()
 	return gUart->dr;
 }
 
-void uart_puts(const char *str)
+void Uart_SendString(const char *str)
 {
 	while (*str)
 	{
-		uart_putc(*str++);
+        Uart_Send(*str++);
 	}
 
-	uart_putc(0);
+    Uart_Send(0);
 }
