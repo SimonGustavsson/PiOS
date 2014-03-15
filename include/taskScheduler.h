@@ -4,7 +4,7 @@
 #define TASK_SCHEDULER_TICK_MS 200
 #define MAX_NUM_TASKS 10
 #include "task.h"
-#include "pqueue.h"
+#include "queue.h"
 
 typedef struct {
 	Task* currentTask;

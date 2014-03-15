@@ -1,7 +1,7 @@
-#include "pqueue.h"
+#include "queue.h"
 #include "memory.h"
 
-void pqueue_enqueue(Queue* queue, void* data)
+void Queue_Enqueue(Queue* queue, void* data)
 {
 	// Create a node
 	Node* node = (Node*)palloc(sizeof(Node));
@@ -21,7 +21,7 @@ void pqueue_enqueue(Queue* queue, void* data)
 	queue->numNodes++;
 }
 
-void* pqueue_dequeue(Queue* queue)
+void* Queue_Dequeue(Queue* queue)
 {
 	// Get a reference to the front node so we don't lose it when modifying front
 	Node* prevFront = queue->front;
@@ -45,7 +45,7 @@ void* pqueue_dequeue(Queue* queue)
 	return data;
 }
 
-void* pqueue_peek(Queue* queue)
+void* Queue_Peek(Queue* queue)
 {
 	if (queue->front != 0)
 		return queue->front->data;

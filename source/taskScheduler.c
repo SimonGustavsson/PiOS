@@ -4,7 +4,7 @@
 #include "util/utilities.h"
 #include "hardware/mmu.h"
 #include "hardware/timer.h"
-#include "pqueue.h"
+#include "queue.h"
 
 // This is really the heart of PiOS - this is where PiOS sits constantly
 volatile extern unsigned int gTaskSchedulerTick;
@@ -28,7 +28,7 @@ void taskScheduler_EnqueueTask(Task* task)
 	// Initialize task
 
 	// Add it to the queue for processing
-	pqueue_enqueue(&gScheduler->tasks, task);
+	Queue_Enqueue(&gScheduler->tasks, task);
 }
 
 void taskScheduler_TimerTick(registers* regs)

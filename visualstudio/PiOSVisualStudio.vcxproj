@@ -64,11 +64,11 @@
     <ClInclude Include="..\include\hardware\keyboard.h" />
     <ClInclude Include="..\include\hardware\mailbox.h" />
     <ClInclude Include="..\include\memory.h" />
+    <ClInclude Include="..\include\queue.h" />
     <ClInclude Include="..\include\string.h" />
     <ClInclude Include="..\include\util\mmio.h" />
     <ClInclude Include="..\include\hardware\mmu.h" />
     <ClInclude Include="..\include\myfont.h" />
-    <ClInclude Include="..\include\pqueue.h" />
     <ClInclude Include="..\include\task.h" />
     <ClInclude Include="..\include\taskScheduler.h" />
     <ClInclude Include="..\include\stdio.h" />
@@ -93,7 +93,7 @@
     <ClCompile Include="..\source\memory.c" />
     <ClCompile Include="..\source\hardware\mmu.c" />
     <ClCompile Include="..\source\platform.c" />
-    <ClCompile Include="..\source\pqueue.c" />
+    <ClCompile Include="..\source\queue.c" />
     <ClCompile Include="..\source\string.c" />
     <ClCompile Include="..\source\task.c" />
     <ClCompile Include="..\source\taskScheduler.c" />
