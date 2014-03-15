@@ -13,7 +13,7 @@ unsigned int gCommandCount = 0;
 
 extern volatile Emmc* gEmmc;
 
-void TerminalRegisterCommand(char* name, char* description, unsigned int (*execute)(char**, unsigned int))
+void TerminalCommands_registerCommand(char* name, char* description, unsigned int (*execute)(char**, unsigned int))
 {
 	gCommands[gCommandCount].name = name;
 	gCommands[gCommandCount].description = description;
@@ -22,7 +22,7 @@ void TerminalRegisterCommand(char* name, char* description, unsigned int (*execu
 	gCommandCount++;
 }
 
-TerminalCommand *TerminalGetCommand(char* name)
+TerminalCommand *TerminalCommands_GetCommand(char* name)
 {
 	unsigned int i;
 	for(i = 0; i < MAX_COMMAND_COUNT; i++)
@@ -44,7 +44,7 @@ unsigned int Command_Help_Execute(char** args, unsigned int argCount)
 	if(argCount > 1)
 	{
 		// Print command specific help
-		TerminalCommand* cmd = TerminalGetCommand(args[1]);
+		TerminalCommand* cmd = TerminalCommands_GetCommand(args[1]);
 		
 		if(cmd == 0)
 		{
@@ -235,25 +235,25 @@ unsigned int Command_GetPower_Execute(char** args, unsigned int argCount)
 	return 0;
 }
 
-void TerminalInitCommands(void)
+void TerminalCommands_Initialize(void)
 {
-	TerminalRegisterCommand("about", "Prints information about PiOS.", &Command_About_Execute);
-	TerminalRegisterCommand("help", "Prints a listing of commands.", &Command_Help_Execute);
-	TerminalRegisterCommand("test", "Command for testing new things.", &Command_Test_Execute);
-	TerminalRegisterCommand("cls", "Clears the terminal.", &Command_Cls_Execute);
-	TerminalRegisterCommand("echo", "Prints the given string to the terminal.", &Command_Echo_Execute);
-	TerminalRegisterCommand("prompt", "Changes the system prompt text.", &Command_Prompt_Execute);
-	TerminalRegisterCommand("setpower", "Changes the power state(1 or 0) of the given device(0-8).", &Command_SetPower_Execute);
-	TerminalRegisterCommand("getpower", "Retrieves the power state of the given device (0-8).", &Command_GetPower_Execute);
+	TerminalCommands_registerCommand("about", "Prints information about PiOS.", &Command_About_Execute);
+    TerminalCommands_registerCommand("help", "Prints a listing of commands.", &Command_Help_Execute);
+    TerminalCommands_registerCommand("test", "Command for testing new things.", &Command_Test_Execute);
+    TerminalCommands_registerCommand("cls", "Clears the terminal.", &Command_Cls_Execute);
+    TerminalCommands_registerCommand("echo", "Prints the given string to the terminal.", &Command_Echo_Execute);
+    TerminalCommands_registerCommand("prompt", "Changes the system prompt text.", &Command_Prompt_Execute);
+    TerminalCommands_registerCommand("setpower", "Changes the power state(1 or 0) of the given device(0-8).", &Command_SetPower_Execute);
+    TerminalCommands_registerCommand("getpower", "Retrieves the power state of the given device (0-8).", &Command_GetPower_Execute);
 
 	// Sd cards for debugging
-	TerminalRegisterCommand("dbgsd", "Prints the mmc struct", &Command_DbgSd_Execute);
-	TerminalRegisterCommand("sdstatus", "Prints the status of the external mass media controller", &Command_SdStatus_Execute);
-	TerminalRegisterCommand("sdcontrol0", "Prints the current control0 configuration", &Command_SdControl0_Execute);
+    TerminalCommands_registerCommand("dbgsd", "Prints the mmc struct", &Command_DbgSd_Execute);
+    TerminalCommands_registerCommand("sdstatus", "Prints the status of the external mass media controller", &Command_SdStatus_Execute);
+    TerminalCommands_registerCommand("sdcontrol0", "Prints the current control0 configuration", &Command_SdControl0_Execute);
 }
 
 // 0: OK, -1: Unknown command
-unsigned int TerminalExecuteCommand(char* cmd)
+unsigned int TerminalCommands_Execute(char* cmd)
 {
 	char delimiter = ' ';
 	char currentChar;
@@ -294,7 +294,7 @@ unsigned int TerminalExecuteCommand(char* cmd)
 	if(*str != '\0')
 		arguments[argCount] = str;
 	
-	TerminalCommand* command = TerminalGetCommand(arguments[0]);
+	TerminalCommand* command = TerminalCommands_GetCommand(arguments[0]);
 	
 	if(command == 0)
 	{

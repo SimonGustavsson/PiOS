@@ -70,7 +70,7 @@ void Terminal_PrintPrompt(void)
 
 void ExecuteCommand(char* cmd, unsigned int cmdLen)
 {
-	TerminalExecuteCommand(cmd);
+	TerminalCommands_Execute(cmd);
 	
 	// TODO: Do something with the result of the command?
 	
@@ -208,7 +208,7 @@ int Terminal_Initialize(void)
 	Terminal_Clear();
 	
 	// Setup default built in commands
-    TerminalInitCommands();
+    TerminalCommands_Initialize();
 	
 	return 0;
 }
