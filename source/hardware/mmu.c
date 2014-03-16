@@ -18,8 +18,10 @@ void Mmu_Initialize(unsigned int* pageTableBase)
 	for (i = 0; i < 4096; i++)
 		*(pageTableBase + i) = 0; // STMIA?
 
+#ifdef MMU_DEBUG
     printf("mmu - Kernel: 0x000 -> C800000 (200MB)\n");
     printf("mmu - Peripherals: 0x20000000 -> 0x10000000(256MB)\n");
+#endif
 
 	// The first 200 MB is all kernel data (including memory allocator), do a 1:1 mapping
 	Mmu_MapSection(0x00000000, 0x00000000, 200, APNoneSvcRw, 1, 1);
