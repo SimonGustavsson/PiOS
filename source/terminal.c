@@ -13,6 +13,7 @@
 #include "types/string.h"
 #include "terminalCommands.h"
 #include "hardware/uart.h"
+#include "hardware/timer.h"
 
 // Forward declare
 void PresentBufferToScreen(void);
@@ -197,7 +198,7 @@ int Terminal_Initialize(void)
 	
 	if(Fb_Initialize() != 0)
 		return -1;
-	
+
 	unsigned int i;
 	for(i = 0; i < 256; i++)
 		gInputBuffer[i] = 0;
@@ -337,12 +338,12 @@ void print_internal(char* string, unsigned int length, unsigned int important)
 	PresentBufferToScreen();
 }
 
-void print_i(char* string, unsigned int length)
+void Terminal_PrintImportant(char* string, unsigned int length)
 {
 	print_internal(string, length, 1);
 }
 
-void print(char* string, unsigned int length)
+void Terminal_Print(char* string, unsigned int length)
 {
 	print_internal(string, length, 0);
 }

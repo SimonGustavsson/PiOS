@@ -1,5 +1,5 @@
-void print(char* string, unsigned int length);
-void print_i(char* string, unsigned int length);
+void Terminal_Print(char* string, unsigned int length);
+void Terminal_PrintImportant(char* string, unsigned int length);
 
 int Terminal_Initialize(void);
 void Terminal_Clear(void);

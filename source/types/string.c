@@ -197,7 +197,7 @@ void printf_i(char* text, ...)
 		*result++ = *text;
 	}while(*text++ != '\0');
 	
-	print_i(res, strlen(res));
+	Terminal_PrintImportant(res, strlen(res));
 }
 
 void printf(char* text, ...)
@@ -258,5 +258,5 @@ void printf(char* text, ...)
 		*result++ = *text;
 	}while(*text++ != '\0');
 	
-	print(res, strlen(res));
+	Terminal_Print(res, strlen(res));
 }
