@@ -376,17 +376,17 @@ unsigned int fat32_initialize(void) // Pass in device?
 
 		if(e->attribute.bits.directory)
 		{
-			print("[", 1);
+            printf("[");
 		}
 
 		if(e->has_long_name)
 			printf((char*)e->long_name);
 		else
-			print((char*)e->name, 11);
+			printf((char*)e->name);
 		
 		if(e->attribute.bits.directory)
 		{
-			print("]", 1);
+            printf("]");
 		}
 
 		printf(" - Cluster: %d.\n", e->first_cluster_low);

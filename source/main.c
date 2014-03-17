@@ -76,7 +76,7 @@ int cmain(void)
 {
     if (system_initialize() != 0)
     {
-        print("\n * * * System Halting * * *\n", 29);
+        printf("\n * * * System Halting * * *\n");
 
         while (1);
     }
@@ -88,7 +88,10 @@ int cmain(void)
 	*((unsigned int*)0x10E00000) = 2;
 	printf("If you can see this, the data abort was successful.\n");
                 
-    printf("Calling loaded program img, should trigger SVC!\n");
+    //printf("Calling loaded program img, should trigger SVC!\n");
+    printf("Can we wait? ");
+    wait(200);
+    printf("YES!\n");
     //branchTo((unsigned int *)(FINAL_USER_START_VA));
     printf("It worked!? :-)\n");
 
