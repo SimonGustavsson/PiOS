@@ -68,8 +68,7 @@ $(OBJ_DIR)/%.o: %.c
 # Open dependency file, append OBJ_DIR to target and create empty targets for all dependencies
 # So that MAKE doesn't complain if a dependency is removed/renamed and still builds everything that used to depend on it
 	@sed -e 's|.*: |$(OBJ_DIR)/$*.o:|' < $(DEPENDENCY_DIR)/$*.d.tmp > $(DEPENDENCY_DIR)/$*.d
-	@sed -e 's/.*://' -e 's/\\$$//' < $(DEPENDENCY_DIR)/$*.d.tmp | fmt -1 | \
-	sed -e 's/*//' -e 's/$$/:/' >> $(DEPENDENCY_DIR)/$*.d
+	@sed -e 's/.*: //' -e 's/\\$$//' < $(DEPENDENCY_DIR)/$*.d.tmp | fmt -1 | sed -e 's/*//' -e 's/$$/: /' >> $(DEPENDENCY_DIR)/$*.d
 	  
 # Remove the temp file
 	@rm -f $(DEPENDENCY_DIR)/$*.d.tmp
