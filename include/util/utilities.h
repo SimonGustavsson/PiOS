@@ -1,5 +1,9 @@
 #define assert(expression) (!expression ? printf("Assertion failed at %s(%d), expression: " #expression, __FILE__, __LINE__) : (void)0)
 #define assert2(expression, message) (!expression ? printf("Assertion failed at %s(%d), expression: " #expression "%s", __FILE__, __LINE__, message) : (void)0)
+#define ReturnOnFailure(result, message) if(((result) != 0)) { printf(message);  goto fExit; }
+#define ReturnOnFailureF(result, message, ...) if((result > 0)) { printf(message, __VA_ARGS__); goto fExit; }
+#define ReturnOnNull(result, message) if((result) == NULL) { printf(message); goto fExit; }
+#define inline __inline
 
 #ifdef __cplusplus
 extern "C" {

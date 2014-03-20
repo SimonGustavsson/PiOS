@@ -4,395 +4,603 @@
 #include "types/string.h"
 #include "terminal.h"
 #include "memory.h"
+#include "types/types.h"
+#include "fs/filesystem.h"
 
-static char gBlock_buf[512];
-filesystem* gFs;
-
-unsigned int fat32_read_boot_sector(unsigned int block_number)
+unsigned int Fat32_translateTo83FatName(char* filename, char* dest)
 {
-	if(!Emmc_ReadBlock(&gBlock_buf[0], 512, block_number))
-	{
-		printf("fat32 - Failed to read volume id block (%d).\n", block_number);
-		return -1;
-	}
-	
-	// Read Partition boot sector ("volume ID")
-	char* vi = &gBlock_buf[0];
+    char* file = filename + 3; // Skip past x:/
 
-	my_memcpy(&gFs->boot_sector.partition_type_name[0], &vi[0x3], 8); 
-	gFs->boot_sector.partition_type_name[8] = '\0'; // Make oem name print friendly
-    my_memcpy(&gFs->boot_sector.bytes_per_sector, &vi[0x0B], 2);
-    my_memcpy(&gFs->boot_sector.sectors_per_cluster, &vi[0x0D], 1);
-    my_memcpy(&gFs->boot_sector.num_reserved_sectors, &vi[0x0E], 2);
-    my_memcpy(&gFs->boot_sector.num_fats, &vi[0x10], 1);
-    my_memcpy(&gFs->boot_sector.root_entries, &vi[0x11], 2);
-    my_memcpy(&gFs->boot_sector.small_sectors, &vi[0x13], 2);
-    my_memcpy(&gFs->boot_sector.media_type, &vi[0x15], 1);
-    my_memcpy(&gFs->boot_sector.sectors_per_fat, &vi[0x24], 2);
-    my_memcpy(&gFs->boot_sector.sectors_per_head, &vi[0x18], 2);
-    my_memcpy(&gFs->boot_sector.number_of_heads, &vi[0x1A], 2); // heads per cylinder
-    my_memcpy(&gFs->boot_sector.hidden_sectors, &vi[0x1C], 4);
-    my_memcpy(&gFs->boot_sector.large_sectors, &vi[0x20], 4);
-    my_memcpy(&gFs->boot_sector.large_sectors_per_fat, &vi[0x24], 4);
-    my_memcpy(&gFs->boot_sector.flags, &vi[0x28], 2);
-    my_memcpy(&gFs->boot_sector.version, &vi[0x2A], 2);
-    my_memcpy(&gFs->boot_sector.root_dir_start, &vi[0x2C], 4);
-    my_memcpy(&gFs->boot_sector.info_sector, &vi[0x30], 2);
-    my_memcpy(&gFs->boot_sector.backup_sector, &vi[0x32], 2);
+    // Split out extension from file name
+    unsigned int nameLength = strlen(file);
+    int extIndex;
+    unsigned int hasExtension = 0;
+    // Step backwards and find the first full stop
+    for (extIndex = nameLength; extIndex >= 0; extIndex--)
+    {
+        if (*(file + extIndex) == '.')
+        {
+            hasExtension = 1;
+            break; // Found it! :-)
+        }
+    }
 
-	//printf("fat32 - Root partition: OEM name: '%s'.\n", gFs->boot_sector.partition_type_name);	
-	//printf("fat32 - Root partition: Bytes per sector: %d.\n", gFs->boot_sector.bytes_per_sector);
-	//printf("fat32 - Root partition: Sectors per cluster: %d.\n", gFs->boot_sector.sectors_per_cluster);
-	//printf("fat32 - Root partition: Reserved sectors: %d.\n", gFs->boot_sector.num_reserved_sectors);
-	//printf("fat32 - Root partition: There are %d copies of the FAT.\n", gFs->boot_sector.num_fats);
-	//printf("fat32 - Root partition: There are %d root entries.\n", gFs->boot_sector.root_entries);
-	//printf("fat32 - Root partition: There are %d small sectors.\n", gFs->boot_sector.small_sectors); // If 0, large is used instead
-	//printf("fat32 - Root partition: The type of the media is %h.\n", gFs->boot_sector.media_type);
-	//printf("fat32 - Root partition: %d sectors per fat.\n", gFs->boot_sector.sectors_per_fat);
-	//printf("fat32 - Root partition: %d sectors per head.\n", gFs->boot_sector.sectors_per_head);
-	//printf("fat32 - Root partition: %d hidden sectors.\n", gFs->boot_sector.hidden_sectors);
-	//printf("fat32 - Root partition: %d large sectors.\n", gFs->boot_sector.large_sectors);
-	//printf("fat32 - Root partition: %d large sectors per fat.\n", gFs->boot_sector.large_sectors_per_fat);	
-	//printf("fat32 - Root partition: Flags: %d\n", gFs->boot_sector.flags);
-	//printf("fat32 - Root partition: Version: %d\n", gFs->boot_sector.version);
-	//printf("fat32 - Root partition: Root dir start sector: %d.\n", gFs->boot_sector.root_dir_start);
-	//printf("fat32 - Root partition: Info sector: %d.\n", gFs->boot_sector.info_sector);
-	//printf("fat32 - Root partition: backup sector: %d.\n", gFs->boot_sector.backup_sector);
+    if (hasExtension)
+    {
+        my_memcpy(dest, file, extIndex);
 
-	if(gFs->boot_sector.bytes_per_sector != 512)
-	{
-		printf("fat32 - WARNING: %d bytes per sector in boot_sector, expected 512.\n", gFs->boot_sector.bytes_per_sector);
-		return -1;
-	}
+        unsigned int i;
+        int paddingSpacesNeeded = 11 - (nameLength - 1); // We removed the . remember?
+        if (paddingSpacesNeeded > 0)
+        {
+            for (i = 0; i < (unsigned int)paddingSpacesNeeded; i++)
+                *((dest + extIndex) + i) = ' ';
+        }
 
-	if(gFs->boot_sector.num_fats != 2)
-	{
-		printf("fat32 - Invalid number of fats in volume id %d.\n", gFs->boot_sector.num_fats);
-		return -1;
-	}
+        unsigned int extLength = nameLength - extIndex + 1;
 
-	if(vi[0x1FE] != 0x55 || vi[0x1FF] != 0xAA)
-	{
-		printf("fat32 - Invalid signature in volume id.\n");
-		return -1;
-	}
+        // and write extension
+        for (i = 0; i < extLength; i++)
+            *(dest + extIndex + paddingSpacesNeeded + i) = *(file + extIndex + 1 + i);
 
-	gFs->boot_sector.root_start_sector = gFs->mbr.boot_sector_block + gFs->boot_sector.num_reserved_sectors + 
-		(gFs->boot_sector.num_fats * gFs->boot_sector.sectors_per_fat);
+        // aaaand make it all upper case (Note: We need to start considering case insensitive stuff here...)
+        for (i = 0; i < 11; i++)
+        {
+            if (*(dest + i) > 96 && *(dest + i) < 123)
+                *(dest + i) = *(dest + i) - 32;
+        }
+    }
+    else
+    {
+        // No extension
 
-	//unsigned int cluster_count = 2 + (gFs->boot_sector.large_sectors - gFs->boot_sector.root_start_sector - 2) * gFs->boot_sector.sectors_per_cluster;
-	//printf("fat32 - Root start: %d.\n", gFs->boot_sector.root_start_sector);
-	//printf("fat32 - Cluster count: %d.\n", cluster_count);
+        // Copy the entire name over
+        my_memcpy(dest, file, nameLength);
 
-	// TODO: Make sure we properly read the extended FAT32 part of the boot sector (See osdev/FAT)
-	
-	return 0;
+        // Make upper case
+        unsigned int i;
+        for (i = 0; i < 11; i++)
+        {
+            if (*(dest + i) > 96 && *(dest + i) < 123)
+                *(dest + i) = *(dest + i) - 32;
+        }
+    }
+
+    return 0;
 }
 
-unsigned int unicode16_to_asci(long_entry* dest, unsigned short* src, int srcLength)
+int Fat32_getDirEntry(Partition* part, char* filename, DirEntry** entry)
 {
-	unsigned int i;
-	for(i = 0; i < srcLength; i++)
-	{
-		if(src[i] == 0)
-		{
-			dest->length = i;
-			dest->name[i] = 0;
-			return 1;
-		}
+    int result = 0;
+    Fat32Disk* disk = (Fat32Disk*)part->data;
 
-		dest->name[i] = (char)src[i];
-	}
+    unsigned int filesFound = 0;
+    DirEntry* entries = Fat32_listDirectory(part, disk->rootDirectorySector, &filesFound);
 
-	dest->length = srcLength;
+    ReturnOnFailure(filesFound < 1, "Failed to read root directory.\n");
 
-	return i;
-}
+    char* fatFilename = (char*)palloc(11);
+    ReturnOnFailureF(result = Fat32_translateTo83FatName(filename, fatFilename), "Failed to translate '%s' to 8.3 format.\n", filename);
 
-//
-//unsigned int parse_dir_block(char* buf, int buflen, dir_entry* entries)
-//{
-//	int root_dir_entry_index;
-//	char tmp[26]; // Temporary buffer for storing the long file name when converting
-//	long_entry long_entries[63];
-//	unsigned int num_long_entries;
-//	unsigned int i;
-//	int last_long;
-//
-//	last_long = 0;
-//	root_dir_entry_index = 0;
-//	num_long_entries = 0;
-//
-//	for(i = 0; i < buflen; i++)
-//	{
-//		if(*buf == 0) break; // no more entries
-//
-//		// If the entry exists
-//		if(*buf != 0xE5)
-//		{
-//			if(buf[11] == 0x0F) // Long entry
-//			{
-//				unsigned char index = buf[0] - 1; // 1 based
-//
-//				if(index & 0x40)
-//					index &= ~0x40; // Last long entry for this file
-//
-//				// Copy name to buffer so it's all in one block
-//				memcpy(&tmp[0], &buf[1], 10);
-//				memcpy(&tmp[0 + 10], &buf[14], 12);
-//				memcpy(&tmp[0 + 10 + 12], &buf[28], 4);
-//
-//				// Store it as ASCI
-//				unicode16_to_asci(&long_entries[index], (unsigned short*)tmp, 13);
-//
-//				num_long_entries++;
-//				last_long = 1;
-//			}
-//			else
-//			{
-//				if(last_long)
-//				{
-//					// Concatenate all long entries into one block
-//					unsigned int j;
-//					unsigned int offset = 0;
-//					char full_name[255];
-//					for(j = 0; j < num_long_entries; j++)
-//					{
-//						memcpy(&full_name[offset], long_entries[j].name, long_entries[j].length);
-//					
-//						offset += long_entries[j].length;
-//					}
-//
-//					memcpy(entries[root_dir_entry_index].long_name, full_name, offset + 1);
-//					
-//					entries[root_dir_entry_index].has_long_name = 1;
-//
-//					last_long = 0;
-//				}
-//
-//				// Copy the 8.3 data over to a struct for convenient access
-//				memcpy(&entries[root_dir_entry_index], &buf[0], 32);
-//
-//				root_dir_entry_index++;
-//			}
-//		}
-//
-//		buf += 32; // Parse next entry
-//	}
-//
-//	return root_dir_entry_index;
-//}
+    DirEntry* file = 0;
+    unsigned int i;
+    for (i = 0; i < filesFound + 1; i++)
+    {
+        // Only search for files for now, no directory support
+        if (entries[i].attribute.bits.directory)
+            continue;
 
-static unsigned int parse_directory_block(char* buf, int buflen, dir_entry* entries, unsigned int max_entries)
-{
-	unsigned int i;
+        if (strcmp((char*)entries[i].name, fatFilename) == 0 ||
+            strcmp((char*)entries[i].longName, filename) == 0)
+        {
+            file = &entries[i];
+            break; // Found it!
+        }
+    }
 
-	long_entry long_entries[19]; // Max 19 entries @ 13 asci chars each = 247byte max filename length
-	unsigned int lfn_count = 0;
-	unsigned int last_lfn = 0;
-	unsigned int file_index = 0;
+    ReturnOnFailureF((file == 0), "Couldn't find file with name '%s'\n", filename);
 
-	for(i = 0; i < buflen; i++)
-	{
-		if(buf[0] == 0) break; // Done reading
-		if(*buf == 0xE5) continue; // Doesn't exist
-		
-		if(LONG_FILE_ENTRY_SIG == buf[11])
-		{
-			unsigned char lfn_index = ((buf[0] - 1) & ~0x40); // Just ignore the "last lfn entry" flag
-
-			// Read the file name into a block
-			unsigned short tmp[26];
-			my_memcpy(&tmp[0], &buf[1], 10);
-            my_memcpy(&tmp[0 + 10], &buf[14], 12);
-            my_memcpy(&tmp[0 + 10 + 12], &buf[28], 4);
-
-			// Convert from Unicode16 and store it as ASCI
-			unicode16_to_asci(&long_entries[lfn_index], tmp, 13);
-
-			lfn_count++;
-
-			last_lfn = 1;
-		}
-		else
-		{
-			if(last_lfn)
-			{
-				// Concatenate all long file entry values into the full name
-				char lfn[255];
-				unsigned int offset = 0;
-				unsigned int lfn_index;
-				for(lfn_index = 0; lfn_index < lfn_count; lfn_index++)
-				{
-					my_memcpy(&lfn[offset], long_entries[lfn_index].name, long_entries[lfn_index].length);
-
-					offset += long_entries[lfn_index].length;
-				}
-
-				// Store the name in the file entry
-				my_memcpy(entries[file_index].long_name, lfn, offset + 1); // Null terminated
-				entries[file_index].has_long_name = 1;
-				
-				last_lfn = 0;
-			}
-
-			// Copy 8.3 data to the file entry
-			my_memcpy(&entries[file_index], &buf[0], 32);
-
-			file_index++;
-		}
-
-		buf += 32; // Advance to the next entry
-	}
-
-	return file_index; // Was 0 indexed
-}
-
-unsigned int read_dir_at_cluster(char* buf, unsigned int buflen, dir_entry* entries, unsigned int max_entries, unsigned int cluster)
-{
-	unsigned int cluster_lba = gFs->boot_sector.root_start_sector + (cluster * gFs->boot_sector.sectors_per_cluster);
-
-	unsigned int cur_block;
-	unsigned int max_block = gFs->boot_sector.sectors_per_cluster;
-	unsigned int files_read = 0;
-	dir_entry* entries_ptr;
-
-	for(cur_block = 0; cur_block < max_block; cur_block++)
-	{
-		unsigned int block_lba = cluster_lba + cur_block;
-		
-		if(!Emmc_ReadBlock(buf, buflen, block_lba))
-		{
-			printf("fat32 - Could not read block: %d of cluster: %d.\n", block_lba, cluster);
-
-			return -1;
-		}
-
-		unsigned int num_files = parse_directory_block(buf, buflen, entries, max_entries - files_read);
-
-		if(num_files < 1)
-		{
-			// Couldn't read any files, we must be at the end of the directory
-			break;
-		}
-		
-		files_read += num_files;
-
-		// Increment the entries ptr so that the next call places the entries after the ones we just found
-		entries_ptr += num_files;
-	}
-
-	return files_read;
-}
-
-unsigned int fat32_initialize(void) // Pass in device?
-{
-	printf("fat32 - Initializing...\n");
-	
-	// Read MBR
-	if(!Emmc_ReadBlock(gBlock_buf, 512, 0))
-	{
-		printf("fat32 - Failed to read mbr sector.\n");
-		return -1;
-	}
-
-    //return 0;
-
-	// Verify signature
-	if(gBlock_buf[510] != 0x55 || gBlock_buf[511] != 0xAA)
-	{
-		printf("fat32 - Invalid mbr signature, dumping first block:\n");
-
-		unsigned int index;
-		unsigned int i;
-		for (i = 0; i < 16; i++)
-		{
-			unsigned int j;
-			for (j = 0; j < 32; j++)
-			{
-				index = (i * 32) + j;
-
-				if (gBlock_buf[index] == 0)
-					printf("0");
-				else if (gBlock_buf[index] > 126)
-					printf(".");
-				else
-					printf("%h ", gBlock_buf[(i * 32) + j]);
-			}
-			printf("\n");
-		}
-
-		return -1; // Invalid mbr signature
-	}
-
-    gFs = (filesystem*)palloc(sizeof(filesystem));
-
-	// Save partition information in our global struct
-	unsigned int i;
-	for(i = 0; i < 4; i++)
-		my_memcpy(&gFs->mbr.partitions[i], &gBlock_buf[446 + (i * 16)], 16);
+    // Allocate a new entry with the data so that it isn't tied to the arg
+    *entry = (DirEntry*)palloc(sizeof(DirEntry));
+    my_memcpy(*entry, file, sizeof(DirEntry));
 
     return 0;
 
-	// Find first FAT32 partition
-	unsigned int part_index;
-	for(part_index = 0; part_index < 4; part_index++)
-	{
-		if(gFs->mbr.partitions[part_index].type == FAT32WithCHS || gFs->mbr.partitions[part_index].type == FAT32XWIthLBA)
-			break;
+fExit:
+    return -1;
+}
 
-		if(part_index == 3)
-		{
-			printf("fat32 - Failed to locate first FAT32 partition.\n");
-			return -1;
-		}
-	}
+int Fat32_Open(void* part, char* filename, FileSystemOpenMode mode)
+{
+    int result = 0;
+    Partition* partition = (Partition*)part;
 
-    
-	// Read the boot sector
-	gFs->mbr.boot_sector_block = byte_to_int((unsigned char*)&gFs->mbr.partitions[part_index].lba_begin[0]);
-	if(gFs->mbr.boot_sector_block < 1)
-	{
-		printf("fat32 - Invalid boot sector block number (%d), expected a number higher than 0.\n", gFs->mbr.boot_sector_block);
-		return -1;
-	}
+    // Check if it's already open
+    FileStatus* file = 0;
+    unsigned int i;
+    int firstAvailableSlot = -1;
+    for (i = 0; i < 5; i++)
+    {
+        if (partition->openFiles[i].file == 0)
+        {
+            if (firstAvailableSlot == -1)
+                firstAvailableSlot = i;
 
-	printf("boot sector block: %d.\n", gFs->mbr.boot_sector_block);
-	if(fat32_read_boot_sector(gFs->mbr.boot_sector_block) != 0)
-	{
-		printf("fat32 - Failed to read boot sector.\n");
-		return -1;
-	}
-		
-	// Read root directory
-	dir_entry rootDirEntries[50];
+            continue;
+        }
 
-	unsigned int root_entries = read_dir_at_cluster(gBlock_buf, 512, rootDirEntries, 50, gFs->boot_sector.root_dir_start - 2);
-	
-	printf("%d files in root/:\n", root_entries);
-	for(i = 0; i < root_entries; i++)
-	{
-		dir_entry* e = &rootDirEntries[i];
+        if (strcmp((char*)partition->openFiles[i].filename, filename) == 0)
+        {
+            if (mode == FsOpenWrite)
+                return -1; // Two people can't write to the same file simultaneously 
+            else
+            {
+                // Bingo! Already open so we don't have to search for it!
+                file = &partition->openFiles[i];
+                break;
+            }
+        }
+    }
 
-		if(e->attribute.bits.directory)
-		{
-            printf("[");
-		}
+    if (file == 0)
+    {
+        ReturnOnFailure(firstAvailableSlot < 0, "Can't open more files, please close some handles and try again.\n");
 
-		if(e->has_long_name)
-			printf((char*)e->long_name);
-		else
-			printf((char*)e->name);
-		
-		if(e->attribute.bits.directory)
-		{
-            printf("]");
-		}
+        DirEntry* entry = 0;
+        ReturnOnFailureF(result = Fat32_getDirEntry(partition, filename, &entry), "Failed to get dir entry for %s.\n", filename);
 
-		printf(" - Cluster: %d.\n", e->first_cluster_low);
-	}
-	
-	printf("\nfat32 - Initialize success.\n");
+        file = &partition->openFiles[firstAvailableSlot];
 
-	return 0;
+        file->streamPosition = 0;
+        file->file = entry;
+        file->mode = mode;
+        my_memcpy(file->filename, filename, strlen(filename));
+    }
+
+    return (partition->ownerDeviceId << 16) & (partition->partitionId << 8) & (firstAvailableSlot);
+
+fExit:
+
+    return -1;
+}
+
+int Fat32_Close(void* part, int handle)
+{
+    int result = 0;
+
+    ReturnOnFailure(result = handle < 0 || handle > 4, "fat32_close: Invalid handle.\n");
+
+    unsigned int openFileIndex = (handle & 0xFF);
+    Partition* partition = (Partition*)part;
+    FileStatus* file = &partition->openFiles[openFileIndex];
+
+    phree(file->file);
+    file->file = 0;
+    file->streamPosition = 0;
+
+    // Zero out the name so that it's nice and clean
+    unsigned int i;
+    for (i = 0; i < 80; i++)
+        file->filename[i] = 0;
+    file->mode = FsFileClosed;
+
+fExit:
+    return result;
+}
+
+int Fat32_Seek(void* part, int handle, long int offset, FsSeekOrigin origin)
+{
+    int result = 0;
+
+    ReturnOnFailure(result = handle < 0 || handle > 4, "Fat32_Seek: Invalid handle.\n");
+
+    unsigned int openFileIndex = (handle & 0xFF);
+    Partition* partition = (Partition*)part;
+    FileStatus* file = &partition->openFiles[openFileIndex];
+
+    switch (origin)
+    {
+    case FsSeekBegin:
+        file->streamPosition = offset;
+        break;
+    case FsSeekCurrent:
+        file->streamPosition += offset;
+        break;
+    case FsSeekEnd:
+        file->streamPosition = file->file->size - offset;
+        break;
+    default:
+        result = -1;
+        printf("Fat32_Seek: Invalid seek origin\n");
+        break;
+    }
+
+fExit:
+    return result;
+}
+
+int Fat32_Tell(void* part, int handle)
+{
+    unsigned int openFileIndex = (handle & 0xFF);
+
+    if (openFileIndex > 4)
+        return -1; // Invalid file index
+
+    Partition* partition = (Partition*)part;
+    FileStatus* file = &partition->openFiles[openFileIndex];
+
+    return file->streamPosition;
+}
+
+int Fat32_Read(void* part, void* buf, unsigned long int bytesToRead, int handle)
+{
+    int result = 0;
+    unsigned int openFileIndex = (handle & 0xFF);
+
+    if (openFileIndex > 4)
+        return -1; // Invalid file index
+
+    char* argBuf = (char*)buf;
+    Partition* partition = (Partition*)part;
+    FileStatus* file = &partition->openFiles[openFileIndex];
+
+    // Figure out how many bytes to read
+    unsigned long int bytesLeftInFile = file->file->size - file->streamPosition;
+    if (bytesLeftInFile < bytesToRead)
+        bytesToRead = bytesLeftInFile;
+
+    Fat32Disk* disk = (Fat32Disk*)partition->data;
+
+    unsigned int fileStartCluster = file->file->firstClusterHigh << 16 | file->file->firstClusterLow;
+    unsigned int fileFirstSector = disk->rootDirectorySector + ((fileStartCluster - 2) * disk->vbr->sectors_per_cluster);
+
+    //unsigned int curStreamSector = file->streamPosition / 512;
+    unsigned int sectorsToRead = bytesToRead / 512;
+    sectorsToRead += bytesToRead % 512 != 0 ? 1 : 0;
+
+    unsigned int totalBytesRead = 0;
+    unsigned int i;
+    if (sectorsToRead < disk->vbr->sectors_per_cluster)
+    {
+        // Oh joy! We only have to read one cluster
+        for (i = 0; i < sectorsToRead; i++)
+        {
+            unsigned int sectorToRead = fileFirstSector + i;
+
+            ReturnOnFailureF(result = partition->device->operation(OpRead, &sectorToRead, partition->device->buffer),
+                "Failed to read sector %d for file with handle %d.\n", sectorToRead, handle);
+
+            unsigned int bytesRead = bytesToRead > 512 ? 512 : bytesToRead;
+
+            my_memcpy((argBuf + totalBytesRead), partition->device->buffer, bytesRead);
+
+            bytesToRead -= bytesRead;
+            totalBytesRead += bytesRead;
+        }
+    }
+    else
+    {
+        // THe file is spread across multiple clusters - we need the FAT for this one
+        unsigned int clustersToRead = sectorsToRead / disk->vbr->sectors_per_cluster;
+        clustersToRead += sectorsToRead % disk->vbr->sectors_per_cluster != 0 ? 1 : 0;
+
+        unsigned int currentCluster = fileStartCluster;
+        for (i = 0; i < clustersToRead; i++)
+        {
+            // Read the cluster (8 * 512 byte blocks, 4096 bytes)
+            unsigned int j;
+            for (j = 0; j < disk->vbr->sectors_per_cluster; j++)
+            {
+                unsigned int lba = (disk->rootDirectorySector + ((currentCluster - 2) * disk->vbr->sectors_per_cluster)) + j;
+
+                ReturnOnFailureF(result = partition->device->operation(OpRead, &lba, partition->device->buffer), "Failed to read sector %d for file with handle %d. Cluster: %d\n", lba, handle, currentCluster);
+
+                unsigned int bytesRead = bytesToRead > 512 ? 512 : bytesToRead;
+
+                my_memcpy(argBuf + totalBytesRead, partition->device->buffer, bytesRead);
+
+                bytesToRead -= bytesRead;
+                totalBytesRead += bytesRead;
+            }
+
+            unsigned int fatEntry = disk->fat0[currentCluster] & 0x0FFFFFFF; // Ignore 4 high bits
+
+            if (fatEntry >= 0x0FFFFFF8)
+                break; // There are no more clusters to read! (this shouldn't happen?)
+            else if (fatEntry == 0x0FFFFFF7)
+                break; // Bad cluster :-( Report to user?
+
+            currentCluster = fatEntry;
+        }
+    }
+
+fExit:
+    return result;
+}
+
+unsigned int Fat32_Write(void* part, char* filename)
+{
+    printf("You have to write the code first, dummy! :)");
+
+    return 1;
+}
+
+unsigned int Fat32_ReadBlock(Partition* part, char* buffer, unsigned int blockNumber)
+{
+    //Fat32Disk* disk = (Fat32Disk*)part->data;
+
+    unsigned int result = 0;
+
+    ReturnOnFailure(result = part->device->operation(OpRead, &blockNumber, part->device->buffer), "Failed to read first sector of file.\n");
+
+    // Copy read data to the buffer
+    my_memcpy(buffer, part->device->buffer, BLOCK_SIZE);
+
+fExit:
+    return result;
+}
+
+unsigned int Fat32_Initialize(Partition* partition)
+{
+    unsigned int result = 0;
+
+    partition->open = &Fat32_Open;
+    partition->close = &Fat32_Close;
+    partition->read = &Fat32_Read;
+    partition->write = &Fat32_Write;
+
+    // Read Volume Boot Record
+    ReturnOnFailure(result = partition->device->operation(OpRead, &partition->firstSector, partition->device->buffer), "Failed to read volume boot record.\n");
+
+    Fat32Disk* data = (Fat32Disk*)palloc(sizeof(Fat32Disk));
+    data->vbr = Fat32_parseVirtualBootRecord(partition->device->buffer, BLOCK_SIZE);
+
+    partition->data = data; // Store it so we can retrieve the precomputed values later on
+
+    // Calculate start of root directory
+    data->rootDirectorySector = partition->firstSector + data->vbr->num_reserved_sectors + (data->vbr->num_fats * data->vbr->sectors_per_fat);
+
+    // Process the allocation tables
+    unsigned int fatbegin = partition->firstSector + data->vbr->num_reserved_sectors;
+
+    // Allocate memory for the tables
+    data->fat0 = (unsigned int*)palloc(data->vbr->sectors_per_fat * data->vbr->bytes_per_sector);
+    data->fat1 = (unsigned int*)palloc(data->vbr->sectors_per_fat * data->vbr->bytes_per_sector);
+
+    // Read the tables from disk
+    unsigned int i;
+    // Fat 1
+    for (i = 0; i < data->vbr->sectors_per_fat; i++)
+    {
+        // TODO: better error message, include fat+device name etc
+        unsigned int sector_to_read = fatbegin + i;
+        ReturnOnFailure(result = partition->device->operation(OpRead, &sector_to_read, partition->device->buffer), "Failed to read fat table");
+
+        my_memcpy(data->fat0 + BLOCK_SIZE * i, partition->device->buffer, BLOCK_SIZE);
+    }
+
+    // Move to second fat
+    fatbegin += data->vbr->sectors_per_fat;
+
+    // Fat 2
+    for (i = 0; i < data->vbr->sectors_per_fat; i++)
+    {
+        // TODO: better error message, include fat+device name etc
+        unsigned int sector_to_read = fatbegin + i;
+        ReturnOnFailure(result = partition->device->operation(OpRead, &sector_to_read, partition->device->buffer), "Failed to read fat table\n");
+
+        my_memcpy(data->fat1 + BLOCK_SIZE * i, partition->device->buffer, BLOCK_SIZE);
+    }
+
+fExit:
+
+    return result;
+}
+
+unsigned int fat32_unicode16ToLongName(Fat32Lfe* dest, unsigned short* src, unsigned int srcLength)
+{
+    unsigned int i;
+    for (i = 0; i < srcLength; i++)
+    {
+        if (src[i] == 0)
+        {
+            dest->length = i;
+            dest->name[i] = 0;
+            return 0; // Done reading, success!
+        }
+
+        dest->name[i] = (char)src[i];
+    }
+
+    dest->length = srcLength;
+
+    return i;
+}
+
+Fat32BootSector* Fat32_parseVirtualBootRecord(unsigned char* buf, unsigned int buflen)
+{
+    Fat32BootSector* boot_sector = (Fat32BootSector*)palloc(sizeof(Fat32BootSector));
+
+    my_memcpy(&boot_sector->partition_type_name[0], &buf[0x3], 8);
+    boot_sector->partition_type_name[8] = '\0'; // Make oem name print friendly
+    my_memcpy(&boot_sector->bytes_per_sector, &buf[0x0B], 2);
+    my_memcpy(&boot_sector->sectors_per_cluster, &buf[0x0D], 1);
+    my_memcpy(&boot_sector->num_reserved_sectors, &buf[0x0E], 2);
+    my_memcpy(&boot_sector->num_fats, &buf[0x10], 1);
+    my_memcpy(&boot_sector->root_entries, &buf[0x11], 2);
+    my_memcpy(&boot_sector->small_sectors, &buf[0x13], 2);
+    my_memcpy(&boot_sector->media_type, &buf[0x15], 1);
+    my_memcpy(&boot_sector->sectors_per_fat, &buf[0x24], 2);
+    my_memcpy(&boot_sector->sectors_per_head, &buf[0x18], 2);
+    my_memcpy(&boot_sector->number_of_heads, &buf[0x1A], 2); // heads per cylinder
+    my_memcpy(&boot_sector->hidden_sectors, &buf[0x1C], 4);
+    my_memcpy(&boot_sector->large_sectors, &buf[0x20], 4);
+    my_memcpy(&boot_sector->large_sectors_per_fat, &buf[0x24], 4);
+    my_memcpy(&boot_sector->flags, &buf[0x28], 2);
+    my_memcpy(&boot_sector->version, &buf[0x2A], 2);
+    my_memcpy(&boot_sector->root_dir_start, &buf[0x2C], 4);
+    my_memcpy(&boot_sector->info_sector, &buf[0x30], 2);
+    my_memcpy(&boot_sector->backup_sector, &buf[0x32], 2);
+
+    // TODO: Add error checking on the read values
+
+    return boot_sector;
+}
+
+DirEntry* Fat32_listDirectory(Partition* part, unsigned int firstSector, unsigned int* pFilesFound)
+{
+    //Fat32Disk* disk = (Fat32Disk*)part->data;
+
+    // Read the first block of the directory
+    //int result = 0;
+
+    DirEntry* entries = (DirEntry*)palloc(sizeof(DirEntry)* 19);
+    Fat32Lfe* entries_long = (Fat32Lfe*)palloc(sizeof(Fat32Lfe)* 19);
+
+    unsigned int lfn_count = 0;
+    unsigned int last_lfn = 0;
+    unsigned int file_index = 0;
+
+    unsigned int doneReading = 0;
+
+    unsigned int blockOffset = 0;
+    while (!doneReading)
+    {
+        // Read a block (NOTE: This fails miserably on multi-cluster directories)
+        unsigned int blockToRead = firstSector + blockOffset;
+        part->device->operation(OpRead, &blockToRead, part->device->buffer);
+
+        unsigned char* buf = part->device->buffer;
+
+        // 16 entries per block
+        unsigned int i;
+        for (i = 0; i < 16; i++)
+        {
+            unsigned int currentEntryOffset = i * 32; // Entries are 32 byte
+            if (buf[0 + currentEntryOffset] == 0)
+            {
+                doneReading = 1;
+                break;
+            }
+            else if (buf[0 + currentEntryOffset] == 0xE5) // Free entry
+                continue;
+
+            if (buf[11 + currentEntryOffset] == LONG_FILE_ENTRY_SIGNATURE)
+            {
+                // Long entry
+                unsigned char lfn_index = ((buf[0 + currentEntryOffset] - 1) & ~0x40); // Just ignore the "last lfn entry" flag
+
+                unsigned char* tmp = (unsigned char*)palloc(sizeof(short)* 26);
+                my_memcpy(&tmp[0], &buf[1 + currentEntryOffset], 10);
+                my_memcpy(&tmp[0 + 10], &buf[14 + currentEntryOffset], 12);
+                my_memcpy(&tmp[0 + 10 + 12], &buf[28 + currentEntryOffset], 4);
+
+                fat32_unicode16ToLongName(&entries_long[lfn_index], (unsigned short*)tmp, 13);
+
+                phree(tmp);
+
+                lfn_count++;
+
+                last_lfn = 1;
+            }
+            else
+            {
+                // Short entry
+                if (last_lfn)
+                {
+                    char lfn[255];
+                    unsigned int offset = 0;
+                    unsigned int lfn_index = 0;
+
+                    // Copy concatenate all the long name entries into a string
+                    for (lfn_index = 0; lfn_index < lfn_count; lfn_index++)
+                    {
+                        my_memcpy(&lfn[offset], entries_long[lfn_index].name, entries_long[lfn_index].length);
+                        offset += entries_long[lfn_index].length;
+                    }
+
+                    my_memcpy(&entries[file_index].longName, lfn, offset + 1);
+                    entries[file_index].longName[offset] = 0; // null terminated
+                    entries[file_index].hasLongName = 1;
+
+                    last_lfn = 0;
+                }
+
+                // Copy the entire short entry to the dir entry
+                my_memcpy(&entries[file_index], &buf[0 + currentEntryOffset], 32);
+
+                file_index++;
+            }
+        }
+
+        blockOffset++; // Read next block
+    }
+
+    *pFilesFound = file_index - 1; // 0 based
+
+    return entries;
+}
+
+char* Fat32_dateToString(short date)
+{
+    unsigned short year, month, day;
+
+    char* res = (char*)palloc(11); // yyyy-mm-dd\0 format
+
+    year = 1980 + ((date & 0xFE00) >> 9); // Year is stored in 15-9 (0 = 1980)
+    month = (date & 0xF0) >> 4; // Month is stored in 8-5 (1 - 12)
+    day = (date & 0x1F);
+
+    itoa(year, &res[0]);
+    res[4] = '-';
+    itoa(month, &res[5]);
+
+    // Ugly special handling for now until I add capabilities for itoa to padd with n zeroes
+    unsigned int offset = 0;
+    if (month < 10)
+        offset = 6;
+    else
+        offset = 7;
+
+    res[offset] = '-';
+    offset++;
+
+    itoa(day, &res[offset]);
+
+    return res;
+}
+
+char* Fat32_timeToString(short time)
+{
+    unsigned short hour, minute, second;
+    char* res = (char*)palloc(9); // HH:mm:ss (length: 9)
+
+    hour = ((time & 0xF800) >> 11); // 15-11 (0-23)
+    minute = ((time & 0x7FF) >> 5); // 10-5 (0-59)
+    second = (time & 0x1F) * 2; // 4-0 (0-29, seconds / 2)
+
+    itoa(hour, res);
+
+    unsigned int offset;
+    if (hour < 9)
+        offset = 1;
+    else
+        offset = 2;
+
+    res[offset] = ':';
+    offset++;
+
+    itoa(minute, &res[offset]);
+
+    if (minute < 9)
+        offset += 1;
+    else
+        offset += 2;
+
+    res[offset] = ':';
+    offset++;
+
+    itoa(second, &res[offset]);
+
+    return res;
 }

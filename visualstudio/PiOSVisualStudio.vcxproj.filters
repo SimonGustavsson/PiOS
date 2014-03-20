@@ -37,6 +37,12 @@
     <Filter Include="Source Files\types">
       <UniqueIdentifier>{cf523b7c-5030-43cf-8bc4-b48ee425ca19}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\hardware\device">
+      <UniqueIdentifier>{ea3e9a30-de6d-4397-b2f4-0fbf636f51ff}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\hardware\device">
+      <UniqueIdentifier>{130ff0a2-96a5-41bf-8178-0eb8708bb28b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="readme.txt" />
@@ -114,6 +120,15 @@
     <ClInclude Include="..\include\types\types.h">
       <Filter>Header Files\types</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\hardware\device\blockDevice.h">
+      <Filter>Header Files\hardware\device</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\fs\filesystem.h">
+      <Filter>Header Files\fs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\hardware\device\sd.h">
+      <Filter>Header Files\hardware\device</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\main.c">
@@ -184,6 +199,12 @@
     </ClCompile>
     <ClCompile Include="..\source\types\string.c">
       <Filter>Source Files\types</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\fs\filesystem.c">
+      <Filter>Source Files\fs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\hardware\device\sd.c">
+      <Filter>Source Files\hardware\device</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -7,6 +7,10 @@
 #include "util/utilities.h"
 #include "terminal.h"
 #include "taskScheduler.h"
+#include "hardware/device/sd.h"
+#include "memory.h"
+#include "fs/filesystem.h"
+#include "hardware/device/sd.h"
 
 // Windows doesn't have __attribute__ :(
 #ifdef _MSC_VER
@@ -44,6 +48,26 @@ void system_initialize_serial(void)
 	enable_irq();
 }
 
+unsigned int system_initialize_fs(void)
+{
+    BlockDevice* sd = (BlockDevice*)palloc(sizeof(BlockDevice));
+    printf("Registering SD device\n");
+    
+    Sd_Register(sd);
+    
+    printf("Done registering SD device\n");
+    printf("Initializing SD device\n");
+    
+    Sd_Initialize();
+    //branchTo((unsigned int*)&sd->init);
+    //sd->init(); // Should be called by Fs_Initialize really?
+
+    printf("Done initializing SD device\n");
+    //Fs_Initialize(sd);
+
+    return 0;
+}
+
 unsigned int system_initialize(void)
 {
 	unsigned int result = 0;
@@ -62,6 +86,8 @@ unsigned int system_initialize(void)
 
 	Mmu_Initialize(basePageTable);
 	
+    result = system_initialize_fs();
+
 	//taskScheduler_Init();
 	
 	printf("System initialization complete, result: %d\n", result);

@@ -2,6 +2,9 @@
 
 #define BOOTABLE_PARTITION 0x80s
 
+#ifndef FILESYSTEM_H
+#define FILESYSTEM_H
+
 typedef enum{
     UnknownFsType = 0x00,
     Fat12 = 0x01,
@@ -113,3 +116,5 @@ int Fs_Tell(int handle);
 int Fs_Read(void* buf, unsigned long int bytesToRead, int handle);
 
 MbrPartitionEntry* Fs_getFirstActivePartition(MasterBootRecord* record);
+
+#endif

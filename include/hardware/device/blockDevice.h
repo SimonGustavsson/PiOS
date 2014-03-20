@@ -1,3 +1,8 @@
+#define BLOCK_SIZE 512
+
+#ifndef BLOCK_DEVICE_H
+#define BLOCK_DEVICE_H
+
 typedef enum {
     OpRead,
     OpWrite,
@@ -12,3 +17,5 @@ typedef struct {
     unsigned int(*operation)(BlockDevOp opCode, void* arg, void *arg2);
     void(*cleanup)(void);
 } BlockDevice;
+
+#endif

@@ -4,7 +4,7 @@
 #define MAX_ALLOCATED_SLICES (MAX_ALLOCATED_BYTES / BYTES_PER_SLICE)
 #define EXTENDED_SIZE_BYTE_FLAG (1 << 7)
 
-#define DEBUG_MEM
+//#define DEBUG_MEM
 
 void DataMemoryBarrier(void);
 void DataSyncBarrier(void);
