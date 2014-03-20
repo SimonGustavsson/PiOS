@@ -9,12 +9,8 @@ SECTIONS
     .text : { *(.text*) } > ram
     . = ALIGN(4096); /* align to page size */
 	
-	_bss_start = .;
-	
     .bss : { *(.bss*) } > ram
     . = ALIGN(4096); /* align to page size */
-	
-	_bss_end = .;	
 	
 	.data : { *(.data) } > ram
 	.rodata : { *(.rodata) } > ram
