@@ -201,7 +201,7 @@ int Terminal_Initialize(void)
 
 	unsigned int i;
 	for(i = 0; i < 256; i++)
-		gInputBuffer[i] = 0;
+		gInputBuffer[i] = 0; // TODO: we don't have to do this, bss is initialized to 0
 		
 	gInputBufferIndex = 0;
 
