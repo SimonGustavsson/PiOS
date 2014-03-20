@@ -1,4 +1,3 @@
-#include "fs/fat32.h"
 #include "hardware/emmc.h"
 #include "hardware/interrupts.h"
 #include "hardware/timer.h"
@@ -20,6 +19,11 @@
 #define SVC_INSTRUCTION(number) asm volatile("svc %0" : : "I" (number))
 #define FINAL_USER_START_VA 0x00F00000
 #define task_main_func int(*)(void)
+
+// This variable makes sure we have something in the .data section,
+// Because we place .bss before data, this will make sure that the compiler
+// Zeroes out the .bss region for us, as it pads it with 0's
+volatile unsigned int dataVarForPadding = 42;
 
 extern void enable_irq(void);
 extern void branchTo(unsigned int*);
@@ -47,8 +51,8 @@ unsigned int system_initialize(void)
     system_initialize_serial();
 
     Uart_SendString("Welcome to PiOS!\n\r");
-
-	// Initialize terminal first so we can print error messages if any (Hah, unlikely!)
+	
+    // Initialize terminal first so we can print error messages if any (Hah, unlikely!)
 	if ((result = Terminal_Initialize()) != 0)
 	{
 		Uart_SendString("Failed to initialize terminal.\n");
@@ -59,13 +63,6 @@ unsigned int system_initialize(void)
 	Mmu_Initialize(basePageTable);
 	
 	//taskScheduler_Init();
-
-	// Note: EMMC is not essential to system initialisation
-	if(Emmc_Initialise() != 0)
-		printf("Failed to intialise emmc.\n");
-
-	if(fat32_initialize() != 0)
-		printf("Failed to initialize fat32.\n");
 	
 	printf("System initialization complete, result: %d\n", result);
 
@@ -89,9 +86,6 @@ int cmain(void)
 	printf("If you can see this, the data abort was successful.\n");
                 
     //printf("Calling loaded program img, should trigger SVC!\n");
-    printf("Can we wait? ");
-    wait(200);
-    printf("YES!\n");
     //branchTo((unsigned int *)(FINAL_USER_START_VA));
     printf("It worked!? :-)\n");
 
