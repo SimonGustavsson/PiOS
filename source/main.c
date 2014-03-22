@@ -33,6 +33,7 @@ extern void enable_irq(void);
 extern void branchTo(unsigned int*);
 
 volatile extern Emmc* gEmmc;
+BlockDevice* gSd;
 
 void system_initialize_serial(void)
 {
@@ -50,19 +51,16 @@ void system_initialize_serial(void)
 
 unsigned int system_initialize_fs(void)
 {
-    BlockDevice* sd = (BlockDevice*)palloc(sizeof(BlockDevice));
-    printf("Registering SD device\n");
+    printf("Initializing file system\n");
+    gSd = (BlockDevice*)palloc(sizeof(BlockDevice));
     
-    Sd_Register(sd);
+    Sd_Register(gSd);
     
-    printf("Done registering SD device\n");
-    printf("Initializing SD device\n");
-    
-    Sd_Initialize();
-    //branchTo((unsigned int*)&sd->init);
-    //sd->init(); // Should be called by Fs_Initialize really?
+    printf("Main: After register, name: %s, init is 0x%h\n", gSd->name, gSd->init);
+        
+    int foo = gSd->init(); // Should be called by Fs_Initialize really?
 
-    printf("Done initializing SD device\n");
+    printf("Done initializing file system\n");
     //Fs_Initialize(sd);
 
     return 0;

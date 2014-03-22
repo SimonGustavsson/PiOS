@@ -9,15 +9,12 @@ Emmc* _emmc;
 
 unsigned int Sd_Register(BlockDevice* device)
 {
-    my_memcpy(&device->name[0], "SDBLKDEV\0", 9);
+    my_memcpy(device->name, "SDBLKDEV\0", 9);
     device->name_length = 10;
-    device->init = &Sd_Initialize;
-    device->cleanup = &Sd_Cleanup;
-    device->operation = &Sd_DeviceOperation;
-    
-    printf("init device buffer\n");
+    device->init = Sd_Initialize;
+    device->cleanup = Sd_Cleanup;
+    device->operation = Sd_DeviceOperation;
     device->buffer = (unsigned char*)palloc(BLOCK_SIZE);
-    printf("DOne allocating device buffer\n");
 
     return 0;
 }
@@ -25,19 +22,17 @@ unsigned int Sd_Register(BlockDevice* device)
 int Sd_Initialize(void)
 {
     printf("Initializing EMMC\n");
-    //int result = Emmc_Initialise();
+    int result = Emmc_Initialise();
 
-    printf("Emmc initialized!\n");
-    return 0;
     // Just do a dummy read on the first sector
     // To check that we can read
 
-    //char* buffer = (char*)palloc(BLOCK_SIZE);
-    //result = (int)Emmc_ReadBlock(buffer, BLOCK_SIZE, 0);
+    char* buffer = (char*)palloc(BLOCK_SIZE);
+    result = (int)Emmc_ReadBlock(buffer, BLOCK_SIZE, 0);
 
-    //phree(buffer);
+    phree(buffer);
 
-    //return result;
+    return result;
 }
 
 unsigned int Sd_DeviceOperation(BlockDevOp opCode, void* arg, void *arg2)
