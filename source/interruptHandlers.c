@@ -23,6 +23,8 @@ void c_abort_data_handler(unsigned int address, unsigned int errorType, unsigned
     printf("Instruction at 0x%h caused a data abort accessing memory at 0x%h, \n", address, accessedAddr);
 
     print_abort_error(errorType);
+ 
+    wait(3000);
 }
 
 void c_abort_instruction_handler(unsigned int address, unsigned int errorType)
@@ -37,6 +39,8 @@ void c_abort_instruction_handler(unsigned int address, unsigned int errorType)
 
         print_abort_error(errorType);
     }
+    
+    wait(3000);
 }
 
 void c_swi_handler(unsigned int swi)
