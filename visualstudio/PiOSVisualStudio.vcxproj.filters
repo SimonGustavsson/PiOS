@@ -126,7 +126,7 @@
     <ClInclude Include="..\include\fs\filesystem.h">
       <Filter>Header Files\fs</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\hardware\device\sd.h">
+    <ClInclude Include="..\include\hardware\device\sdBlockDevice.h">
       <Filter>Header Files\hardware\device</Filter>
     </ClInclude>
   </ItemGroup>
@@ -203,7 +203,7 @@
     <ClCompile Include="..\source\fs\filesystem.c">
       <Filter>Source Files\fs</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\hardware\device\sd.c">
+    <ClCompile Include="..\source\hardware\device\sdBlockDevice.c">
       <Filter>Source Files\hardware\device</Filter>
     </ClCompile>
   </ItemGroup>

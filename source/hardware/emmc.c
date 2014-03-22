@@ -263,11 +263,11 @@ int Emmc_Initialise(void)
 
 	// Power cycle to ensure initial state
 	// TODO: Add error checking
-    if (Emmc_powerCycle() != 0)
+ /*   if (Emmc_powerCycle() != 0)
 	{
 		printf("ssed - Controller did not successfully power cycle.\n");
 		return -1;
-	}
+	}*/
 
 	//printf("ssed - Controller power cycled.\n");
 
@@ -421,13 +421,13 @@ int Emmc_Initialise(void)
 		wait(500);
 	}
 
-	/* TODO: Store this for later use?
+   /* TODO: Store this for later use?
 	if(((gDevice.last_resp0 >> 30) & 0x1) == 0)
 		printf("ssed - card is a SDSC.\n");
 	else
 		printf("ssed - card is SDHC/SDXC.\n");
-	*/
-	
+        */
+		
 	// We have an SD card which supports SDR12 mode at 25MHz - Set frequency
 	Emmc_switchClockRate(base_clock, SdClockNormal);
 	
@@ -696,9 +696,7 @@ void Emmc_sdPowerOff(void)
 
 int Emmc_powerCycle(void)
 {
-	printf("ssed - Power cycling:\n");
-	
-	unsigned int res = 0;
+	int res = 0;
 	if((res = Emmc_powerOff()) < 0)
 	{
 		return -1;
@@ -707,9 +705,7 @@ int Emmc_powerCycle(void)
 	wait(100);
 	
 	if((res = Emmc_powerOn()) < 0)
-		printf("Failed!\n");
-	else
-		printf("Success!\n");
+		printf("ssed - Failed to power on\n");
 	
 	return res;
 }
@@ -736,9 +732,7 @@ static int Emmc_resetDatLine()
 static void Emmc_handleCardInterrupt(void)
 {
 	unsigned int status = gEmmc->Status.raw;
-
-	printf("ssed - card interrupt\n");
-	printf("ssed - controller status: 0x%h", status);
+	printf("ssed - handleCardInterrupt (status: 0x%h), rca: %s\n", status, gDevice.rca ? "true" : "false");
 
 	if(gDevice.rca)
 	{
@@ -1123,7 +1117,7 @@ int Emmc_issueCommandInt(unsigned int command, unsigned int argument)
 
 int Emmc_issueCommand(unsigned int command, unsigned int argument)
 {
-	Emmc_handleInterrupt();
+    Emmc_handleInterrupt();
 
 	if(command & IS_APP_CMD)
 	{

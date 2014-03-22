@@ -33,7 +33,7 @@ unsigned int Fs_Initialize(BlockDevice* device)
 
     // Parse MBR and initialize partitions (if any)
     unsigned int sectorToRead = 0;
-    ReturnOnFailure(result = device->operation(OpRead, &sectorToRead, device->buffer), "Failed to read MBR block\n");
+    ReturnOnFailure(result = device->operation(OpRead, &sectorToRead, device->buffer), "fs - Failed to read MBR block\n");
 
     // Copy the mbr over to our struct as the buffer gets reused
     my_memcpy(&logical->mbr.bootloader[0], device->buffer, 512);

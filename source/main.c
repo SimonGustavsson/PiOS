@@ -7,10 +7,9 @@
 #include "util/utilities.h"
 #include "terminal.h"
 #include "taskScheduler.h"
-#include "hardware/device/sd.h"
 #include "memory.h"
 #include "fs/filesystem.h"
-#include "hardware/device/sd.h"
+#include "hardware/device/sdBlockDevice.h"
 
 // Windows doesn't have __attribute__ :(
 #ifdef _MSC_VER
@@ -49,21 +48,25 @@ void system_initialize_serial(void)
 	enable_irq();
 }
 
-unsigned int system_initialize_fs(void)
+int system_initialize_fs(void)
 {
-    printf("Initializing file system\n");
+    int result = 0;
     gSd = (BlockDevice*)palloc(sizeof(BlockDevice));
     
     Sd_Register(gSd);
-    
-    printf("Main: After register, name: %s, init is 0x%h\n", gSd->name, gSd->init);
-        
-    int foo = gSd->init(); // Should be called by Fs_Initialize really?
+      
+    // Should be called by Fs_Initialize really?
+    if ((result = gSd->init()) != 0)
+    {
+        printf("Failed to initialize Sd\n");
+        return result;
+    }
+
+    Fs_Initialize(gSd);
 
     printf("Done initializing file system\n");
-    //Fs_Initialize(sd);
-
-    return 0;
+    
+    return result;
 }
 
 unsigned int system_initialize(void)

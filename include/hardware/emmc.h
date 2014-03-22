@@ -63,7 +63,7 @@ typedef struct {
 
 	unsigned int cid[4];
 	unsigned int* receive_buffer;
-	unsigned int rca;
+	unsigned int rca; // Relative card address (we get this after the identification phase)
 	unsigned int supports_sdhc;
 	unsigned int ocr;
 	unsigned int failed_voltage_switch;

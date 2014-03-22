@@ -9,7 +9,6 @@ unsigned int* gPageTableBase;
 
 void Mmu_Initialize(unsigned int* pageTableBase)
 {
-	printf("mmu - Initializing page table at 0x%h\n", pageTableBase);
 
 	gPageTableBase = pageTableBase;
 
@@ -19,6 +18,7 @@ void Mmu_Initialize(unsigned int* pageTableBase)
 		*(pageTableBase + i) = 0; // STMIA?
 
 #ifdef MMU_DEBUG
+    printf("mmu - Initializing page table at 0x%h\n", pageTableBase);
     printf("mmu - Kernel: 0x000 -> C800000 (200MB)\n");
     printf("mmu - Peripherals: 0x20000000 -> 0x10000000(256MB)\n");
 #endif

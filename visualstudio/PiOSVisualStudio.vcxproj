@@ -56,7 +56,7 @@
     <ClInclude Include="..\include\debugging.h" />
     <ClInclude Include="..\include\fs\filesystem.h" />
     <ClInclude Include="..\include\hardware\device\blockDevice.h" />
-    <ClInclude Include="..\include\hardware\device\sd.h" />
+    <ClInclude Include="..\include\hardware\device\sdBlockDevice.h" />
     <ClInclude Include="..\include\hardware\emmc.h" />
     <ClInclude Include="..\include\fs\fat32.h" />
     <ClInclude Include="..\include\hardware\framebuffer.h" />
@@ -84,7 +84,7 @@
   <ItemGroup>
     <ClCompile Include="..\source\debugging.c" />
     <ClCompile Include="..\source\fs\filesystem.c" />
-    <ClCompile Include="..\source\hardware\device\sd.c" />
+    <ClCompile Include="..\source\hardware\device\sdBlockDevice.c" />
     <ClCompile Include="..\source\hardware\emmc.c" />
     <ClCompile Include="..\source\fs\fat32.c" />
     <ClCompile Include="..\source\hardware\framebuffer.c" />

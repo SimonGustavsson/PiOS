@@ -1,7 +1,7 @@
 #include "hardware/device/blockDevice.h"
 #include "hardware/emmc.h"
 #include "memory.h"
-#include "hardware/device/sd.h"
+#include "hardware/device/sdBlockDevice.h"
 #include "util/utilities.h"
 #include "types/string.h"
 
@@ -21,14 +21,18 @@ unsigned int Sd_Register(BlockDevice* device)
 
 int Sd_Initialize(void)
 {
-    printf("Initializing EMMC\n");
     int result = Emmc_Initialise();
+
+    if (result != 0) {
+        printf("sd - Failed to initialize emmc\n");
+    }
 
     // Just do a dummy read on the first sector
     // To check that we can read
 
     char* buffer = (char*)palloc(BLOCK_SIZE);
-    result = (int)Emmc_ReadBlock(buffer, BLOCK_SIZE, 0);
+    if ((int)Emmc_ReadBlock(buffer, BLOCK_SIZE, 0) != BLOCK_SIZE) 
+        printf("dummy read in SD Initialize failed :(");
 
     phree(buffer);
 
@@ -40,6 +44,7 @@ unsigned int Sd_DeviceOperation(BlockDevOp opCode, void* arg, void *arg2)
     switch (opCode)
     {
     case OpRead:
+        printf("sd - reading a block\n");
         return Emmc_ReadBlock((char*)arg2, BLOCK_SIZE, *(unsigned int*)arg);
     case OpWrite:
         printf("Sd write is not yet implemented.\n");
