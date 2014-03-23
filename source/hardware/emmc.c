@@ -634,10 +634,10 @@ int Emmc_Initialise(void)
 
 	// 5 means both 4-bit and 8-bit are supported
 	// It must support at least one, so fall back to 4-bit if 8 fails
-	unsigned int data_mode = 8;
+	//unsigned int data_mode = 8; // This var is purely for debugging
 	if(gDevice.scr.sd_bus_widths != 5)
 	{
-		data_mode = 4;
+		//data_mode = 4;
 		// Set 4-bit transfer mode (ACMD6)
 		printf("ssed - Setting 4-bit data mode.\n");
 
@@ -663,11 +663,11 @@ int Emmc_Initialise(void)
 	}
 
 	
-    printf("ssed - Found a valid %s (~%d~) SD card, using %d-bit transfer mode.\n", gSdVersionStrings[gDevice.scr.sd_version], gDevice.scr.sd_version, data_mode);
+    //printf("ssed - Found a valid %s (~%d~) SD card, using %d-bit transfer mode.\n", gSdVersionStrings[gDevice.scr.sd_version], gDevice.scr.sd_version, data_mode);
 
 	gEmmc->Interrupt.raw = 0xFFFFFFFF;
 
-	printf("ssed - Initialization complete, the SD card is now your bitch!\n");
+    printf("ssed - Initialization complete\n");
 
 	return 0;
 }
