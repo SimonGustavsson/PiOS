@@ -48,30 +48,9 @@ void system_initialize_serial(void)
 	enable_irq();
 }
 
-int system_initialize_fs(void)
+int system_initialize(void)
 {
-    int result = 0;
-    gSd = (BlockDevice*)palloc(sizeof(BlockDevice));
-    
-    Sd_Register(gSd);
-      
-    // Should be called by Fs_Initialize really?
-    if ((result = gSd->init()) != 0)
-    {
-        printf("Failed to initialize Sd\n");
-        return result;
-    }
-
-    Fs_Initialize(gSd);
-
-    printf("Done initializing file system\n");
-    
-    return result;
-}
-
-unsigned int system_initialize(void)
-{
-	unsigned int result = 0;
+	int result = 0;
 
     system_initialize_serial();
 
@@ -82,12 +61,23 @@ unsigned int system_initialize(void)
 	{
 		Uart_SendString("Failed to initialize terminal.\n");
 	}
-
-	unsigned int* basePageTable = (unsigned int *)0x00A08000;
-
+    
+    // Now that the terminal is setup, enable virtual memory
+	unsigned int* basePageTable = (unsigned int *)0x000F8000;
 	Mmu_Initialize(basePageTable);
+
+    Pallocator_Initialize();
+
+    // Verify page table by attempting to access unmapped memory
+    printf("Testing translation fault by accessing unmapped memory...\n");
+    *((unsigned int*)0x10E00000) = 2;
 	
-    result = system_initialize_fs();
+    // Initialize the SD card and filesystem
+    gSd = (BlockDevice*)palloc(sizeof(BlockDevice));
+
+    Sd_Register(gSd);
+
+    Fs_Initialize(gSd);
 
 	//taskScheduler_Init();
 	
@@ -108,13 +98,36 @@ int cmain(void)
 	Terminal_PrintWelcome();
 	Terminal_PrintPrompt();
 
-	printf("Testing translation fault by accessing unmapped memory.\n");
-	*((unsigned int*)0x10E00000) = 2;
-	printf("If you can see this, the data abort was successful.\n");
-                
-    //printf("Calling loaded program img, should trigger SVC!\n");
-    //branchTo((unsigned int *)(FINAL_USER_START_VA));
-    printf("It worked!? :-)\n");
+    int cmdLineFileHandle = -1;
+    if ((cmdLineFileHandle = Fs_Open("0:/cmdline.txt", FsOpenRead)) != -1)
+    {
+        printf("Failed to open 0:/cmdline.txt\n");
+    }
+    else
+    {
+        // Get file size
+        Fs_Seek(cmdLineFileHandle, 0, FsSeekEnd);
+        int size = Fs_Tell(cmdLineFileHandle);
+        Fs_Seek(cmdLineFileHandle, 0, FsSeekBegin);
+
+        // Allocate buffer and readfile
+        char* buf = (char*)palloc(size);
+
+        int it;
+        for (it = 0; it < size; it++)
+            *(buf + it) = 0;
+
+        if ((Fs_Read(buf, size, cmdLineFileHandle) < 0))
+        {
+            printf("Failed read 512 bytes of cmdline.txt\n");
+
+            Fs_Close(cmdLineFileHandle);
+        }
+        else 
+        {
+            printf("Successfully read cmdline.txt\n");
+        }
+    }
 
     // Timer temporarily disabled as it messes with execution of relocated code
 	// Enable timer intterrupts and set up timer

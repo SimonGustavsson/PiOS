@@ -350,9 +350,14 @@ unsigned int Fat32_Initialize(Partition* partition)
     partition->write = &Fat32_Write;
 
     // Read Volume Boot Record
+    printf("Reading Volume Boot Record\n");
     ReturnOnFailure(result = partition->device->operation(OpRead, &partition->firstSector, partition->device->buffer), "Failed to read volume boot record.\n");
 
     Fat32Disk* data = (Fat32Disk*)palloc(sizeof(Fat32Disk));
+    unsigned int it;
+    for (it = 0; it < sizeof(Fat32Disk); it++)
+        *(((unsigned int*)data) + it) = 0;
+
     data->vbr = Fat32_parseVirtualBootRecord(partition->device->buffer, BLOCK_SIZE);
 
     partition->data = data; // Store it so we can retrieve the precomputed values later on
@@ -374,6 +379,7 @@ unsigned int Fat32_Initialize(Partition* partition)
     {
         // TODO: better error message, include fat+device name etc
         unsigned int sector_to_read = fatbegin + i;
+        printf("Reading fat 1 sector %d\n", sector_to_read);
         ReturnOnFailure(result = partition->device->operation(OpRead, &sector_to_read, partition->device->buffer), "Failed to read fat table");
 
         my_memcpy(data->fat0 + BLOCK_SIZE * i, partition->device->buffer, BLOCK_SIZE);
@@ -387,6 +393,7 @@ unsigned int Fat32_Initialize(Partition* partition)
     {
         // TODO: better error message, include fat+device name etc
         unsigned int sector_to_read = fatbegin + i;
+        printf("Reading fat 2 sector %d\n", sector_to_read);
         ReturnOnFailure(result = partition->device->operation(OpRead, &sector_to_read, partition->device->buffer), "Failed to read fat table\n");
 
         my_memcpy(data->fat1 + BLOCK_SIZE * i, partition->device->buffer, BLOCK_SIZE);
