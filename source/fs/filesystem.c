@@ -7,7 +7,7 @@
 
 static FileSystem* gFileSystem;
 
-unsigned int Fs_Initialize(BlockDevice* device)
+int Fs_Initialize(BlockDevice* device)
 {
     unsigned int result = 0;
     LogicalDevice* logical = 0;
@@ -16,24 +16,41 @@ unsigned int Fs_Initialize(BlockDevice* device)
     if (!gFileSystem)
         gFileSystem = (FileSystem*)palloc(sizeof(FileSystem));
 
+    // Heap might be dirty - initialize to 0
+    // TODO: calloc? memset?
+    unsigned int t;
+    char* fsPtr = (char*)gFileSystem;
+    for (t = 0; t < sizeof(FileSystem); t++)
+        *fsPtr++ = 0;
+
+    // Initialize the device
+    if ((result = device->init()) != 0) 
+    {
+        printf("Fs - Failed to initialize device '%s'\n", device->name);
+        return result;
+    }
+
     // Store device as dev0 or dev1?
     unsigned int deviceId;
-    if (!gFileSystem->devices[0].initialized)
+    if (gFileSystem->devices[0].initialized == 0)
     {
         logical = &gFileSystem->devices[0];
         deviceId = 0;
     }
-    else if (!gFileSystem->devices[1].initialized)
+    else if (gFileSystem->devices[1].initialized == 0)
     {
         logical = &gFileSystem->devices[1];
         deviceId = 1;
     }
     else
+    {
+        printf("Fs - Can only initialize 2 storage devices\n");
         return 2; // Error: Can't initialize more than two devices
+    }
 
     // Parse MBR and initialize partitions (if any)
     unsigned int sectorToRead = 0;
-    ReturnOnFailure(result = device->operation(OpRead, &sectorToRead, device->buffer), "fs - Failed to read MBR block\n");
+    ReturnOnFailureF(result = device->operation(OpRead, &sectorToRead, device->buffer), "fs - Failed to read MBR block, result: %d\n", result);
 
     // Copy the mbr over to our struct as the buffer gets reused
     my_memcpy(&logical->mbr.bootloader[0], device->buffer, 512);
@@ -59,12 +76,13 @@ unsigned int Fs_Initialize(BlockDevice* device)
 
         // TODO: Lookup registrered file systems keyed on type and use that instead
         //       Of hardcoding fat32 access here
+
+        printf("Fs - Initializing partition on disk %d with type %d\n", deviceId, part->type);
         switch (part->type)
         {
         case FAT32WithCHS:
-        case Fat32WithLba2:
         case Fat32WithLba3:
-        case FAT32XWIthLBA:
+        case FAT32XWithLba:
             //printf("Fat32 partition detected on %s, type: %d.\n", device->name, part->type);
             logical->partitions[i].ownerDeviceId = deviceId;
             logical->partitions[i].partitionId = deviceId + i;
@@ -78,6 +96,7 @@ unsigned int Fs_Initialize(BlockDevice* device)
         }
     }
 
+    printf("Marking logical device %d as initialized\n", deviceId);
     logical->initialized = 1; // Looks good!
 
 fExit:
@@ -90,8 +109,15 @@ unsigned int Fs_getPartition(char* filename, Partition** part)
 
     unsigned int physicalDeviceId = deviceId / 4;
 
-    if (physicalDeviceId > 4 || gFileSystem->devices[physicalDeviceId].initialized != 1)
+    if (physicalDeviceId > 4)
+    {
+        printf("Invalid physical device id for '%s', id is %d\n", filename, physicalDeviceId);
         return -1; // Invalid device Id
+    }
+    else if (gFileSystem->devices[physicalDeviceId].initialized != 1)
+    {
+        printf("Physical device id %d has not yet been initialized\n", physicalDeviceId);
+    }
 
     *part = &(gFileSystem->devices[physicalDeviceId].partitions[physicalDeviceId % 4]);
 
@@ -110,7 +136,7 @@ int Fs_Open(char* filename, FileSystemOpenMode mode)
     case FAT32WithCHS:
         return Fat32_Open(part, filename, mode);
     default:
-        printf("Invalid filesystem type of partition.\n");
+        printf("Invalid filesystem type '%d' of partition.\n", part->type);
         break;
     }
 
