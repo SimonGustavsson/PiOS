@@ -2,9 +2,11 @@
 #include "util/utilities.h"
 #include "types/string.h"
 #include "types/types.h"
+//                                                 
+static unsigned char* gBitmap = (unsigned char*)(0x01209000); // (@ 18 MB)
+static unsigned char* gMemory = (unsigned char*)((0x01209000) + (MAX_ALLOCATED_SLICES / 8)); // (Right after the bitmap)
 
-static unsigned char* gBitmap = (unsigned char*)(0xA00000 + 0x8000); // 10 MB From the kernel at 0x8000
-static unsigned char* gMemory = (unsigned char*)((0xA00000 + 0x8000) + (MAX_ALLOCATED_SLICES / 8)); // Put after the bitmap (which size i 0x1900000)
+unsigned int gBytesAllocated;
 
 void DataMemoryBarrier(void)
 {
@@ -21,16 +23,17 @@ void FlushCache(void)
     asm volatile ("mcr p15, #0, %[zero], c7, c14, #0" : : [zero] "r" (0));
 }
 
-unsigned int gBytesAllocated;
-
 void Pallocator_Initialize(void)
 {
     gBytesAllocated = 0;
 
     // Zero out the bitmap to start with
-    unsigned int i;
-    for (i = 0; i < MAX_ALLOCATED_SLICES / 8; i++)
-        gBitmap[i] = 0;
+   unsigned int i;
+    int* bmpPtr = (int*)gBitmap;
+    for (i = 0; i < (MAX_ALLOCATED_SLICES / 8) / 4; i++)
+        *bmpPtr++ = 0;
+
+    printf("Pallocator reporting for duty, sir!\n");
 }
 
 static void mark_slices(unsigned int start, unsigned int count, bool used)
@@ -131,6 +134,7 @@ static int get_first_available_slice(unsigned int requestedSize)
     printf("Searching for first block of %d available slices.\r\n", requestedSize);
 #endif
 
+    int foundBits = 0;
     for (i = 0; i < MAX_ALLOCATED_SLICES / sizeof(char); i++)
     {
         if ((gBitmap[i] & 0xFF) == 0xFF) // No free in this byte, skip
@@ -164,7 +168,10 @@ static int get_first_available_slice(unsigned int requestedSize)
                     clear_bits_found += 1;
 
                     if (clear_bits_found == requestedSize)
+                    {
+                        foundBits = 1;
                         break; // Found a free block
+                    }
                 }
                 else
                 {
@@ -176,7 +183,15 @@ static int get_first_available_slice(unsigned int requestedSize)
 
         // Did we find a free block?
         if (clear_bits_start != -1 && (unsigned int)clear_bits_found >= requestedSize)
+        {
+            foundBits = 1;
             break;
+        }
+    }
+
+    if (foundBits == 0)
+    {
+        printf("Looks like we went through the entire map and didn't find enough memory\n");
     }
 
     assert2(i == MAX_ALLOCATED_SLICES, "Searched entire map, not enough slices available.");
@@ -185,7 +200,7 @@ static int get_first_available_slice(unsigned int requestedSize)
 
     if (clear_bits_found < requestedSize)
     {
-        printf("Couldn't locate enough slices, sorry!");
+        printf("Couldn't locate enough slices, %d requested, %d found at %d\n", requestedSize, clear_bits_found, clear_bits_start);
         return -1;
     }
 
@@ -203,7 +218,7 @@ void* palloc(unsigned int size)
         slice_count++;
 
 #ifdef DEBUG_MEM
-    printf("palloc(%d), slice count: %d.\n", size, slice_count);
+    printf("Palloc(%d) (%d/%d)\n", size, gBytesAllocated, MAX_ALLOCATED_BYTES);
 #endif
 
     // Do we need an extended size byte?
