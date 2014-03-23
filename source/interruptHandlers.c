@@ -8,6 +8,12 @@
 // Imported via extern in taskScheduler
 volatile unsigned int gTaskSchedulerTick;
 
+// Because I sometimes mess up and end up getting spammed with
+// Abort interrupts of various types, this adds a delay to the abort handlers
+// So that I have time to read the error before spam scrolls it out of view
+// </Lazymode> :-)
+#define INTERRUPT_HANDLER_DELAY 20 // in ms
+
 void c_undefined_handler(void* lr)
 {
     printf("Undefined instruction at 0x%h. (instruction: %d).\n", lr, *((unsigned int*)lr));
@@ -15,7 +21,7 @@ void c_undefined_handler(void* lr)
     //unsigned int* instAddr = (unsigned int*)*(r14 - 1) + 4;
     //printf("Instruction that cause abort is at 0x%h (%d) - SPSR: 0x%h.\n", instAddr, *instAddr, 42);// spsr);
 
-    wait(2000);
+    wait(INTERRUPT_HANDLER_DELAY);
 }
 
 void c_abort_data_handler(unsigned int address, unsigned int errorType, unsigned int accessedAddr, unsigned int* sp)
@@ -24,7 +30,7 @@ void c_abort_data_handler(unsigned int address, unsigned int errorType, unsigned
 
     print_abort_error(errorType);
  
-    wait(3000);
+    wait(INTERRUPT_HANDLER_DELAY);
 }
 
 void c_abort_instruction_handler(unsigned int address, unsigned int errorType)
@@ -40,7 +46,7 @@ void c_abort_instruction_handler(unsigned int address, unsigned int errorType)
         print_abort_error(errorType);
     }
     
-    wait(3000);
+    wait(INTERRUPT_HANDLER_DELAY);
 }
 
 void c_swi_handler(unsigned int swi)
