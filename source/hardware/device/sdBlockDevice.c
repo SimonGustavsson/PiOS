@@ -45,7 +45,10 @@ unsigned int Sd_DeviceOperation(BlockDevOp opCode, void* arg, void *arg2)
     {
     case OpRead:
         printf("sd - reading a block\n");
-        return Emmc_ReadBlock((char*)arg2, BLOCK_SIZE, *(unsigned int*)arg);
+        if (Emmc_ReadBlock((char*)arg2, BLOCK_SIZE, *(unsigned int*)arg) == -1)
+            return -1;
+        else
+            return 0;
     case OpWrite:
         printf("Sd write is not yet implemented.\n");
         return 2;
