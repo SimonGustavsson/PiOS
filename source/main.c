@@ -98,8 +98,8 @@ int cmain(void)
 	Terminal_PrintWelcome();
 	Terminal_PrintPrompt();
 
-    int cmdLineFileHandle = -1;
-    if ((cmdLineFileHandle = Fs_Open("0:/cmdline.txt", FsOpenRead)) != -1)
+    int cmdLineFileHandle = Fs_Open("0:/cmdline.txt", FsOpenRead);
+    if (cmdLineFileHandle == -1)
     {
         printf("Failed to open 0:/cmdline.txt\n");
     }
@@ -126,6 +126,8 @@ int cmain(void)
         else 
         {
             printf("Successfully read cmdline.txt\n");
+
+            printf("Content(%d): %s\n", size, buf);
         }
     }
 
