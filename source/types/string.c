@@ -1,7 +1,7 @@
 #include "types/string.h"
 #include "terminal.h"
 
-int strlen(char* str)
+int my_strlen(char* str)
 {
 	int length = 0;
 	while(*str++)
@@ -10,7 +10,7 @@ int strlen(char* str)
 	return length;
 }
 
-char* strcpy(const char* src, char* dst)
+char* my_strcpy(const char* src, char* dst)
 {
 	char *ptr;
 	ptr = dst;
@@ -19,7 +19,7 @@ char* strcpy(const char* src, char* dst)
 	return ptr;
 }
 
-char ctolower(char c)
+char my_ctolower(char c)
 {
 	if(c >= 'A' && c <= 'Z')
 		return 'a' + (c - 'A');
@@ -27,31 +27,45 @@ char ctolower(char c)
 		return c;
 }
 
-unsigned int strcasecmp(char* str1, char* str2)
+unsigned int my_strcasecmp(char* str1, char* str2)
 {
 	for(;; str1++, str2++)
 	{
-		int d = ctolower(*str1) - ctolower(*str2); 
+		int d = my_ctolower(*str1) - my_ctolower(*str2); 
 		if(d != 0 || !*str1)
 			return d;
 	}
 }
 
-unsigned int strcmp(char* str1, char* str2)
+int my_strcmp_s(char* str1, unsigned int size, char* str2)
 {
-	unsigned int len1 = strlen(str1);
-	unsigned int len2 = strlen(str2);
-	
+    unsigned int i;
+    for (i = 0; i < size; i++)
+    {
+        if (*str1++ != *str2++)
+            return -1;
+    }
+
+    return 0;
+}
+
+unsigned int my_strcmp(char* str1, char* str2)
+{
+	unsigned int len1 = my_strlen(str1);
+	unsigned int len2 = my_strlen(str2);
+    
 	if(len1 != len2)
 		return 0; // Not equal
 		
 	unsigned int i;
-	for(i = 0; i < len1; i++)
-		if(str1[i] != str2[i])
-			return 0;
-			
+    for (i = 0; i < len1; i++)
+    {
+        if (str1[i] != str2[i])
+            return 0;
+    }
+
 	// They must be equal
-	return 1;
+    return 1;
 }
 
 void itoa(int number, char* buf)
@@ -92,6 +106,12 @@ void dec_to_hex(char* buf, unsigned int dec)
 {
 	unsigned int reminder[50];
 	unsigned int length = 0;
+	char* buf_ptr = buf;
+
+    if (dec == 0)
+    {
+        *buf_ptr++ = '0';
+    }
 
 	while(dec > 0)
 	{
@@ -100,7 +120,6 @@ void dec_to_hex(char* buf, unsigned int dec)
 		length++;
 	}
 
-	char* buf_ptr = buf;
 
 	int i;
 	for(i = length - 1; i >= 0; i--)
@@ -128,9 +147,9 @@ void dec_to_hex(char* buf, unsigned int dec)
 					char itoa_buf[10];
 					itoa(reminder[i], itoa_buf);
 
-					strcpy(itoa_buf, buf_ptr);
+					my_strcpy(itoa_buf, buf_ptr);
 
-					buf_ptr += strlen(itoa_buf);
+					buf_ptr += my_strlen(itoa_buf);
 				break;
 				}
 		}
@@ -161,17 +180,17 @@ void printf_i(char* text, ...)
 				char itoBuf[10];
 				itoa(va_arg(ap, int), &itoBuf[0]);
 				
-				char* intstr = strcpy(itoBuf, result);
+				char* intstr = my_strcpy(itoBuf, result);
 				
-				result += strlen(intstr);
+				result += my_strlen(intstr);
 			}
 			else if(*(text + 1) == 's') // string
 			{
 				char* arg = (char*)va_arg(ap, int);
 				
-				strcpy(arg, result);
+				my_strcpy(arg, result);
 				
-				result += strlen(arg);
+				result += my_strlen(arg);
 			}
 			else if(*(text + 1) == 'h') // hex
 			{
@@ -180,9 +199,9 @@ void printf_i(char* text, ...)
 
 				dec_to_hex(hex_buf_ptr, va_arg(ap, int));
 				
-				strcpy(hex_buf, result);
+				my_strcpy(hex_buf, result);
 				
-				unsigned int hexLength = strlen(hex_buf);
+				unsigned int hexLength = my_strlen(hex_buf);
 
 				result += hexLength;
 			}
@@ -197,7 +216,7 @@ void printf_i(char* text, ...)
 		*result++ = *text;
 	}while(*text++ != '\0');
 	
-	Terminal_PrintImportant(res, strlen(res));
+	Terminal_PrintImportant(res, my_strlen(res));
 }
 
 void printf(char* text, ...)
@@ -222,17 +241,17 @@ void printf(char* text, ...)
 				char itoBuf[10];
 				itoa(va_arg(ap, int), &itoBuf[0]);
 				
-				char* intstr = strcpy(itoBuf, result);
+				char* intstr = my_strcpy(itoBuf, result);
 				
-				result += strlen(intstr);
+				result += my_strlen(intstr);
 			}
 			else if(*(text + 1) == 's') // string
 			{
 				char* arg = (char*)va_arg(ap, int);
 				
-				strcpy(arg, result);
+				my_strcpy(arg, result);
 				
-				result += strlen(arg);
+				result += my_strlen(arg);
 			}
 			else if(*(text + 1) == 'h') // hex
 			{
@@ -241,9 +260,9 @@ void printf(char* text, ...)
 
 				dec_to_hex(hex_buf_ptr, va_arg(ap, int));
 				
-				strcpy(hex_buf, result);
+				my_strcpy(hex_buf, result);
 				
-				unsigned int hexLength = strlen(hex_buf);
+				unsigned int hexLength = my_strlen(hex_buf);
 
 				result += hexLength;
 			}
@@ -258,5 +277,5 @@ void printf(char* text, ...)
 		*result++ = *text;
 	}while(*text++ != '\0');
 	
-	Terminal_Print(res, strlen(res));
+	Terminal_Print(res, my_strlen(res));
 }

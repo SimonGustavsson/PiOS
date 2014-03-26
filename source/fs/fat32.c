@@ -18,18 +18,16 @@ int Fat32_getFatEntry(Partition* part, unsigned int cluster)
     unsigned int fatbegin = part->firstSector + data->vbr->num_reserved_sectors;
     unsigned int sectorToRead = fatbegin + (cluster / BLOCK_SIZE);
 
-    printf("Retrieving FAT entry for cluster %d from block %d, index in block: %d\n", cluster, sectorToRead, indexOfEntryInCluster);
     int readResult;
     ReturnOnFailureF(readResult = part->device->operation(OpRead, &sectorToRead, part->device->buffer), 
         "Failed to read fat table, %d\n", readResult);
 
-    // TODO: This is stupid - right now we're caching the result, but never reading from the cache
-    my_memcpy(data->fat0 + (BLOCK_SIZE * sectorToRead), part->device->buffer, BLOCK_SIZE);
+    // We're not actually using the cache
+    //my_memcpy(&data->fat0[BLOCK_SIZE * sectorToRead], part->device->buffer, BLOCK_SIZE);
 
     // Extract the entry from the block we just read
     fatEntry = byte_to_int(&part->device->buffer[indexOfEntryInCluster]);
-    
-    printf("FAT entry: %d\n", fatEntry);
+
 fExit:
     return fatEntry;
 }
@@ -39,7 +37,7 @@ unsigned int Fat32_translateTo83FatName(char* filename, char* dest)
     char* file = filename + 3; // Skip past x:/
 
     // Split out extension from file name
-    unsigned int nameLength = strlen(file);
+    unsigned int nameLength = my_strlen(file);
     int extIndex;
     unsigned int hasExtension = 0;
     // Step backwards and find the first full stop
@@ -98,8 +96,6 @@ unsigned int Fat32_translateTo83FatName(char* filename, char* dest)
 
 int Fat32_getDirEntry(Partition* part, char* filename, DirEntry** entry)
 {
-    printf("Getting dir entry for '%s'\n", filename);
-
     int result = 0;
     Fat32Disk* disk = (Fat32Disk*)part->data;
 
@@ -111,20 +107,18 @@ int Fat32_getDirEntry(Partition* part, char* filename, DirEntry** entry)
     char* fatFilename = (char*)palloc(11);
     ReturnOnFailureF((result = Fat32_translateTo83FatName(filename, fatFilename)), "Failed to translate '%s' to 8.3 format.\n", filename);
 
-    printf("Converted to 8.3 name: %s\n", fatFilename);
-
     DirEntry* file = 0;
     unsigned int i;
-    for (i = 0; i < filesFound + 1; i++)
+    unsigned int max = filesFound + 1;
+    for (i = 0; i < max; i++)
     {
         // Only search for files for now, no directory support
         if (entries[i].attribute.bits.directory)
             continue;
-
-        if (strcmp((char*)entries[i].name, fatFilename) == 0 ||
-            strcmp((char*)entries[i].longName, filename) == 0)
+        
+        if (my_strcmp_s((char*)entries[i].name, 11, fatFilename) == 0)// || 
+            //my_strcmp((char*)entries[i].longName, filename) == 1)
         {
-            printf("Found file entry, size: %d\n", entries[i].size);
             file = &entries[i];
             break; // Found it!
         }
@@ -136,7 +130,7 @@ int Fat32_getDirEntry(Partition* part, char* filename, DirEntry** entry)
     *entry = (DirEntry*)palloc(sizeof(DirEntry));
     char* dirPtr = (char*)*entry;
     for (i = 0; i < sizeof(DirEntry); i++)
-        *dirPtr = 0;
+        *dirPtr++ = 0;
 
     my_memcpy(*entry, file, sizeof(DirEntry));
 
@@ -165,7 +159,7 @@ int Fat32_Open(void* part, char* filename, FileSystemOpenMode mode)
             continue;
         }
 
-        if (strcmp((char*)partition->openFiles[i].filename, filename) == 0)
+        if (my_strcmp((char*)partition->openFiles[i].filename, filename) == 0)
         {
             if (mode == FsOpenWrite)
             {
@@ -193,7 +187,7 @@ int Fat32_Open(void* part, char* filename, FileSystemOpenMode mode)
         file->streamPosition = 0;
         file->file = entry;
         file->mode = mode;
-        my_memcpy(file->filename, filename, strlen(filename));
+        my_memcpy(file->filename, filename, my_strlen(filename));
     }
 
     return (partition->ownerDeviceId << 16) & (partition->partitionId << 8) & (firstAvailableSlot);
@@ -236,8 +230,6 @@ int Fat32_Seek(void* part, int handle, long int offset, FsSeekOrigin origin)
     unsigned int openFileIndex = (handle & 0xFF);
     Partition* partition = (Partition*)part;
     FileStatus* file = &partition->openFiles[openFileIndex];
-
-    printf("Fat32_Seek: Old pos: %d, size: %d\n", file->streamPosition, file->file->size);
 
     switch (origin)
     {
@@ -401,7 +393,6 @@ unsigned int Fat32_Initialize(Partition* partition)
     partition->write = &Fat32_Write;
 
     // Read Volume Boot Record
-    printf("Reading Volume Boot Record\n");
     ReturnOnFailure(result = partition->device->operation(OpRead, &partition->firstSector, partition->device->buffer), "Failed to read volume boot record.\n");
 
     Fat32Disk* data = (Fat32Disk*)palloc(sizeof(Fat32Disk));
@@ -420,8 +411,6 @@ unsigned int Fat32_Initialize(Partition* partition)
     //unsigned int fatbegin = partition->firstSector + data->vbr->num_reserved_sectors;
 
     // Allocate memory for the tables
-    printf("FAT tables are %d bytes large, making room in memory but not reading them\n", data->vbr->sectors_per_fat * data->vbr->bytes_per_sector);
-
     // In the future we might be able to dynamically allocate this as and when it's actually used
     data->fat0 = (unsigned int*)palloc(data->vbr->sectors_per_fat * data->vbr->bytes_per_sector);
     data->fat1 = (unsigned int*)palloc(data->vbr->sectors_per_fat * data->vbr->bytes_per_sector);
@@ -566,8 +555,6 @@ DirEntry* Fat32_listDirectory(Partition* part, unsigned int firstSector, unsigne
                 // Copy the entire short entry to the dir entry
                 my_memcpy(&entries[file_index], &buf[0 + currentEntryOffset], 32);
 
-                printf("Entry: %s size: %d\n", entries[file_index].name, entries[file_index].size);
-
                 file_index++;
             }
         }
@@ -576,8 +563,6 @@ DirEntry* Fat32_listDirectory(Partition* part, unsigned int firstSector, unsigne
     }
 
     *pFilesFound = file_index - 1; // 0 based
-
-    printf("Done listing directory, files found: %d\n", *pFilesFound);
 
     return entries;
 }

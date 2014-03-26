@@ -353,8 +353,8 @@ char* GetKeyName(char* buf, unsigned int bufLen, virtualkey vk)
 {
 	char* keyName = gKeynames[vk];
 	
-	if(strlen(keyName) < bufLen)
-		strcpy(keyName, buf);
+	if(my_strlen(keyName) < bufLen)
+		my_strcpy(keyName, buf);
 		
 	return buf;
 }

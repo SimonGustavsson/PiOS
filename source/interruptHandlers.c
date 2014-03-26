@@ -4,7 +4,7 @@
 #include "hardware/uart.h"
 #include "types/string.h"
 #include "util/utilities.h"
-
+#include "debugging.h"
 // Imported via extern in taskScheduler
 volatile unsigned int gTaskSchedulerTick;
 
@@ -29,6 +29,8 @@ void c_abort_data_handler(unsigned int address, unsigned int errorType, unsigned
     printf("Instruction at 0x%h caused a data abort accessing memory at 0x%h, \n", address, accessedAddr);
 
     print_abort_error(errorType);
+
+    Debug_PrintCallstack();
  
     wait(INTERRUPT_HANDLER_DELAY);
 }

@@ -44,7 +44,6 @@ unsigned int Sd_DeviceOperation(BlockDevOp opCode, void* arg, void *arg2)
     switch (opCode)
     {
     case OpRead:
-        printf("sd - reading a block\n");
         if (Emmc_ReadBlock((char*)arg2, BLOCK_SIZE, *(unsigned int*)arg) == -1)
             return -1;
         else

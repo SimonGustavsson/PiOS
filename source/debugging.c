@@ -10,7 +10,7 @@ void Debug_PrintCallstack(void)
     int depth = 0;
     int* fp = get_frame_pointer();
 
-    printf("0x%h.\n", (int)fp);
+    printf("From: 0x%h -> ", (int)fp);
     do
     {
         if ((int)fp == 0 || (int)fp > 0x0A827000)

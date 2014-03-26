@@ -150,7 +150,7 @@ void PrintErrorsInInterruptRegister(unsigned int reg)
 	unsigned int i;
 	for(i = 1; i < 32; i++)
 	{
-		if(reg & (1 << i) && strlen(gInterruptErrors[i]) > 0 && i != 15) // 15 = "error has occured", only show the detailed on(there is always one?)
+		if(reg & (1 << i) && my_strlen(gInterruptErrors[i]) > 0 && i != 15) // 15 = "error has occured", only show the detailed on(there is always one?)
 		{
 			printf("%d. %s.\n", i, gInterruptErrors[i]);
 			return;

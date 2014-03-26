@@ -98,37 +98,27 @@ int cmain(void)
 	Terminal_PrintWelcome();
 	Terminal_PrintPrompt();
 
-    int cmdLineFileHandle = Fs_Open("0:/cmdline.txt", FsOpenRead);
-    if (cmdLineFileHandle == -1)
-    {
-        printf("Failed to open 0:/cmdline.txt\n");
-    }
-    else
+    int fHandle = Fs_Open("0:/cmdline.txt", FsOpenRead);
+    if (fHandle != -1)
     {
         // Get file size
-        Fs_Seek(cmdLineFileHandle, 0, FsSeekEnd);
-        int size = Fs_Tell(cmdLineFileHandle);
-        Fs_Seek(cmdLineFileHandle, 0, FsSeekBegin);
+        Fs_Seek(fHandle, 0, FsSeekEnd);
+        int size = Fs_Tell(fHandle);
+        Fs_Seek(fHandle, 0, FsSeekBegin);
 
-        // Allocate buffer and readfile
+        // Allocate buffer and zero it out
+        int i;
         char* buf = (char*)palloc(size);
+        for (i = 0; i < size; i++)
+            *(buf + i) = 0;
 
-        int it;
-        for (it = 0; it < size; it++)
-            *(buf + it) = 0;
-
-        if ((Fs_Read(buf, size, cmdLineFileHandle) < 0))
+        if ((Fs_Read(buf, size, fHandle) >= 0))
         {
-            printf("Failed read 512 bytes of cmdline.txt\n");
-
-            Fs_Close(cmdLineFileHandle);
+            buf[size - 1] = 0; // Printf requires zero terminated strings, files contents might not be
+            printf("0:/cmdline.txt is %d bytes, content: %s\n", size, buf);
         }
-        else 
-        {
-            printf("Successfully read cmdline.txt\n");
 
-            printf("Content(%d): %s\n", size, buf);
-        }
+        Fs_Close(fHandle);
     }
 
     // Timer temporarily disabled as it messes with execution of relocated code

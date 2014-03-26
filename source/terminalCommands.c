@@ -26,7 +26,7 @@ TerminalCommand *TerminalCommands_GetCommand(char* name)
 {
 	unsigned int i;
 	for(i = 0; i < MAX_COMMAND_COUNT; i++)
-		if(strcasecmp(name, gCommands[i].name) == 0)
+		if(my_strcasecmp(name, gCommands[i].name) == 0)
 			return &gCommands[i];
 
 	return 0;

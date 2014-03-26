@@ -96,8 +96,9 @@ int Fs_Initialize(BlockDevice* device)
         }
     }
 
-    printf("Marking logical device %d as initialized\n", deviceId);
     logical->initialized = 1; // Looks good!
+
+    printf("Fs - Initialization complete\n");
 
 fExit:
     return result;
