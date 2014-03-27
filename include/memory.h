@@ -12,4 +12,9 @@ void FlushCache(void);
 
 void Pallocator_Initialize(void);
 void* palloc(unsigned int size);
+
+// Allocates memory for an array of 'size' with elements of 'itemSize'
+// Example: pcalloc(sizeof(int), 4); // Allocates an array of 4 ints
+void* pcalloc(unsigned int itemSize, unsigned int size);
+
 void phree(void* pointer);

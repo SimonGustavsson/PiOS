@@ -107,11 +107,8 @@ int cmain(void)
         Fs_Seek(fHandle, 0, FsSeekBegin);
 
         // Allocate buffer and zero it out
-        int i;
-        char* buf = (char*)palloc(size);
-        for (i = 0; i < size; i++)
-            *(buf + i) = 0;
-
+        char* buf = (char*)pcalloc(sizeof(char), size);
+        
         if ((Fs_Read(buf, size, fHandle) >= 0))
         {
             buf[size - 1] = 0; // Printf requires zero terminated strings, files contents might not be
