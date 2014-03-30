@@ -31,5 +31,8 @@ disassembly.txt
 symbols.txt
 
 # Gedit temporary files
-.c~
-.h~
+*.c~
+*.h~
+*.py~
+makefile~
+*.gitignore~
