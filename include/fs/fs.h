@@ -1,4 +1,4 @@
-
+#include "hardware/device/blockDevice.h"
 #define BOOTABLE_FLAG 0x80
 
 typedef enum{
@@ -72,15 +72,20 @@ typedef enum {
 
 typedef enum {
     storage_read = 0,
-    storage_open = 2,
-    storage_write = 4,
-    storage_close = 8,
-    storage_seek = 16,
-    storage_tell = 32
+    storage_write = 2
 } storage_device_op;
 
+typedef enum {
+    fs_op_read = 0,
+    fs_op_open = 2,
+    fs_op_write = 4,
+    fs_op_close = 8,
+    fs_op_seek = 16,
+    fs_op_tell = 32
+} fs_op;
+
 typedef struct {
-    char device; // Placeholder for block device struct
+    fs_driver* driver; // Placeholder for block device struct
     char* name;
     unsigned int name_len;
     part_info* info;
@@ -93,10 +98,46 @@ typedef struct {
 } partition;
 
 typedef struct {
+    int initialized;
+    BlockDevice* device;
     storage_device_type type;
     long long size;
-    char* driver_name;
-    unsigned int driver_name_len;
-    partition* partitions;
+    partition* partitions[4];
     unsigned int num_partitions;
 } storage_device;
+
+typedef struct {
+    char bootloader[446];
+    part_info partitions[4];
+    unsigned short signature;
+} mbr_t;
+
+typedef struct {
+    fs_type type;
+    char* name;
+    unsigned int name_len;
+    BlockDevice* device;
+
+    unsigned int initialized;
+    int(*init)(BlockDevice* device);
+    int(*op)(fs_op operation, void* arg1, void* arg2);
+} fs_driver;
+
+typedef struct {
+    fs_driver base;
+    
+    // When the 
+    // TOOD: Fat32 specific initialized data here
+} fat32_driver;
+
+typedef struct {
+    storage_device* devices[9];
+    unsigned int numDevices;
+
+    fs_driver* fs_drivers[4];
+    unsigned int num_drivers;
+} file_system;
+
+int fs_initialize(void);
+int fs_register_driver(fs_driver* driver);
+int fs_add_device(BlockDevice*);
