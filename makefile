@@ -4,21 +4,28 @@ LINKER_FLAGS = --no-wchar-size-warning --no-undefined
 
 ASSEMBLER_FLAGS = -march=armv6j  -mfpu=vfp -mfloat-abi=hard
 
-# Make sure gcc searches the include folder
-C_INCLUDE_PATH=include;csud\include
-export C_INCLUDE_PATH
-
 LIBRARIES = csud
 BUILD_DIR = bin
 SOURCE_DIR = source
 INCLUDE_DIR = include
-OBJ_DIR = $(BUILD_DIR)/obj
-DEPENDENCY_DIR = $(BUILD_DIR)/dependencies
+OBJ_DIR := $(BUILD_DIR)/obj
+DEPENDENCY_DIR := $(BUILD_DIR)/dependencies
+
+# Make sure gcc searches the include folder
+
+#C_INCLUDE_PATH := include csud/include
+C_INCLUDE_PATH := $(shell find $(INCLUDE_DIR)/ -type d)
+C_INCLUDE_PATH += $(shell find $(SOURCE_DIR)/ -type d)
+
+export C_INCLUDE_PATH
 
 # When building C files, look in all subdirectories of source
-VPATH := $(shell find $(SOURCE_DIR)/ -type d)
+#VPATH := $(shell find $(SOURCE_DIR)/ -type d)
 # (And headers too!)
-VPATH += $(shell find $(INCLUDE_DIR)/ -type d)
+#VPATH += $(shell find $(INCLUDE_DIR)/ -type d)
+null      :=
+SPACE     := $(null) $(null)
+VPATH := $(subst $(SPACE),:,$(C_INCLUDE_PATH))
 
 CHEADERS := $(shell find $(INCLUDE_DIR)/ -name '*.h')
 CSOURCE := $(shell find $(SOURCE_DIR)/ -name '*.c')
@@ -26,8 +33,8 @@ ASOURCE := $(wildcard $(SOURCE_DIR)/*.s)
 
 _COBJECT := $(patsubst %.c,%.o, $(CSOURCE))
 _AOBJECT := $(patsubst %.s,%.o, $(ASOURCE))
-AOBJECT = $(addprefix $(OBJ_DIR)/, $(notdir $(_AOBJECT)))
-COBJECT = $(addprefix $(OBJ_DIR)/, $(notdir $(_COBJECT)))
+AOBJECT := $(addprefix $(OBJ_DIR)/, $(notdir $(_AOBJECT)))
+COBJECT := $(addprefix $(OBJ_DIR)/, $(notdir $(_COBJECT)))
 
 # To figure out why objects are being build, uncomment this:
 #OLD_SHELL := $(SHELL)
@@ -50,7 +57,7 @@ $(BUILD_DIR)/symbols.txt: $(BUILD_DIR)/kernel.elf
 	@$(TOOL)-objdump -t $< | awk -F ' ' '{if(NF >= 2) print $$(1), "\t", $$(NF);}' > $@
 
 # Link all of the objects (Temporarily removed -l $(LIBRARIES))
-$(BUILD_DIR)/kernel.elf: $(AOBJECT) $(COBJECT) libcsud.a
+$(BUILD_DIR)/kernel.elf: $(AOBJECT) $(COBJECT)
 	@$(TOOL)-ld $(LINKER_FLAGS) $(AOBJECT) $(COBJECT) -Map $(BUILD_DIR)/kernel.map -T memorymap -o $(BUILD_DIR)/kernel.elf
 
 # If make was run previously, we will have .d dependency files
@@ -59,8 +66,9 @@ $(BUILD_DIR)/kernel.elf: $(AOBJECT) $(COBJECT) libcsud.a
 -include $(addprefix $(DEPENDENCY_DIR)/, $(notdir $(COBJECT:.o=.d)))
 	
 #build c files
-$(OBJ_DIR)/%.o: %.c
-	@$(TOOL)-gcc -c $< -o $@ $(CFLAGS) -MD -MF $(DEPENDENCY_DIR)/$*.d 
+# The dependency stuff here is a hack, shouldn't have to do this?
+$(OBJ_DIR)/%.o: */*/%.c
+	@$(TOOL)-gcc -c $< -o $@ $(CFLAGS) -I$(C_INCLUDE_PATH) -MD -MF $(DEPENDENCY_DIR)/$*.d 
 	
 # Create a temp file
 	@mv -f $(DEPENDENCY_DIR)/$*.d $(DEPENDENCY_DIR)/$*.d.tmp
