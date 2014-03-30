@@ -29,3 +29,7 @@ Debug/
 # Debug output
 disassembly.txt
 symbols.txt
+
+# Gedit temporary files
+.c~
+.h~
