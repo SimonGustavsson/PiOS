@@ -8,95 +8,144 @@ static file_system* gFs;
 int fs_initialize(void)
 {
     gFs = (file_system*)pcalloc(sizeof(file_system), 1);
+
+    return 0;
 }
 
 int fs_register_driver(fs_driver* driver)
 {
-    // Todo, support removal?
+    // TODO, support removal?
     gFs->fs_drivers[gFs->num_drivers++] = driver;
+
+    return 0;
+}
+
+int fs_get_next_free_device_slot()
+{
+    unsigned int i;
+    if(gFs->numDevices == 0)
+        return 0;
+    else
+    {
+        for(i = 0; i < gFs->numDevices; i++) 
+        {
+            if(gFs->devices[i] == 0)
+                return i;
+        }
+    }
+
+    return -1; // no slots available
+}
+
+fs_driver* fs_get_driver_for_fs_type(unsigned char type)
+{
+    fs_driver* res = 0;
+
+    unsigned int i;
+    for (i = 0; i < gFs->num_drivers; i++)
+    {
+        if (gFs->fs_drivers[i]->type == type)
+            res = gFs->fs_drivers[i];
+    }
+
+    return res;
+}
+
+// This is an extremely stupid and ugly way of doing it, but I don't have sscanf yet
+// Created a new name for a harddrive "hdd{i}" where {i} is the currently registered
+// Device count
+char* fs_get_next_partition_name(void)
+{
+    char* name = (char*)pcalloc(sizeof(char*), 10); // Max name length is 10, random hooo
+    my_strcpy("hdd", name);
+
+    // Append the device index to the name
+    char* devIndexStr = (char*)pcalloc(sizeof(char), 5);
+    itoa(gFs->numDevices - 1, devIndexStr);
+    my_strcpy((const char*)devIndexStr, &name[3]);
+    
+    // Make sure it's 0-terminated
+    name[3 + my_strlen(devIndexStr) + 1] = 0;
+
+    return name;
 }
 
 int fs_add_device(BlockDevice* dev)
 {
     int result = 0;
+    int dev_slot;
+    unsigned int i;
+    unsigned int sector_to_read;
+    mbr_t mbr;
+    part_info* pInfo;
+    partition* part;
+    fs_driver* driver = 0;
+    unsigned int j;
+    unsigned int num_valid_partitions = 0;
 
-    // TODO: Add "initialized" flag?
-    ReturnOnFailureF((result = dev->init()), 
-        "fs - Failed to initialize device '%s'\n", dev->name);
+    // TODO: Add "initialised" flag?
+    ReturnOnFailureF((result = dev->init()), "fs - Failed to initialise device '%s'\n", dev->name);
 
-    // Get first available storage device
-    int dev_slot = -1;
-    if (gFs->numDevices == 0)
-    {
-        // Great, just use the first slot!
-        dev_slot = 0;
-    }
-    else
-    {
-        unsigned int i; // Linear search for first available slot
-        for (i = 0; i < gFs->numDevices; i++) 
-        {
-            if (!gFs->devices[i] == 0)
-            {
-                dev_slot = i;
-                break;
-            }
-        }
-    }
-
-    ReturnOnFailure(result = dev_slot == -1, "No storage device slots available\n");
+    dev_slot = fs_get_next_free_device_slot();
+    ReturnOnFailure(result = (dev_slot == -1), "No storage device slots available\n");
 
     gFs->devices[dev_slot] = (storage_device*)pcalloc(sizeof(storage_device), 1);
-    storage_device* storage = gFs->devices[dev_slot];
+    gFs->numDevices++; // A new one has been added!
     
     // Read MBR
-    unsigned int sector_to_read = 0;
+    sector_to_read = 0;
     ReturnOnFailure(result = dev->operation(OpRead, &sector_to_read, dev->buffer), "Failed to read MBR partition\n");
 
-    // Validate MBR signature
-    mbr_t mbr;
     my_memcpy(&mbr, dev->buffer, 512); // Copy into an easy to read struct
     ReturnOnFailure(mbr.signature != 0xAA55, "Invalid MBR signature");
 
+
     // Parse partitions
-    unsigned int i;
     for (i = 0; i < 4; i++) // NOTE: No support for extended partitions!
     {
-        part_info* p = &mbr.partitions[i];
+        pInfo = &mbr.partitions[i];
 
-        if (p->type == unknown)
+        if (pInfo->type == unknown)
             break; // No more partitions
 
-        partition* part = (partition*)pcalloc(sizeof(partition), 1);
-        storage->partitions[storage->num_partitions++] = part;
-
-        // Storage the partition info
-        part->info = (part_info*)pcalloc(sizeof(part_info), 1);
-        my_memcpy(part->info, p, sizeof(part_info));
-
         // Find driver that supports reading from this type
-        fs_driver* driver = 0;
-        unsigned int j;
-        for (j = 0; j < gFs->num_drivers; j++)
+        driver = fs_get_driver_for_fs_type(pInfo->type);
+        if((result = (unsigned long)driver) != 0) // THIS SHOULDN'T BE LONG ON THE PI? CLANG FFS :)
         {
-            if (gFs->fs_drivers[j]->type == p->type)
-                driver = gFs->fs_drivers[j];
+            printf("Not fs driver registered for partition of type %d\n", part->type);
+            continue;
         }
 
-        ReturnOnFailureF((result = driver != 0), "Not fs driver registered for partition of type %d\n", part->type);
+        // Initialize the driver
+        fs_driver_info* driver_info;
+        result = driver->init(dev, pInfo, &driver_info);
 
-        // Great! We've got a driver
+        if(result != 0)
+        {
+            printf("Found valid driver for device, but initialization failed.\n");
+            continue;
+        }
 
-        storage->partitions[storage->num_partitions - 1]->driver = driver;
+        // Driver has been initialized
 
-        // Initialize the driver for this device
-        
-        driver->init(dev); // TODO: It might already be initialized
+        // Create part struct where we store stuff
+        part = (partition*)pcalloc(sizeof(partition), 1);
+        part->info = (part_info*)pcalloc(sizeof(part_info), 1);
 
-        // Uuuuh,,, how do we know if this combination has been intialzied?
-        // Also the same BlockDevice can be used to rea dmultiple filesystems
-        // by multiple drivers.... Figure this out.
+        part->name = fs_get_next_partition_name();
+         
+        // Storage the partition info
+        my_memcpy(part->info, pInfo, sizeof(part_info));
+
+        // Store partition in global struct
+        gFs->devices[dev_slot]->partitions[gFs->devices[dev_slot]->num_partitions++] = part;
+
+        num_valid_partitions++;
     }
+
+    // If we at least found one valid partition, it's an overall success
+    if(num_valid_partitions > 0)
+        result = 0;
 
 fExit:
     return result;

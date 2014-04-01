@@ -65,9 +65,9 @@ typedef struct {
 } part_info;
 
 typedef enum {
-    unknown_device = 0,
-    storage_device = 2,
-    removable_device = 4
+    unknown_storage = 0,
+    permanent_storage = 2,
+    removable_storage = 4
 } storage_device_type;
 
 typedef enum {
@@ -84,8 +84,39 @@ typedef enum {
     fs_op_tell = 32
 } fs_op;
 
+// Note: Stupid forward declare because my editor is using clang to
+// provide program-time error checking, and it requires definitions
+// To be provided the first time they're used
+typedef struct fs_driver_info fs_driver_info;
+typedef struct fs_driver fs_driver;
+
+struct fs_driver{
+    fs_type type;
+    char* name;
+    unsigned int name_len;
+    BlockDevice* device;
+
+    unsigned int initialized;
+    int(*init)(BlockDevice* device, part_info* pInfo, fs_driver_info** driver_info);
+    int(*op)(fs_op operation, void* arg1, void* arg2);
+} ;
+
+// This struct represents an initialized file system driver on a specific
+// Block device that has been initialized and can be used by Parition*'s to read
+struct fs_driver_info {
+    char* name; // The name of the device on the system used in fopen("hdd/...") f.ex
+    unsigned int name_len;
+    fs_driver* driver;
+
+    // Driver specific info will  be here, but the FS don't care about it
+    // This just provides the specific filesystems with a place to store
+    // Initialization information
+    // The FAT driver for example will return a fat_driver_info struct
+    // from it's fs_init() call, containing the VBR and first sector to read
+};
+
 typedef struct {
-    fs_driver* driver; // Placeholder for block device struct
+    fs_driver_info* driver;
     char* name;
     unsigned int name_len;
     part_info* info;
@@ -111,24 +142,6 @@ typedef struct {
     part_info partitions[4];
     unsigned short signature;
 } mbr_t;
-
-typedef struct {
-    fs_type type;
-    char* name;
-    unsigned int name_len;
-    BlockDevice* device;
-
-    unsigned int initialized;
-    int(*init)(BlockDevice* device);
-    int(*op)(fs_op operation, void* arg1, void* arg2);
-} fs_driver;
-
-typedef struct {
-    fs_driver base;
-    
-    // When the 
-    // TOOD: Fat32 specific initialized data here
-} fat32_driver;
 
 typedef struct {
     storage_device* devices[9];

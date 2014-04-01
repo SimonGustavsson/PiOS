@@ -11,9 +11,9 @@
 int Fat32_getFatEntry(Partition* part, unsigned int cluster)
 {
     int fatEntry = -1;
-    
-    Fat32Disk* data = (Fat32Disk*)part->data;
 
+    Fat32Disk* data = (Fat32Disk*)part->data;
+    
     unsigned int indexOfEntryInCluster = cluster % BLOCK_SIZE;
     unsigned int fatbegin = part->firstSector + data->vbr->num_reserved_sectors;
     unsigned int sectorToRead = fatbegin + (cluster / BLOCK_SIZE);
