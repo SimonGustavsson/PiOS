@@ -36,3 +36,4 @@ symbols.txt
 *.py~
 makefile~
 *.gitignore~
+*.sublime-workspace
