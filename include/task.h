@@ -42,7 +42,7 @@ typedef struct {
 
 typedef struct {
 	// Register state needs to be restored
-	registers registers;
+	registers* registers;
 
 	// The memory mapping, a process can at most 
 	MemoryMapping memoryMappings[MAX_TASK_MEMORY_MB];
@@ -57,4 +57,4 @@ typedef struct {
 void Task_StartupFunction(Task* task);
 Task* Task_Create(void(*mainFunction)(void));
 
-#endif TASK_H
+#endif

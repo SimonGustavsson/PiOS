@@ -8,7 +8,7 @@
 #include "terminal.h"
 #include "taskScheduler.h"
 #include "memory.h"
-#include "fs/filesystem.h"
+//#include "fs/filesystem.h"
 #include "hardware/device/sdBlockDevice.h"
 
 // Windows doesn't have __attribute__ :(
@@ -77,7 +77,7 @@ int system_initialize(void)
 
     Sd_Register(gSd);
 
-    Fs_Initialize(gSd);
+    //Fs_Initialize(gSd);
 
 	//taskScheduler_Init();
 	
@@ -98,25 +98,25 @@ int cmain(void)
 	Terminal_PrintWelcome();
 	Terminal_PrintPrompt();
 
-    int fHandle = Fs_Open("0:/cmdline.txt", FsOpenRead);
-    if (fHandle != -1)
-    {
-        // Get file size
-        Fs_Seek(fHandle, 0, FsSeekEnd);
-        int size = Fs_Tell(fHandle);
-        Fs_Seek(fHandle, 0, FsSeekBegin);
+    // int fHandle = Fs_Open("0:/cmdline.txt", FsOpenRead);
+    // if (fHandle != -1)
+    // {
+    //     // Get file size
+    //     Fs_Seek(fHandle, 0, FsSeekEnd);
+    //     int size = Fs_Tell(fHandle);
+    //     Fs_Seek(fHandle, 0, FsSeekBegin);
 
-        // Allocate buffer and zero it out
-        char* buf = (char*)pcalloc(sizeof(char), size);
+    //     // Allocate buffer and zero it out
+    //     char* buf = (char*)pcalloc(sizeof(char), size);
         
-        if ((Fs_Read(buf, size, fHandle) >= 0))
-        {
-            buf[size - 1] = 0; // Printf requires zero terminated strings, files contents might not be
-            printf("0:/cmdline.txt is %d bytes, content: %s\n", size, buf);
-        }
+    //     if ((Fs_Read(buf, size, fHandle) >= 0))
+    //     {
+    //         buf[size - 1] = 0; // Printf requires zero terminated strings, files contents might not be
+    //         printf("0:/cmdline.txt is %d bytes, content: %s\n", size, buf);
+    //     }
 
-        Fs_Close(fHandle);
-    }
+    //     Fs_Close(fHandle);
+    // }
 
     // Timer temporarily disabled as it messes with execution of relocated code
 	// Enable timer intterrupts and set up timer

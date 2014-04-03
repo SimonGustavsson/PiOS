@@ -8,21 +8,26 @@
 	"buffers":
 	[
 		{
-			"contents": "#include \"fs/fat32.h\"\n#include \"util/utilities.h\"\n#include \"hardware/emmc.h\"\n#include \"types/string.h\"\n#include \"terminal.h\"\n#include \"memory.h\"\n#include \"types/types.h\"\n#include \"fs/filesystem.h\"\n\n// Retrieves the FAT entry for the specified cluster\nint Fat32_getFatEntry(Partition* part, unsigned int cluster)\n{\n    int fatEntry = -1;\n    \n    Fat32Disk* data = (Fat32Disk*)part->data;\n    data->\n    unsigned int indexOfEntryInCluster = cluster % BLOCK_SIZE;\n    unsigned int fatbegin = part->firstSector + data->vbr->num_reserved_sectors;\n    unsigned int sectorToRead = fatbegin + (cluster / BLOCK_SIZE);\n\n    int readResult;\n    ReturnOnFailureF(readResult = part->device->operation(OpRead, &sectorToRead, part->device->buffer), \n        \"Failed to read fat table, %d\\n\", readResult);\n\n    // We're not actually using the cache\n    //my_memcpy(&data->fat0[BLOCK_SIZE * sectorToRead], part->device->buffer, BLOCK_SIZE);\n\n    // Extract the entry from the block we just read\n    fatEntry = byte_to_int(&part->device->buffer[indexOfEntryInCluster]);\n\nfExit:\n    return fatEntry;\n}\n\nunsigned int Fat32_translateTo83FatName(char* filename, char* dest)\n{\n    char* file = filename + 3; // Skip past x:/\n\n    // Split out extension from file name\n    unsigned int nameLength = my_strlen(file);\n    int extIndex;\n    unsigned int hasExtension = 0;\n    // Step backwards and find the first full stop\n    for (extIndex = nameLength; extIndex >= 0; extIndex--)\n    {\n        if (*(file + extIndex) == '.')\n        {\n            hasExtension = 1;\n            break; // Found it! :-)\n        }\n    }\n\n    if (hasExtension)\n    {\n        my_memcpy(dest, file, extIndex);\n\n        unsigned int i;\n        int paddingSpacesNeeded = 11 - (nameLength - 1); // We removed the . remember?\n        if (paddingSpacesNeeded > 0)\n        {\n            for (i = 0; i < (unsigned int)paddingSpacesNeeded; i++)\n                *((dest + extIndex) + i) = ' ';\n        }\n\n        unsigned int extLength = nameLength - extIndex + 1;\n\n        // and write extension\n        for (i = 0; i < extLength; i++)\n            *(dest + extIndex + paddingSpacesNeeded + i) = *(file + extIndex + 1 + i);\n\n        // aaaand make it all upper case (Note: We need to start considering case insensitive stuff here...)\n        for (i = 0; i < 11; i++)\n        {\n            if (*(dest + i) > 96 && *(dest + i) < 123)\n                *(dest + i) = *(dest + i) - 32;\n        }\n    }\n    else\n    {\n        // No extension\n\n        // Copy the entire name over\n        my_memcpy(dest, file, nameLength);\n\n        // Make upper case\n        unsigned int i;\n        for (i = 0; i < 11; i++)\n        {\n            if (*(dest + i) > 96 && *(dest + i) < 123)\n                *(dest + i) = *(dest + i) - 32;\n        }\n    }\n\n    return 0;\n}\n\nint Fat32_getDirEntry(Partition* part, char* filename, DirEntry** entry)\n{\n    int result = 0;\n    Fat32Disk* disk = (Fat32Disk*)part->data;\n\n    unsigned int filesFound = 0;\n    DirEntry* entries = Fat32_listDirectory(part, disk->rootDirectorySector, &filesFound);\n\n    ReturnOnFailure((filesFound < 1), \"Failed to read root directory.\\n\");\n\n    char* fatFilename = (char*)palloc(11);\n    ReturnOnFailureF((result = Fat32_translateTo83FatName(filename, fatFilename)), \"Failed to translate '%s' to 8.3 format.\\n\", filename);\n\n    DirEntry* file = 0;\n    unsigned int i;\n    unsigned int max = filesFound + 1;\n    for (i = 0; i < max; i++)\n    {\n        // Only search for files for now, no directory support\n        if (entries[i].attribute.bits.directory)\n            continue;\n        \n        if (my_strcmp_s((char*)entries[i].name, 11, fatFilename) == 0)// || \n            //my_strcmp((char*)entries[i].longName, filename) == 1)\n        {\n            file = &entries[i];\n            break; // Found it!\n        }\n    }\n\n    ReturnOnFailureF((file == 0), \"Couldn't find file with name '%s'\\n\", filename);\n\n    // Allocate a new entry with the data so that it isn't tied to the arg\n    *entry = (DirEntry*)palloc(sizeof(DirEntry));\n    char* dirPtr = (char*)*entry;\n    for (i = 0; i < sizeof(DirEntry); i++)\n        *dirPtr++ = 0;\n\n    my_memcpy(*entry, file, sizeof(DirEntry));\n\n    return 0;\n\nfExit:\n    return -1;\n}\n\nint Fat32_Open(void* part, char* filename, FileSystemOpenMode mode)\n{\n    int result = 0;\n    Partition* partition = (Partition*)part;\n\n    // Check if it's already open\n    FileStatus* file = 0;\n    unsigned int i;\n    int firstAvailableSlot = -1;\n    for (i = 0; i < 5; i++)\n    {\n        if (partition->openFiles[i].file == 0)\n        {\n            if (firstAvailableSlot == -1)\n                firstAvailableSlot = i;\n\n            continue;\n        }\n\n        if (my_strcmp((char*)partition->openFiles[i].filename, filename) == 0)\n        {\n            if (mode == FsOpenWrite)\n            {\n                printf(\"File is already open, can not write to it\\n\");\n                return -1; // Two people can't write to the same file simultaneously \n            }\n            else\n            {\n                // Bingo! Already open so we don't have to search for it!\n                file = &partition->openFiles[i];\n                break;\n            }\n        }\n    }\n\n    if (file == 0)\n    {\n        ReturnOnFailure(firstAvailableSlot < 0, \"Can't open more files, please close some handles and try again.\\n\");\n\n        DirEntry* entry = 0;\n        ReturnOnFailureF(result = Fat32_getDirEntry(partition, filename, &entry), \"Failed to get dir entry for %s.\\n\", filename);\n\n        file = &partition->openFiles[firstAvailableSlot];\n\n        file->streamPosition = 0;\n        file->file = entry;\n        file->mode = mode;\n        my_memcpy(file->filename, filename, my_strlen(filename));\n    }\n\n    return (partition->ownerDeviceId << 16) & (partition->partitionId << 8) & (firstAvailableSlot);\n\nfExit:\n\n    return -1;\n}\n\nint Fat32_Close(void* part, int handle)\n{\n    int result = 0;\n\n    ReturnOnFailure(result = handle < 0 || handle > 4, \"fat32_close: Invalid handle.\\n\");\n\n    unsigned int openFileIndex = (handle & 0xFF);\n    Partition* partition = (Partition*)part;\n    FileStatus* file = &partition->openFiles[openFileIndex];\n\n    phree(file->file);\n    file->file = 0;\n    file->streamPosition = 0;\n\n    // Zero out the name so that it's nice and clean\n    unsigned int i;\n    for (i = 0; i < 80; i++)\n        file->filename[i] = 0;\n    file->mode = FsFileClosed;\n\nfExit:\n    return result;\n}\n\nint Fat32_Seek(void* part, int handle, long int offset, FsSeekOrigin origin)\n{\n    int result = 0;\n\n    ReturnOnFailure(result = handle < 0 || handle > 4, \"Fat32_Seek: Invalid handle.\\n\");\n\n    unsigned int openFileIndex = (handle & 0xFF);\n    Partition* partition = (Partition*)part;\n    FileStatus* file = &partition->openFiles[openFileIndex];\n\n    switch (origin)\n    {\n    case FsSeekBegin:\n        file->streamPosition = offset;\n        break;\n    case FsSeekCurrent:\n        file->streamPosition += offset;\n        break;\n    case FsSeekEnd:\n        file->streamPosition = file->file->size - offset;\n        break;\n    default:\n        result = -1;\n        printf(\"Fat32_Seek: Invalid seek origin\\n\");\n        break;\n    }\n\nfExit:\n    return result;\n}\n\nint Fat32_Tell(void* part, int handle)\n{\n    unsigned int openFileIndex = (handle & 0xFF);\n\n    if (openFileIndex > 4)\n        return -1; // Invalid file index\n\n    Partition* partition = (Partition*)part;\n    FileStatus* file = &partition->openFiles[openFileIndex];\n\n    return file->streamPosition;\n}\n\nint Fat32_Read(void* part, void* buf, unsigned long int bytesToRead, int handle)\n{\n    int result = 0;\n    unsigned int openFileIndex = (handle & 0xFF);\n\n    if (openFileIndex > 4)\n        return -1; // Invalid file index\n\n    char* argBuf = (char*)buf;\n    Partition* partition = (Partition*)part;\n    FileStatus* file = &partition->openFiles[openFileIndex];\n\n    // Figure out how many bytes to read\n    unsigned long int bytesLeftInFile = file->file->size - file->streamPosition;\n    if (bytesLeftInFile < bytesToRead)\n        bytesToRead = bytesLeftInFile;\n\n    Fat32Disk* disk = (Fat32Disk*)partition->data;\n\n    unsigned int fileStartCluster = file->file->firstClusterHigh << 16 | file->file->firstClusterLow;\n    unsigned int fileFirstSector = disk->rootDirectorySector + ((fileStartCluster - 2) * disk->vbr->sectors_per_cluster);\n\n    //unsigned int curStreamSector = file->streamPosition / 512;\n    unsigned int sectorsToRead = bytesToRead / 512;\n    sectorsToRead += bytesToRead % 512 != 0 ? 1 : 0;\n\n    unsigned int totalBytesRead = 0;\n    unsigned int i;\n    if (sectorsToRead < disk->vbr->sectors_per_cluster)\n    {\n        // Oh joy! We only have to read one cluster\n        for (i = 0; i < sectorsToRead; i++)\n        {\n            unsigned int sectorToRead = fileFirstSector + i;\n\n            ReturnOnFailureF(result = partition->device->operation(OpRead, &sectorToRead, partition->device->buffer),\n                \"Failed to read sector %d for file with handle %d.\\n\", sectorToRead, handle);\n\n            unsigned int bytesRead = bytesToRead > 512 ? 512 : bytesToRead;\n\n            my_memcpy((argBuf + totalBytesRead), partition->device->buffer, bytesRead);\n\n            bytesToRead -= bytesRead;\n            totalBytesRead += bytesRead;\n        }\n    }\n    else\n    {\n        // THe file is spread across multiple clusters - we need the FAT for this one\n        unsigned int clustersToRead = sectorsToRead / disk->vbr->sectors_per_cluster;\n        clustersToRead += sectorsToRead % disk->vbr->sectors_per_cluster != 0 ? 1 : 0;\n\n        unsigned int currentCluster = fileStartCluster;\n        for (i = 0; i < clustersToRead; i++)\n        {\n            // Read the cluster (8 * 512 byte blocks, 4096 bytes)\n            unsigned int j;\n            for (j = 0; j < disk->vbr->sectors_per_cluster; j++)\n            {\n                unsigned int lba = (disk->rootDirectorySector + ((currentCluster - 2) * disk->vbr->sectors_per_cluster)) + j;\n\n                ReturnOnFailureF(result = partition->device->operation(OpRead, &lba, partition->device->buffer), \"Failed to read sector %d for file with handle %d. Cluster: %d\\n\", lba, handle, currentCluster);\n\n                unsigned int bytesRead = bytesToRead > 512 ? 512 : bytesToRead;\n\n                my_memcpy(argBuf + totalBytesRead, partition->device->buffer, bytesRead);\n\n                bytesToRead -= bytesRead;\n                totalBytesRead += bytesRead;\n            }\n            \n            // used to be disk->fat0[currentCluster]\n            unsigned int fatEntry = Fat32_getFatEntry(partition, currentCluster); // Ignore 4 high bits\n\n            if (fatEntry == -1)\n            {\n                printf(\"Failed to retrieve FAT entry for cluster. :-(\");\n                break;\n            }\n\n            // Ignore the 4 high bits\n            fatEntry &= 0x0FFFFFFF;\n\n            if (fatEntry >= 0x0FFFFFF8)\n                break; // There are no more clusters to read! (this shouldn't happen?)\n            else if (fatEntry == 0x0FFFFFF7)\n                break; // Bad cluster :-( Report to user?\n\n            currentCluster = fatEntry;\n        }\n    }\n\nfExit:\n    return result;\n}\n\nunsigned int Fat32_Write(void* part, char* filename)\n{\n    printf(\"You have to write the code first, dummy! :)\");\n\n    return 1;\n}\n\nunsigned int Fat32_ReadBlock(Partition* part, char* buffer, unsigned int blockNumber)\n{\n    //Fat32Disk* disk = (Fat32Disk*)part->data;\n\n    unsigned int result = 0;\n\n    ReturnOnFailure(result = part->device->operation(OpRead, &blockNumber, part->device->buffer), \"Failed to read first sector of file.\\n\");\n\n    // Copy read data to the buffer\n    my_memcpy(buffer, part->device->buffer, BLOCK_SIZE);\n\nfExit:\n    return result;\n}\n\nunsigned int Fat32_Initialize(Partition* partition)\n{\n    unsigned int result = 0;\n\n    partition->open = &Fat32_Open;\n    partition->close = &Fat32_Close;\n    partition->read = &Fat32_Read;\n    partition->write = &Fat32_Write;\n\n    // Read Volume Boot Record\n    ReturnOnFailure(result = partition->device->operation(OpRead, &partition->firstSector, partition->device->buffer), \"Failed to read volume boot record.\\n\");\n\n    Fat32Disk* data = (Fat32Disk*)palloc(sizeof(Fat32Disk));\n    unsigned int it;\n    for (it = 0; it < sizeof(Fat32Disk); it++)\n        *(((unsigned int*)data) + it) = 0;\n\n    data->vbr = Fat32_parseVirtualBootRecord(partition->device->buffer, BLOCK_SIZE);\n\n    partition->data = data; // Store it so we can retrieve the precomputed values later on\n\n    // Calculate start of root directory\n    data->rootDirectorySector = partition->firstSector + data->vbr->num_reserved_sectors + (data->vbr->num_fats * data->vbr->sectors_per_fat);\n\n    // Process the allocation tables\n    //unsigned int fatbegin = partition->firstSector + data->vbr->num_reserved_sectors;\n\n    // Allocate memory for the tables\n    // In the future we might be able to dynamically allocate this as and when it's actually used\n    data->fat0 = (unsigned int*)palloc(data->vbr->sectors_per_fat * data->vbr->bytes_per_sector);\n    data->fat1 = (unsigned int*)palloc(data->vbr->sectors_per_fat * data->vbr->bytes_per_sector);\n\nfExit:\n\n    return result;\n}\n\nunsigned int fat32_unicode16ToLongName(Fat32Lfe* dest, unsigned short* src, unsigned int srcLength)\n{\n    unsigned int i;\n    for (i = 0; i < srcLength; i++)\n    {\n        if (src[i] == 0)\n        {\n            dest->length = i;\n            dest->name[i] = 0;\n            return 0; // Done reading, success!\n        }\n\n        dest->name[i] = (char)src[i];\n    }\n\n    dest->length = srcLength;\n\n    return i;\n}\n\nFat32BootSector* Fat32_parseVirtualBootRecord(unsigned char* buf, unsigned int buflen)\n{\n    Fat32BootSector* boot_sector = (Fat32BootSector*)palloc(sizeof(Fat32BootSector));\n\n    my_memcpy(&boot_sector->partition_type_name[0], &buf[0x3], 8);\n    boot_sector->partition_type_name[8] = '\\0'; // Make oem name print friendly\n    my_memcpy(&boot_sector->bytes_per_sector, &buf[0x0B], 2);\n    my_memcpy(&boot_sector->sectors_per_cluster, &buf[0x0D], 1);\n    my_memcpy(&boot_sector->num_reserved_sectors, &buf[0x0E], 2);\n    my_memcpy(&boot_sector->num_fats, &buf[0x10], 1);\n    my_memcpy(&boot_sector->root_entries, &buf[0x11], 2);\n    my_memcpy(&boot_sector->small_sectors, &buf[0x13], 2);\n    my_memcpy(&boot_sector->media_type, &buf[0x15], 1);\n    my_memcpy(&boot_sector->sectors_per_fat, &buf[0x24], 2);\n    my_memcpy(&boot_sector->sectors_per_head, &buf[0x18], 2);\n    my_memcpy(&boot_sector->number_of_heads, &buf[0x1A], 2); // heads per cylinder\n    my_memcpy(&boot_sector->hidden_sectors, &buf[0x1C], 4);\n    my_memcpy(&boot_sector->large_sectors, &buf[0x20], 4);\n    my_memcpy(&boot_sector->large_sectors_per_fat, &buf[0x24], 4);\n    my_memcpy(&boot_sector->flags, &buf[0x28], 2);\n    my_memcpy(&boot_sector->version, &buf[0x2A], 2);\n    my_memcpy(&boot_sector->root_dir_start, &buf[0x2C], 4);\n    my_memcpy(&boot_sector->info_sector, &buf[0x30], 2);\n    my_memcpy(&boot_sector->backup_sector, &buf[0x32], 2);\n\n    // TODO: Add error checking on the read values\n\n    return boot_sector;\n}\n\nDirEntry* Fat32_listDirectory(Partition* part, unsigned int firstSector, unsigned int* pFilesFound)\n{\n    DirEntry* entries = (DirEntry*)palloc(sizeof(DirEntry)* 19);\n    Fat32Lfe* entries_long = (Fat32Lfe*)palloc(sizeof(Fat32Lfe)* 19);\n\n    char* entriesPtr = (char*)entries;\n    char* longEntriesPtr = (char*)entries_long;\n    unsigned int i;\n    for (i = 0; i < sizeof(DirEntry)* 19; i++)\n        *entriesPtr++ = 0;\n    for (i = 0; i < sizeof(Fat32Lfe)* 19; i++)\n        *longEntriesPtr++ = 0;\n\n    unsigned int lfn_count = 0;\n    unsigned int last_lfn = 0;\n    unsigned int file_index = 0;\n\n    unsigned int doneReading = 0;\n\n    unsigned int blockOffset = 0;\n    while (!doneReading)\n    {\n        // Read a block (NOTE: This fails miserably on multi-cluster directories)\n        unsigned int blockToRead = firstSector + blockOffset;\n        part->device->operation(OpRead, &blockToRead, part->device->buffer);\n\n        unsigned char* buf = part->device->buffer;\n\n        // 16 entries per block\n        unsigned int i;\n        for (i = 0; i < 16; i++)\n        {\n            unsigned int currentEntryOffset = i * 32; // Entries are 32 byte\n            if (buf[0 + currentEntryOffset] == 0)\n            {\n                doneReading = 1;\n                break;\n            }\n            else if (buf[0 + currentEntryOffset] == 0xE5) // Free entry\n                continue;\n\n            if (buf[11 + currentEntryOffset] == LONG_FILE_ENTRY_SIGNATURE)\n            {\n                // Long entry\n                unsigned char lfn_index = ((buf[0 + currentEntryOffset] - 1) & ~0x40); // Just ignore the \"last lfn entry\" flag\n\n                unsigned char* tmp = (unsigned char*)palloc(sizeof(short)* 26);\n                my_memcpy(&tmp[0], &buf[1 + currentEntryOffset], 10);\n                my_memcpy(&tmp[0 + 10], &buf[14 + currentEntryOffset], 12);\n                my_memcpy(&tmp[0 + 10 + 12], &buf[28 + currentEntryOffset], 4);\n\n                fat32_unicode16ToLongName(&entries_long[lfn_index], (unsigned short*)tmp, 13);\n\n                phree(tmp);\n\n                lfn_count++;\n\n                last_lfn = 1;\n            }\n            else\n            {\n                // Short entry\n                if (last_lfn)\n                {\n                    char lfn[255];\n                    unsigned int offset = 0;\n                    unsigned int lfn_index = 0;\n\n                    // Copy concatenate all the long name entries into a string\n                    for (lfn_index = 0; lfn_index < lfn_count; lfn_index++)\n                    {\n                        my_memcpy(&lfn[offset], entries_long[lfn_index].name, entries_long[lfn_index].length);\n                        offset += entries_long[lfn_index].length;\n                    }\n\n                    my_memcpy(&entries[file_index].longName, lfn, offset + 1);\n                    entries[file_index].longName[offset] = 0; // null terminated\n                    entries[file_index].hasLongName = 1;\n\n                    last_lfn = 0;\n                }\n\n                // Copy the entire short entry to the dir entry\n                my_memcpy(&entries[file_index], &buf[0 + currentEntryOffset], 32);\n\n                file_index++;\n            }\n        }\n\n        blockOffset++; // Read next block\n    }\n\n    *pFilesFound = file_index - 1; // 0 based\n\n    return entries;\n}\n\nchar* Fat32_dateToString(short date)\n{\n    unsigned short year, month, day;\n\n    char* res = (char*)palloc(11); // yyyy-mm-dd\\0 format\n\n    year = 1980 + ((date & 0xFE00) >> 9); // Year is stored in 15-9 (0 = 1980)\n    month = (date & 0xF0) >> 4; // Month is stored in 8-5 (1 - 12)\n    day = (date & 0x1F);\n\n    itoa(year, &res[0]);\n    res[4] = '-';\n    itoa(month, &res[5]);\n\n    // Ugly special handling for now until I add capabilities for itoa to padd with n zeroes\n    unsigned int offset = 0;\n    if (month < 10)\n        offset = 6;\n    else\n        offset = 7;\n\n    res[offset] = '-';\n    offset++;\n\n    itoa(day, &res[offset]);\n\n    return res;\n}\n\nchar* Fat32_timeToString(short time)\n{\n    unsigned short hour, minute, second;\n    char* res = (char*)palloc(9); // HH:mm:ss (length: 9)\n\n    hour = ((time & 0xF800) >> 11); // 15-11 (0-23)\n    minute = ((time & 0x7FF) >> 5); // 10-5 (0-59)\n    second = (time & 0x1F) * 2; // 4-0 (0-29, seconds / 2)\n\n    itoa(hour, res);\n\n    unsigned int offset;\n    if (hour < 9)\n        offset = 1;\n    else\n        offset = 2;\n\n    res[offset] = ':';\n    offset++;\n\n    itoa(minute, &res[offset]);\n\n    if (minute < 9)\n        offset += 1;\n    else\n        offset += 2;\n\n    res[offset] = ':';\n    offset++;\n\n    itoa(second, &res[offset]);\n\n    return res;\n}",
-			"file": "source/fs/fat32.c",
-			"file_size": 19698,
-			"file_write_time": 130406550641932889,
+			"file": "source/fs/fs.c",
 			"settings":
 			{
-				"buffer_size": 19708,
+				"buffer_size": 4112,
 				"line_ending": "Unix"
 			}
 		},
 		{
-			"file": "/home/simon/.config/sublime-text-3/Packages/SublimeClang/SublimeClang.sublime-settings",
+			"file": "/etc/vsftpd.conf",
 			"settings":
 			{
-				"buffer_size": 13844,
+				"buffer_size": 5655,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "include/fs/fs.h",
+			"settings":
+			{
+				"buffer_size": 3796,
 				"line_ending": "Unix"
 			}
 		}
@@ -33,6 +38,18 @@
 		"height": 117.0,
 		"selected_items":
 		[
+			[
+				"sublime",
+				"SublimeClang: Clear cache"
+			],
+			[
+				"Sublime",
+				"SublimeClang: Clear cache"
+			],
+			[
+				"SublimeCLang",
+				"Preferences: SublimeClang Settings – Default"
+			],
 			[
 				"SublimeClang",
 				"Preferences: SublimeClang Settings – Default"
@@ -59,10 +76,23 @@
 	},
 	"file_history":
 	[
+		"/home/simon/git/PiOS/source/fs/filesystem.c",
+		"/home/simon/Dropbox/Pi/FS Pseudo",
+		"/home/simon/git/PiOS/pios.sublime-project",
+		"/home/simon/git/PiOS/include/util/utilities.h",
+		"/home/simon/git/PiOS/source/fs/fat32.c",
+		"/home/simon/.config/sublime-text-3/Packages/C++/C.tmLanguage",
+		"/home/simon/git/PiOS/makefile",
+		"/home/simon/.config/sublime-text-3/Packages/User/Default (Linux).sublime-keymap",
+		"/home/simon/.config/sublime-text-3/Packages/Default/Default (Linux).sublime-keymap",
+		"/home/simon/.config/sublime-text-2/Packages/C++/C.tmLanguage",
+		"/home/simon/.config/sublime-text-3/Packages/SublimeClang/SublimeClang.sublime-settings",
+		"/home/simon/git/PiOS/include/fs/filesystem.h",
+		"/home/simon/git/PiOS/include/types/types.h"
 	],
 	"find":
 	{
-		"height": 0.0
+		"height": 22.0
 	},
 	"find_in_files":
 	{
@@ -76,6 +106,10 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"storage.type",
+			"type",
+			"_tab",
+			"storage_device"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -93,24 +127,24 @@
 	"groups":
 	[
 		{
-			"selected": 0,
+			"selected": 1,
 			"sheets":
 			[
 				{
 					"buffer": 0,
-					"file": "source/fs/fat32.c",
+					"file": "source/fs/fs.c",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 19708,
+						"buffer_size": 4112,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								791,
-								791
+								1466,
+								1466
 							]
 						],
 						"settings":
@@ -120,40 +154,68 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 273.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 0,
+					"stack_index": 1,
 					"type": "text"
 				},
 				{
 					"buffer": 1,
-					"file": "/home/simon/.config/sublime-text-3/Packages/SublimeClang/SublimeClang.sublime-settings",
+					"file": "/etc/vsftpd.conf",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 13844,
+						"buffer_size": 5655,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								13542,
-								13542
+								5655,
+								5655
 							]
 						],
 						"settings":
 						{
-							"syntax": "Packages/JavaScript/JSON.tmLanguage",
+							"syntax": "Packages/Text/Plain text.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 1299.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "include/fs/fs.h",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 3796,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								2158,
+								2158
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/C++/C++.tmLanguage",
 							"tab_size": 4,
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 5197.0,
+						"translation.y": 1121.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 1,
+					"stack_index": 2,
 					"type": "text"
 				}
 			]
@@ -161,7 +223,7 @@
 	],
 	"incremental_find":
 	{
-		"height": 0.0
+		"height": 21.0
 	},
 	"input":
 	{
@@ -192,7 +254,7 @@
 	"menu_visible": true,
 	"output.clang":
 	{
-		"height": 175.0
+		"height": 79.0
 	},
 	"output.find_results":
 	{
@@ -201,7 +263,7 @@
 	"project": "pios.sublime-project",
 	"replace":
 	{
-		"height": 0.0
+		"height": 40.0
 	},
 	"save_all_on_build": true,
 	"select_file":
@@ -239,5 +301,6 @@
 	"status_bar_visible": true,
 	"template_settings":
 	{
+		"max_columns": 1
 	}
 }

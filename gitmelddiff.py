@@ -3,4 +3,5 @@
 import sys
 import os
 
-os.system('meld "%s" "%s"' % (sys.argv[2], sys.argv[5]))
+sys.stdout.write("meld '%s' '%s'\n" % (sys.argv[2], sys.argv[5]))
+os.system("meld '%s' '%s'" % (sys.argv[2], sys.argv[5]))

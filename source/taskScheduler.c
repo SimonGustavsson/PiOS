@@ -80,7 +80,7 @@ Task* TaskScheduler_CreateTask(void(*mainFunction)(void))
 
     // Set PC to the task's function so that as soon as we switch modes, that
     // function is invoked
-	task->registers.r15 = (unsigned int)&mainFunction;
+	task->registers->r15 = (unsigned long)&mainFunction;
 	task->state = Ready;
 
 	// Allocate frames (start size = 5 MB / task)

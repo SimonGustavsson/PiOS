@@ -17,6 +17,8 @@ DEPENDENCY_DIR := $(BUILD_DIR)/dependencies
 C_INCLUDE_PATH := $(shell find $(INCLUDE_DIR)/ -type d)
 C_INCLUDE_PATH += $(shell find $(SOURCE_DIR)/ -type d)
 
+GCC_INCLUDE = $(foreach d, $(C_INCLUDE_PATH), -I$d)
+
 export C_INCLUDE_PATH
 
 # When building C files, look in all subdirectories of source
@@ -50,15 +52,18 @@ $(BUILD_DIR)/kernel.img: $(BUILD_DIR)/kernel.elf $(BUILD_DIR)/symbols.txt $(BUIL
 
 # Create disassembly for ease of debugging
 $(BUILD_DIR)/disassembly.txt: $(BUILD_DIR)/kernel.elf
+	@echo Creating binary image...
 	@$(TOOL)-objdump -D $< > $@
 	
 # Dump symbol table for functions
 $(BUILD_DIR)/symbols.txt: $(BUILD_DIR)/kernel.elf
+	@echo Dumping symbol table..
 	@$(TOOL)-objdump -t $< | awk -F ' ' '{if(NF >= 2) print $$(1), "\t", $$(NF);}' > $@
 
 # Link all of the objects (Temporarily removed -l $(LIBRARIES))
 $(BUILD_DIR)/kernel.elf: $(AOBJECT) $(COBJECT)
-	@$(TOOL)-ld $(LINKER_FLAGS) $(AOBJECT) $(COBJECT) -Map $(BUILD_DIR)/kernel.map -T memorymap -o $(BUILD_DIR)/kernel.elf
+	@echo Linking kernel.elf...
+	@$(TOOL)-ld $(LINKER_FLAGS) $(AOBJECT) $(COBJECT) $(GCC_INCLUDE) -Map $(BUILD_DIR)/kernel.map -T memorymap -o $(BUILD_DIR)/kernel.elf
 
 # If make was run previously, we will have .d dependency files
 # Describing wihich headers the objects depend on, import those targets
@@ -67,8 +72,9 @@ $(BUILD_DIR)/kernel.elf: $(AOBJECT) $(COBJECT)
 	
 #build c files
 # The dependency stuff here is a hack, shouldn't have to do this?
-$(OBJ_DIR)/%.o: */*/%.c
-	@$(TOOL)-gcc -c $< -o $@ $(CFLAGS) -I$(C_INCLUDE_PATH) -MD -MF $(DEPENDENCY_DIR)/$*.d 
+$(OBJ_DIR)/$(notdir %).o: %.c
+	@echo Building $< from $@
+	@$(TOOL)-gcc -c $< -o $@ $(CFLAGS) $(GCC_INCLUDE) -MD -MF $(DEPENDENCY_DIR)/$*.d 
 	
 # Create a temp file
 	@mv -f $(DEPENDENCY_DIR)/$*.d $(DEPENDENCY_DIR)/$*.d.tmp

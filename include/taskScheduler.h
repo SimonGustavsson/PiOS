@@ -19,4 +19,4 @@ void TaskScheduler_Initialize(void);
 Task* TaskScheduler_CreateTask(void(*mainFunction)(void));
 void TaskScheduler_EnqueueTask(Task* task);
 
-#endif SCHEDULER_H
+#endif
