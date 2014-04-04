@@ -24,10 +24,10 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <NMakeBuildCommandLine>c:/cygwin64/bin/bash.exe --login -c "cd  /cygdrive/c/git/PiOS/ &amp;&amp; make"</NMakeBuildCommandLine>
+    <NMakeBuildCommandLine>$(ProjectDir)vsbuild.bat PiOS</NMakeBuildCommandLine>
     <NMakeOutput>MyMakefileProj.exe</NMakeOutput>
-    <NMakeCleanCommandLine>c:/cygwin64/bin/bash.exe --login -c "cd  /cygdrive/c/git/PiOS/ &amp;&amp; make clean"</NMakeCleanCommandLine>
-    <NMakeReBuildCommandLine>c:/cygwin64/bin/bash.exe --login -c "cd  /cygdrive/c/git/PiOS/ &amp;&amp; make rebuild"</NMakeReBuildCommandLine>
+    <NMakeCleanCommandLine>$(ProjectDir)vsbuild.bat clean</NMakeCleanCommandLine>
+    <NMakeReBuildCommandLine>$(ProjectDir)vsbuild.bat rebuild</NMakeReBuildCommandLine>
     <NMakePreprocessorDefinitions>WIN32;_DEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
     <NMakeIncludeSearchPath>..\include;$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
     <IncludePath>..\include;$(IncludePath)</IncludePath>
@@ -54,12 +54,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\debugging.h" />
-    <ClInclude Include="..\include\fs\filesystem.h" />
     <ClInclude Include="..\include\fs\fs.h" />
     <ClInclude Include="..\include\hardware\device\blockDevice.h" />
     <ClInclude Include="..\include\hardware\device\sdBlockDevice.h" />
     <ClInclude Include="..\include\hardware\emmc.h" />
-    <ClInclude Include="..\include\fs\fat32.h" />
     <ClInclude Include="..\include\hardware\framebuffer.h" />
     <ClInclude Include="..\include\hardware\gpio.h" />
     <ClInclude Include="..\include\hardware\miniUart.h" />
@@ -84,11 +82,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\debugging.c" />
-    <ClCompile Include="..\source\fs\filesystem.c" />
     <ClCompile Include="..\source\fs\fs.c" />
     <ClCompile Include="..\source\hardware\device\sdBlockDevice.c" />
     <ClCompile Include="..\source\hardware\emmc.c" />
-    <ClCompile Include="..\source\fs\fat32.c" />
     <ClCompile Include="..\source\hardware\framebuffer.c" />
     <ClCompile Include="..\source\hardware\gpio.c" />
     <ClCompile Include="..\source\hardware\miniUart.c" />
@@ -111,6 +107,10 @@
     <ClCompile Include="..\source\util\utilities.c" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\include\fs\fat32.old" />
+    <None Include="..\include\fs\filesystem.old" />
+    <None Include="..\source\fs\fat32.old" />
+    <None Include="..\source\fs\filesystem.old" />
     <None Include="..\source\start.s" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

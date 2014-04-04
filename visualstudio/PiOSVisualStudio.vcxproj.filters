@@ -96,9 +96,6 @@
     <ClInclude Include="..\include\hardware\uart.h">
       <Filter>Header Files\hardware</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\fs\fat32.h">
-      <Filter>Header Files\fs</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\util\utilities.h">
       <Filter>Header Files\util</Filter>
     </ClInclude>
@@ -122,9 +119,6 @@
     </ClInclude>
     <ClInclude Include="..\include\hardware\device\blockDevice.h">
       <Filter>Header Files\hardware\device</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\fs\filesystem.h">
-      <Filter>Header Files\fs</Filter>
     </ClInclude>
     <ClInclude Include="..\include\hardware\device\sdBlockDevice.h">
       <Filter>Header Files\hardware\device</Filter>
@@ -154,9 +148,6 @@
     </ClCompile>
     <ClCompile Include="..\source\interruptHandlers.c">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\fs\fat32.c">
-      <Filter>Source Files\fs</Filter>
     </ClCompile>
     <ClCompile Include="..\source\hardware\emmc.c">
       <Filter>Source Files\hardware</Filter>
@@ -203,9 +194,6 @@
     <ClCompile Include="..\source\types\string.c">
       <Filter>Source Files\types</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\fs\filesystem.c">
-      <Filter>Source Files\fs</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\hardware\device\sdBlockDevice.c">
       <Filter>Source Files\hardware\device</Filter>
     </ClCompile>
@@ -216,6 +204,18 @@
   <ItemGroup>
     <None Include="..\source\start.s">
       <Filter>Source Files</Filter>
+    </None>
+    <None Include="..\include\fs\fat32.old">
+      <Filter>Header Files\fs</Filter>
+    </None>
+    <None Include="..\include\fs\filesystem.old">
+      <Filter>Header Files\fs</Filter>
+    </None>
+    <None Include="..\source\fs\fat32.old">
+      <Filter>Source Files\fs</Filter>
+    </None>
+    <None Include="..\source\fs\filesystem.old">
+      <Filter>Source Files\fs</Filter>
     </None>
   </ItemGroup>
 </Project>
