@@ -12,43 +12,46 @@ int fs_initialize(void)
     return 0;
 }
 
-int fs_register_driver(fs_driver* driver)
+int fs_register_driver_factory(int(*factory)(BlockDevice* device, part_info* pInfo, fs_driver_info** driver_info))
 {
-    // TODO, support removal?
-    gFs->fs_drivers[gFs->num_drivers++] = driver;
+    printf("Registering new fs driver factory, currently %d registered.\n", gFs->num_factories);
+
+    if (gFs->num_factories >= MAX_FS_DRIVER_FACTORIES)
+    {
+        printf("Can only register 4 driver factories\n");
+        return -1;
+    }
+
+    gFs->factories[gFs->num_factories++] = factory;
 
     return 0;
 }
 
 int fs_get_next_free_device_slot()
 {
+    printf("Getting next free logical device slot\n");
+
     unsigned int i;
-    if(gFs->numDevices == 0)
+    if (gFs->numDevices == 0)
+    {
+        printf("First registered device, using slot 0\n");
         return 0;
+    }
     else
     {
         for(i = 0; i < gFs->numDevices; i++) 
         {
-            if(gFs->devices[i] == 0)
+            if (gFs->devices[i] == 0)
+            {
+                printf("Found free slot %d\n", i);
                 return i;
+            }
         }
     }
 
+    printf("No slots available for logical device\n");
+
     return -1; // no slots available
-}
-
-fs_driver* fs_get_driver_for_fs_type(unsigned char type)
-{
-    fs_driver* res = 0;
-
-    unsigned int i;
-    for (i = 0; i < gFs->num_drivers; i++)
-    {
-        if (gFs->fs_drivers[i]->type == type)
-            res = gFs->fs_drivers[i];
-    }
-
-    return res;
 }
 
 // This is an extremely stupid and ugly way of doing it, but I don't have sscanf yet
@@ -56,6 +59,7 @@ fs_driver* fs_get_driver_for_fs_type(unsigned char type)
 // Device count
 char* fs_get_next_partition_name(void)
 {
+    printf("Creating name for next partition\n");
     char* name = (char*)pcalloc(sizeof(char*), 10); // Max name length is 10, random hooo
     my_strcpy("hdd", name);
 
@@ -67,11 +71,14 @@ char* fs_get_next_partition_name(void)
     // Make sure it's 0-terminated
     name[3 + my_strlen(devIndexStr) + 1] = 0;
 
+    printf("Name created: '%s'\n", name);
+
     return name;
 }
 
 int fs_add_device(BlockDevice* dev)
 {
+    printf("Adding block deice to file system\n");
     int result = 0;
     int dev_slot;
     unsigned int i;
@@ -79,7 +86,7 @@ int fs_add_device(BlockDevice* dev)
     mbr_t mbr;
     part_info* pInfo;
     partition* part;
-    fs_driver* driver = 0;
+    fs_driver_info* driver = 0;
     unsigned int j;
     unsigned int num_valid_partitions = 0;
 
@@ -96,34 +103,46 @@ int fs_add_device(BlockDevice* dev)
     sector_to_read = 0;
     ReturnOnFailure(result = dev->operation(OpRead, &sector_to_read, dev->buffer), "Failed to read MBR partition\n");
 
+    printf("MBR size: %d, part info size: %d\n", sizeof(mbr_t), sizeof(part_info));
+
     my_memcpy(&mbr, dev->buffer, 512); // Copy into an easy to read struct
     ReturnOnFailure(mbr.signature != 0xAA55, "Invalid MBR signature");
 
-
+    printf("Valid MBR signature found, parsing partition table\n");
     // Parse partitions
     for (i = 0; i < 4; i++) // NOTE: No support for extended partitions!
     {
         pInfo = &mbr.partitions[i];
 
         if (pInfo->type == unknown)
+        {
+            printf("No more partitions\n");
             break; // No more partitions
+        }
+
+        printf("Finding driver for partition %d\n", i);
 
         // Find driver that supports reading from this type
-        driver = fs_get_driver_for_fs_type(pInfo->type);
-        if((result = (unsigned long)driver) != 0) // THIS SHOULDN'T BE LONG ON THE PI? CLANG FFS :)
+        unsigned int j;
+        for (j = 0; j < gFs->num_factories; j++)
+        {
+            if (gFs->factories[j](dev, pInfo, &driver) == 0)
+            {
+                printf("Factory successfully created a driver\n");
+                break;
+            }
+        }
+
+        printf("We should have called factory now if any can handle it, driver: 0x%h\n", driver);
+        
+        if (driver == 0)
         {
             printf("Not fs driver registered for partition of type %d\n", part->type);
             continue;
         }
-
-        // Initialize the driver
-        fs_driver_info* driver_info;
-        result = driver->init(dev, pInfo, &driver_info);
-
-        if(result != 0)
+        else
         {
-            printf("Found valid driver for device, but initialization failed.\n");
-            continue;
+            printf("Driver found , initializing partition structure\n");
         }
 
         // Driver has been initialized
@@ -141,11 +160,13 @@ int fs_add_device(BlockDevice* dev)
         gFs->devices[dev_slot]->partitions[gFs->devices[dev_slot]->num_partitions++] = part;
 
         num_valid_partitions++;
+
+        printf("Partition '%s'(%d) all set up and ready!\n", part->name, i);
     }
 
-    // If we at least found one valid partition, it's an overall success
-    if(num_valid_partitions > 0)
-        result = 0;
+    // If we got this far, we consider initialization a success, even if the device didn't
+    // Contain any valid partitions
+    result = 0;
 
 fExit:
     return result;

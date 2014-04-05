@@ -10,6 +10,8 @@
 #include "memory.h"
 //#include "fs/filesystem.h"
 #include "hardware/device/sdBlockDevice.h"
+#include "fs/fs.h"
+#include "fs/fat32driver.h"
 
 // Windows doesn't have __attribute__ :(
 #ifdef _MSC_VER
@@ -75,9 +77,17 @@ int system_initialize(void)
     // Initialize the SD card and filesystem
     gSd = (BlockDevice*)palloc(sizeof(BlockDevice));
 
+    // Initialize the SD block device
     Sd_Register(gSd);
 
-    //Fs_Initialize(gSd);
+    // Initialize global filesystem
+    fs_initialize();
+
+    // Add support for FAT32 partitions to filesystem
+    fs_register_driver_factory(&fat32_driver_factory);
+
+    // Add the SD card to the file system
+    fs_add_device(gSd);
 
 	//taskScheduler_Init();
 	

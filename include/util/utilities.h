@@ -5,6 +5,9 @@
 #define ReturnOnNull(result, message) if((result) == NULL) { printf((char*)message); goto fExit; }
 #define inline __inline
 
+#ifndef UTILITIES_H
+#define UTILITIES_H
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -54,4 +57,6 @@ extern "C" {
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

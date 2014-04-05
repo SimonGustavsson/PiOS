@@ -54,6 +54,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\debugging.h" />
+    <ClInclude Include="..\include\fs\fat32driver.h" />
     <ClInclude Include="..\include\fs\fs.h" />
     <ClInclude Include="..\include\hardware\device\blockDevice.h" />
     <ClInclude Include="..\include\hardware\device\sdBlockDevice.h" />
@@ -82,6 +83,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\debugging.c" />
+    <ClCompile Include="..\source\fs\fat32driver.c" />
     <ClCompile Include="..\source\fs\fs.c" />
     <ClCompile Include="..\source\hardware\device\sdBlockDevice.c" />
     <ClCompile Include="..\source\hardware\emmc.c" />

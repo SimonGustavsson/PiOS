@@ -1,6 +1,11 @@
 #include "hardware/device/blockDevice.h"
 #define BOOTABLE_FLAG 0x80
 
+#define E_UNSUPPORTED -2
+
+#ifndef FS_H
+#define FS_H
+
 typedef enum{
     UnknownFsType = 0x00,
     Fat12 = 0x01,
@@ -51,7 +56,7 @@ typedef struct {
 
 typedef struct {
     direntry* entry;
-    long long offet;
+    long long offset;
     file_mode mode;
 } direntry_open;
 
@@ -90,19 +95,9 @@ typedef enum {
 typedef struct fs_driver_info fs_driver_info;
 typedef struct fs_driver fs_driver;
 
-struct fs_driver{
-    fs_type type;
-    char* name;
-    unsigned int name_len;
-    BlockDevice* device;
-
-    unsigned int initialized;
-    int(*init)(BlockDevice* device, part_info* pInfo, fs_driver_info** driver_info);
-    int(*op)(fs_op operation, void* arg1, void* arg2);
-} ;
-
 // This struct represents an initialized file system driver on a specific
 // Block device that has been initialized and can be used by Parition*'s to read
+// It is created by a drivers factory function that is registered via a call to fs_register_driver_factory
 struct fs_driver_info {
     char* name; // The name of the device on the system used in fopen("hdd/...") f.ex
     unsigned int name_len;
@@ -143,14 +138,18 @@ typedef struct {
     unsigned short signature;
 } mbr_t;
 
+#define MAX_FS_DRIVER_FACTORIES 4
 typedef struct {
     storage_device* devices[9];
     unsigned int numDevices;
 
-    fs_driver* fs_drivers[4];
-    unsigned int num_drivers;
+    int(*factories[MAX_FS_DRIVER_FACTORIES])(BlockDevice* device, part_info* pInfo, fs_driver_info** driver_info);
+    unsigned int num_factories;
 } file_system;
 
 int fs_initialize(void);
-int fs_register_driver(fs_driver* driver);
+
+int fs_register_driver_factory(int(*factory)(BlockDevice* device, part_info* pInfo, fs_driver_info** driver_info));
 int fs_add_device(BlockDevice*);
+
+#endif
