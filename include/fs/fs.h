@@ -70,12 +70,6 @@ typedef struct {
 } part_info;
 
 typedef enum {
-    unknown_storage = 0,
-    permanent_storage = 2,
-    removable_storage = 4
-} storage_device_type;
-
-typedef enum {
     storage_read = 0,
     storage_write = 2
 } storage_device_op;
@@ -86,7 +80,8 @@ typedef enum {
     fs_op_write = 4,
     fs_op_close = 8,
     fs_op_seek = 16,
-    fs_op_tell = 32
+    fs_op_tell = 32,
+    fs_op_peek = 64
 } fs_op;
 
 // Note: Stupid forward declare because my editor is using clang to
@@ -101,8 +96,10 @@ typedef struct fs_driver fs_driver;
 struct fs_driver_info {
     char* name; // The name of the device on the system used in fopen("hdd/...") f.ex
     unsigned int name_len;
-    fs_driver* driver;
+    BlockDevice* device;
+    part_info* info;
 
+    int(*operation)(fs_driver_info* info, storage_device_op op, void* arg1, void* arg2);
     // Driver specific info will  be here, but the FS don't care about it
     // This just provides the specific filesystems with a place to store
     // Initialization information
@@ -114,19 +111,15 @@ typedef struct {
     fs_driver_info* driver;
     char* name;
     unsigned int name_len;
-    part_info* info;
     fs_type type;
     long long size;
     direntry_open* open_dirs;
     unsigned int num_open_dirs;
-
-    int(*operation)(storage_device_op, void* arg1, void* arg2);
 } partition;
 
 typedef struct {
     int initialized;
     BlockDevice* device;
-    storage_device_type type;
     long long size;
     partition* partitions[4];
     unsigned int num_partitions;

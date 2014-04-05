@@ -12,6 +12,9 @@
 extern "C" {
 #endif
 
+#define S_OK 0
+#define E_GENERIC_ERROR -1
+
     // Support for unaligned data access
     static inline void write_word(unsigned int val, unsigned char* buf, int offset)
     {

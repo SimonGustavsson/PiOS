@@ -15,6 +15,7 @@ unsigned int Sd_Register(BlockDevice* device)
     device->cleanup = Sd_Cleanup;
     device->operation = Sd_DeviceOperation;
     device->buffer = (unsigned char*)palloc(BLOCK_SIZE);
+    device->type = BlockDevRemovable;
 
     return 0;
 }
