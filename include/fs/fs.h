@@ -196,5 +196,6 @@ int fs_register_driver_factory(int(*factory)(BlockDevice* device, part_info* pIn
 int fs_add_device(BlockDevice*);
 
 int fs_open(char* filename, file_mode mode);
+int fs_close(int handle);
 
 #endif

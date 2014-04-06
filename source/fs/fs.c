@@ -245,3 +245,37 @@ int fs_open(char* filename, file_mode mode)
     // Add open filed index to the handle by sticking it in the low 8 bits and return it
     return ((part->num_open_dirs - 1) & 0xFF);
 }
+
+int fs_close(int handle)
+{
+    printf("fs - Closing %d\n", handle);
+
+    // Handles look like this:
+    // uuuuuuuu dddddddd pppppppp oooooooo
+    // u = Unused, d = device index, p = partition index, o = open file index
+    if (handle == INVALID_HANDLE)
+    {
+        printf("Can't close invalid file handle\n");
+        return -1;
+    }
+
+    int devIndex = (handle >> 16) & 0xFF;
+    int partIndex = (handle >> 8) & 0xFF;
+    int fileIndex = handle & 0xFF;
+
+    if (devIndex == -1 || partIndex == -1 || fileIndex == -1 || 
+        devIndex >= gFs->numDevices || partIndex >= gFs->devices[devIndex]->num_partitions)
+    {
+        printf("Can't close invalid file handle(d:%d,p:%d,f:%d)\n", devIndex, partIndex, fileIndex);
+        return -1; // Invalid handle
+    }
+
+    printf("Found dir entry from handle(d:%d,p:%d,f:%d)\n", devIndex, partIndex, fileIndex);
+
+    partition* part = gFs->devices[devIndex]->partitions[partIndex];
+
+    phree(part->open_dirs[fileIndex]);
+    part->open_dirs[fileIndex] = 0;
+    part->num_open_dirs--;
+}
+

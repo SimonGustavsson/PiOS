@@ -92,6 +92,8 @@ int system_initialize(void)
     // Example of opening a file
     int cmdHandle = fs_open("/dev/sd0/cmdline.txt", file_read);
     printf("cmdline.txt handle: %d\n", cmdHandle);
+    if (cmdHandle != INVALID_HANDLE)
+        fs_close(cmdHandle);
 
 	//taskScheduler_Init();
 	
