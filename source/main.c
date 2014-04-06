@@ -89,6 +89,10 @@ int system_initialize(void)
     // Add the SD card to the file system
     fs_add_device(gSd);
 
+    // Example of opening a file
+    int cmdHandle = fs_open("/dev/sd0/cmdline.txt", file_read);
+    printf("cmdline.txt handle: %d\n", cmdHandle);
+
 	//taskScheduler_Init();
 	
 	printf("System initialization complete, result: %d\n", result);

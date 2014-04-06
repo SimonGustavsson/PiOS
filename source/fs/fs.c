@@ -5,6 +5,62 @@
 
 static file_system* gFs;
 
+/*
+* Forward declaring 
+*/
+// NOTE: This function expects ABSOLUTE paths, /dev/hdd0/....
+int fs_get_partition(char* filename, partition** part);
+
+
+// NOTE: This function expects ABSOLUTE paths, /dev/hdd0/....
+int fs_get_partition(char* filename, partition** part)
+{
+    // Skip past /dev/, we don't need it from this point onwards
+    filename += 5;
+    
+    // Find the end of the device name (which is actually the partition)
+    int deviceNameEndIndex = 0;
+    while (*filename && *filename != '/')
+    {
+        filename++; 
+        deviceNameEndIndex++;
+    }
+
+    // Rewind back so we can extract device name
+    filename -= deviceNameEndIndex;
+
+    // Strip out the device name
+    int devNameLen = deviceNameEndIndex;
+    char* devName = (char*)pcalloc(sizeof(char), deviceNameEndIndex + 2);
+    my_memcpy(devName, filename, deviceNameEndIndex);
+    devName[deviceNameEndIndex + 1] = 0;
+
+    unsigned int i, j;
+    for (i = 0; i < gFs->numDevices; i++)
+    {
+        for (j = 0; j < gFs->devices[i]->num_partitions; j++)
+        {
+            partition* curPart = gFs->devices[i]->partitions[j];
+            if (curPart->name_len == devNameLen && my_strcmp_s(curPart->name, devNameLen, devName) == 0)
+            {
+                *part = curPart;
+
+                // Return information about this partition that can be used to make up a file handle
+                // Making it easy to retrieve this partition
+                // Bits of handle:
+                // uuuuuuuu dddddddd pppppppp oooooooo
+                // u = Unused, d = device index, p = partition index, o = open file index
+                // Note open file index is not set by this function, we just make room for it
+                return ((i & 0xFF) << 16) | ((j & 0xFF) << 8);
+            }
+        }
+    }
+
+    printf("Could not find partition for filename\n");
+
+    return INVALID_HANDLE;
+}
+
 int fs_initialize(void)
 {
     gFs = (file_system*)pcalloc(sizeof(file_system), 1);
@@ -84,7 +140,6 @@ int fs_add_device(BlockDevice* dev)
     part_info* pInfo;
     partition* part;
     fs_driver_info* driver = 0;
-    unsigned int j;
     unsigned int num_valid_partitions = 0;
 
     // TODO: Add "initialised" flag?
@@ -148,4 +203,45 @@ int fs_add_device(BlockDevice* dev)
 
 fExit:
     return result;
+}
+
+int fs_get_direntry(partition* part, char* filename, direntry** fileEntry)
+{
+    return -1;
+}
+
+// NOTE: This assumes absolute paths like /dev/sd0/... for no
+int fs_open(char* filename, file_mode mode)
+{
+    partition* part;
+
+    int handle = fs_get_partition(filename, &part);
+
+    if (handle == INVALID_HANDLE)
+    {
+        printf("No device with that name registered\n");
+        return INVALID_HANDLE;
+    }
+
+    // Strip out device name and everything, the driver only needs to know the file name
+    // Relative to its filesystem
+    filename += 5;
+    while (*filename && *filename++ != '/');
+    
+    direntry* fileEntry = 0;
+    if (part->driver->operation(part->driver, fs_op_open, filename, fileEntry) != S_OK)
+    {
+        printf("Failed to get directory entry for '%s', does it really exist?\n", filename);
+        return INVALID_HANDLE;
+    }
+
+    direntry_open* entry = (direntry_open*)pcalloc(sizeof(direntry_open), 1);
+    entry->mode = mode;
+    entry->offset = 0;
+    entry->entry = fileEntry;
+
+    part->open_dirs[part->num_open_dirs++] = entry;
+
+    // Add open filed index to the handle by sticking it in the low 8 bits and return it
+    return ((part->num_open_dirs - 1) & 0xFF);
 }

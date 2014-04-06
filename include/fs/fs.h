@@ -2,6 +2,7 @@
 #define BOOTABLE_FLAG 0x80
 
 #define E_UNSUPPORTED -2
+#define INVALID_HANDLE -1
 
 #ifndef FS_H
 #define FS_H
@@ -62,27 +63,46 @@ typedef enum {
      } bits;
  } direntry_attribute;
 
-typedef struct {
-    unsigned int it;
-    char* name;
-    unsigned int name_len;
+ // This is what I want to do, but as I'm too lazy to add a translation between
+ // FAT32 dir entries and my structure right now, I'll just be using the FAT32 structure for every entry
+//typedef struct {
+//    unsigned int it;
+//    char* name;
+//    unsigned int name_len;
+//
+//    // TODO: Right now this is using the FAT32 attribute structure
+//    // Should use a more generic on in the future
+//    direntry_attribute attribute;
+//    // TODO: Remove long file name, should never be using short entries, so this
+//    // Should be the default, and only entry
+//    unsigned char hasLongName;
+//    unsigned char longName[256];
+//
+//    // Not 100% sure I want to store the size here?
+//    // Added it so I don't have to rewrite the entire fat32 driver now
+//    long long size;
+//
+//    // Fat32 Specifics, figure out how to remove
+//    unsigned int first_cluster_high;
+//    unsigned int first_cluster_low;
+//} direntry;
 
-    // TODO: Right now this is using the FAT32 attribute structure
-    // Should use a more generic on in the future
-    direntry_attribute attribute;
-    // TODO: Remove long file name, should never be using short entries, so this
-    // Should be the default, and only entry
-    unsigned char hasLongName;
-    unsigned char longName[256];
-
-    // Not 100% sure I want to store the size here?
-    // Added it so I don't have to rewrite the entire fat32 driver now
-    long long size;
-
-    // Fat32 Specifics, figure out how to remove
-    unsigned int first_cluster_high;
-    unsigned int first_cluster_low;
-} direntry;
+ typedef struct {
+          unsigned char name[11]; // Offset; 0x00 - (11 bytes)
+          direntry_attribute attribute; // Offset: 0x0B
+          unsigned char reserved; // Reserved for Windows NT (Supposedly this tells us about the casing)
+          unsigned char creationTimeInTenths; // Creation time in tenths of a second. Note: Only 24 bits used
+          unsigned short createTime; // 5 bits Hour, 6 bits minutes, 5 bits seconds
+          unsigned short createDate; // 7 bits year, 4 bits month, 5 bits day
+          unsigned short lastAccessDate; // 
+          unsigned short first_cluster_high; // High 16 bits is first cluster number
+          unsigned short lastModifiedTime;
+          unsigned short lastModifiedDate;
+          unsigned short first_cluster_low;  // Low 16 bits is the first cluster number
+          unsigned int size; // In bytes
+          unsigned char hasLongName;
+          unsigned char longName[256];
+ } direntry;
 
 typedef struct {
     direntry* entry;
@@ -129,7 +149,7 @@ struct fs_driver_info {
     BlockDevice* device;
     part_info* info;
 
-    int(*operation)(fs_driver_info* info, storage_device_op op, void* arg1, void* arg2);
+    int(*operation)(fs_driver_info* info, fs_op op, void* arg1, void* arg2);
     // Driver specific info will  be here, but the FS don't care about it
     // This just provides the specific filesystems with a place to store
     // Initialization information
@@ -143,7 +163,7 @@ typedef struct {
     unsigned int name_len;
     fs_type type;
     long long size;
-    direntry_open* open_dirs;
+    direntry_open** open_dirs;
     unsigned int num_open_dirs;
 } partition;
 
@@ -174,5 +194,7 @@ int fs_initialize(void);
 
 int fs_register_driver_factory(int(*factory)(BlockDevice* device, part_info* pInfo, fs_driver_info** driver_info));
 int fs_add_device(BlockDevice*);
+
+int fs_open(char* filename, file_mode mode);
 
 #endif

@@ -2,6 +2,11 @@
 #include "fs/fat32driver.h"
 #include "types/string.h"
 
+// Forward declare static functions
+static direntry* fat32_listDirectory(fat32_driver_info* part, unsigned int firstSector, unsigned int* pFilesFound);
+static int fat32_getFatEntry(fat32_driver_info* driver, unsigned int cluster);
+int fat32_getDirEntry(fat32_driver_info* part, char* filename, direntry** entry);
+
 static int fat32_getFatEntry(fat32_driver_info* driver, unsigned int cluster)
 {
     int fatEntry = -1;
@@ -24,7 +29,7 @@ fExit:
 // TODO: This must be updated to our new directory structure
 static int fat32_translateTo83FatName(char* filename, char* dest)
 {
-    char* file = filename + 3; // Skip past x:/
+    char* file = filename;
 
     // Split out extension from file name
     unsigned int nameLength = my_strlen(file);
@@ -88,13 +93,13 @@ int fat32_getDirEntry(fat32_driver_info* part, char* filename, direntry** entry)
 {
     int result = 0;
     unsigned int filesFound = 0;
-    direntry* entries = Fat32_listDirectory(part, part->root_dir_sector, &filesFound);
+    direntry* entries = fat32_listDirectory(part, part->root_dir_sector, &filesFound);
 
     ReturnOnFailure((filesFound < 1), "Failed to read root directory.\n");
 
     char* fatFilename = (char*)palloc(11);
-    ReturnOnFailureF((result = Fat32_translateTo83FatName(filename, fatFilename)), "Failed to translate '%s' to 8.3 format.\n", filename);
-
+    ReturnOnFailureF((result = fat32_translateTo83FatName(filename, fatFilename)), "Failed to translate '%s' to 8.3 format.\n", filename);
+   
     direntry* file = 0;
     unsigned int i;
     unsigned int max = filesFound + 1;
@@ -126,7 +131,7 @@ fExit:
 
 static int fat32_unicode16ToLongName(fat32_lfe* dest, unsigned short* src, unsigned int srcLength)
 {
-    // TODO: Isn't this just a memcpy?
+    // TODO: Isn't this just a straight up copy of the memory? :S
     unsigned int i;
     for (i = 0; i < srcLength; i++)
     {
@@ -161,7 +166,11 @@ static direntry* fat32_listDirectory(fat32_driver_info* part, unsigned int first
     {
         // Read a block (NOTE: This fails miserably on multi-cluster directories)
         unsigned int blockToRead = firstSector + blockOffset;
-        part->basic.device->operation(OpRead, &blockToRead, part->basic.device->buffer);
+        if (part->basic.device->operation(OpRead, &blockToRead, part->basic.device->buffer) != S_OK)
+        {
+            printf("Failed to read sector %d\n", blockToRead);
+            break;
+        }
         
         unsigned char* buf = part->basic.device->buffer;
 
@@ -230,6 +239,9 @@ static direntry* fat32_listDirectory(fat32_driver_info* part, unsigned int first
     }
 
     *pFilesFound = file_index - 1; // 0 based
+
+    // No longer need the long entries, their info has been copied to entries
+    phree(entries_long);
 
     return entries;
 }
@@ -405,7 +417,7 @@ static void read_boot_sector(fat_boot_sector* boot_sector, char* buffer)
     // I want the partition name for to be null terminated, and also because I'm
     // Not storing all information in the boot sector, like the bootloader code
     // TODO: Make the fat_boot_sector struct perfectly match what's on disk
-    // So that this function can be replaced with a single call to memcpy()
+    // So that this function can be replaced with a single call to to copy the memory
     my_memcpy(&boot_sector->partition_type_name[0], &buffer[0x3], 8);
     boot_sector->partition_type_name[8] = '\0'; // Make oem name print friendly
     my_memcpy(&boot_sector->bytes_per_sector, &buffer[0x0B], 2);
@@ -450,14 +462,15 @@ int fat32_driver_factory(BlockDevice* device, part_info* pInfo, fs_driver_info**
     }
 
     // Parse it into our structure
-    read_boot_sector(&info->boot_sector, device->buffer);
+    read_boot_sector(&info->boot_sector, (char*)device->buffer);
     
     info->first_sector = byte_to_int(pInfo->lba_begin);
+
     info->root_dir_sector = info->first_sector + info->boot_sector.num_reserved_sectors + 
         (info->boot_sector.num_fats * info->boot_sector.sectors_per_fat);
     
     // Assign the return value
-    *driver_info = info;
+    *driver_info = (fs_driver_info*)info;
    
     return 0;
 }
@@ -467,17 +480,9 @@ int fat32_driver_operation(fs_driver_info* info, fs_op operation, void* arg1, vo
     switch (operation)
     {
     case fs_op_read:
-        return fat32_driver_read();
+        return fat32_driver_read((fat32_driver_info*)info, (unsigned int)arg1, arg2, 512); // TODO: It's really not just 512...
     case fs_op_open:
-        return fat32_driver_open();
-    case fs_op_close:
-        return fat32_driver_close();
-    case fs_op_seek:
-        return fat32_driver_seek();
-    case fs_op_tell:
-        return fat32_driver_tell();
-    case fs_op_peek:
-        return fat32_driver_peek();
+        return fat32_getDirEntry((fat32_driver_info*)info, (char*)arg1, (direntry**)arg2);
     default:
         // Not supported - Probably write?
         return -1;
