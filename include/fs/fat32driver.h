@@ -2,6 +2,14 @@
 #include "fs/fs.h"
 #include "util/utilities.h"
 
+#define LONG_FILE_ENTRY_SIG 0x0
+
+typedef struct {
+    unsigned char name[255];
+    unsigned int length;
+} fat32_lfe;
+
+
 typedef struct {
     unsigned char jump_instruction[3];     // 0xEB 0x58 0x90
     unsigned char partition_type_name[9];  // MSDOS5.0
@@ -39,6 +47,8 @@ typedef struct {
     fs_driver_info basic;
 
     fat_boot_sector boot_sector; // This is really a struct, TODO
+    unsigned int first_sector;
+    unsigned int root_dir_sector;
 } fat32_driver_info;
 
 // Public functions

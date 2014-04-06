@@ -48,10 +48,40 @@ typedef enum {
     device = 8
 } direntry_type;
 
+ typedef union{
+     unsigned char raw;
+     struct {
+         unsigned char readOnly : 1;
+         unsigned char hidden : 1;
+         unsigned char systemFile : 1;
+         unsigned char volumeId : 1; // This attribute is also used to indicate that the file entry is a Long file name entry
+         unsigned char directory : 1; // Is a Sub directory (32-byte records)
+         unsigned char archive : 1; // Has changed since backup
+         unsigned char unused : 1; // 0
+         unsigned char unused2 : 1; // 0
+     } bits;
+ } direntry_attribute;
+
 typedef struct {
     unsigned int it;
     char* name;
     unsigned int name_len;
+
+    // TODO: Right now this is using the FAT32 attribute structure
+    // Should use a more generic on in the future
+    direntry_attribute attribute;
+    // TODO: Remove long file name, should never be using short entries, so this
+    // Should be the default, and only entry
+    unsigned char hasLongName;
+    unsigned char longName[256];
+
+    // Not 100% sure I want to store the size here?
+    // Added it so I don't have to rewrite the entire fat32 driver now
+    long long size;
+
+    // Fat32 Specifics, figure out how to remove
+    unsigned int first_cluster_high;
+    unsigned int first_cluster_low;
 } direntry;
 
 typedef struct {
