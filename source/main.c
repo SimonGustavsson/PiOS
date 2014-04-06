@@ -89,12 +89,6 @@ int system_initialize(void)
     // Add the SD card to the file system
     fs_add_device(gSd);
 
-    // Example of opening a file
-    int cmdHandle = fs_open("/dev/sd0/cmdline.txt", file_read);
-    printf("cmdline.txt handle: %d\n", cmdHandle);
-    if (cmdHandle != INVALID_HANDLE)
-        fs_close(cmdHandle);
-
 	//taskScheduler_Init();
 	
 	printf("System initialization complete, result: %d\n", result);
@@ -114,25 +108,20 @@ int cmain(void)
 	Terminal_PrintWelcome();
 	Terminal_PrintPrompt();
 
-    // int fHandle = Fs_Open("0:/cmdline.txt", FsOpenRead);
-    // if (fHandle != -1)
-    // {
-    //     // Get file size
-    //     Fs_Seek(fHandle, 0, FsSeekEnd);
-    //     int size = Fs_Tell(fHandle);
-    //     Fs_Seek(fHandle, 0, FsSeekBegin);
+    // Example of opening a file
+    int cmdHandle = fs_open("/dev/sd0/cmdline.txt", file_read);
+    if (cmdHandle != INVALID_HANDLE)
+    {
+        fs_seek(cmdHandle, 0, seek_end);
 
-    //     // Allocate buffer and zero it out
-    //     char* buf = (char*)pcalloc(sizeof(char), size);
-        
-    //     if ((Fs_Read(buf, size, fHandle) >= 0))
-    //     {
-    //         buf[size - 1] = 0; // Printf requires zero terminated strings, files contents might not be
-    //         printf("0:/cmdline.txt is %d bytes, content: %s\n", size, buf);
-    //     }
+        unsigned int fileSize = fs_tell(cmdHandle) & 0xFFFFFFFF;
+        //fs_seek(cmdHandle, 0, seek_begin);
 
-    //     Fs_Close(fHandle);
-    // }
+        printf("Main, size: %d\n", fileSize);
+
+
+        fs_close(cmdHandle);
+    }
 
     // Timer temporarily disabled as it messes with execution of relocated code
 	// Enable timer intterrupts and set up timer

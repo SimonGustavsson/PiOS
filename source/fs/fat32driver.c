@@ -119,6 +119,8 @@ int fat32_getDirEntry(fat32_driver_info* part, char* filename, direntry** entry)
 
     ReturnOnFailureF((file == 0), "Couldn't find file with name '%s'\n", filename);
 
+    printf("Get entry, size: %d\n", file->size);
+
     // Allocate a new entry with the data so that it isn't tied to the arg
     *entry = (direntry*)pcalloc(sizeof(direntry), 1);
     my_memcpy(*entry, file, sizeof(direntry));
@@ -312,6 +314,8 @@ static char* fat32_timeToString(short time)
 
 static int fat32_driver_read(fat32_driver_info* info, long handle, char* buf, long long bytesToRead)
 {
+    printf("Fat32_driver_read(info, %d, 0x%h, %d\n", handle, &buf, bytesToRead);
+
     int result = 0;
     unsigned int openFileIndex = (handle & 0xFF);
 
@@ -475,12 +479,12 @@ int fat32_driver_factory(BlockDevice* device, part_info* pInfo, fs_driver_info**
     return 0;
 }
 
-int fat32_driver_operation(fs_driver_info* info, fs_op operation, void* arg1, void* arg2)
+int fat32_driver_operation(fs_driver_info* info, fs_op operation, void* arg1, void* arg2, void* arg3)
 {
     switch (operation)
     {
     case fs_op_read:
-        return fat32_driver_read((fat32_driver_info*)info, (unsigned int)arg1, arg2, 512); // TODO: It's really not just 512...
+        return fat32_driver_read((fat32_driver_info*)info, (unsigned int)arg1, arg2, (long long)arg3);
     case fs_op_open:
         return fat32_getDirEntry((fat32_driver_info*)info, (char*)arg1, (direntry**)arg2);
     default:

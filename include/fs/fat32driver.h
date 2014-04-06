@@ -53,4 +53,4 @@ typedef struct {
 
 // Public functions
 int fat32_driver_factory(BlockDevice* device, part_info* pInfo, fs_driver_info** driver_info);
-int fat32_driver_operation(fs_driver_info* info, fs_op operation, void* arg1, void* arg2);
+int fat32_driver_operation(fs_driver_info* info, fs_op operation, void* arg1, void* arg2, void* arg3);

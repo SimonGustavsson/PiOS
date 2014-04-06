@@ -149,7 +149,7 @@ struct fs_driver_info {
     BlockDevice* device;
     part_info* info;
 
-    int(*operation)(fs_driver_info* info, fs_op op, void* arg1, void* arg2);
+    int(*operation)(fs_driver_info* info, fs_op op, void* arg1, void* arg2, void* arg3);
     // Driver specific info will  be here, but the FS don't care about it
     // This just provides the specific filesystems with a place to store
     // Initialization information
@@ -163,7 +163,7 @@ typedef struct {
     unsigned int name_len;
     fs_type type;
     long long size;
-    direntry_open** open_dirs;
+    direntry_open* open_dirs[10];
     unsigned int num_open_dirs;
 } partition;
 
@@ -197,5 +197,9 @@ int fs_add_device(BlockDevice*);
 
 int fs_open(char* filename, file_mode mode);
 int fs_close(int handle);
+int fs_read(int handle, char* buffer, long long bytesToRead);
+long long fs_tell(int handle);
+int fs_seek(int handle, long long offset, seek_origin origin);
+
 
 #endif

@@ -11,6 +11,27 @@ static file_system* gFs;
 // NOTE: This function expects ABSOLUTE paths, /dev/hdd0/....
 int fs_get_partition(char* filename, partition** part);
 
+// On Success returns open file index, on failure returns -1
+static int fs_get_part_from_handle(int handle, partition** part)
+{
+    printf("Getting part from handle\n");
+    int devIndex = (handle >> 16) & 0xFF;
+    int partIndex = (handle >> 8) & 0xFF;
+    int fileIndex = handle & 0xFF;
+
+    if (devIndex == -1 || partIndex == -1 || fileIndex == -1 ||
+        devIndex >= gFs->numDevices || partIndex >= gFs->devices[devIndex]->num_partitions)
+    {
+        printf("Could not find partition for handle %d\n", handle);
+        return -1; // Invalid handle
+    }
+
+    part = gFs->devices[devIndex]->partitions[partIndex];
+
+    printf("Partition found\n");
+
+    return fileIndex;
+}
 
 // NOTE: This function expects ABSOLUTE paths, /dev/hdd0/....
 int fs_get_partition(char* filename, partition** part)
@@ -223,27 +244,62 @@ int fs_open(char* filename, file_mode mode)
         return INVALID_HANDLE;
     }
 
+    if (part->num_open_dirs >= 10)
+    {
+        printf("Can't have more than 10 files open at once, close one and try again.\n");
+        return INVALID_HANDLE;
+    }
+
     // Strip out device name and everything, the driver only needs to know the file name
     // Relative to its filesystem
     filename += 5;
     while (*filename && *filename++ != '/');
     
     direntry* fileEntry = 0;
-    if (part->driver->operation(part->driver, fs_op_open, filename, fileEntry) != S_OK)
+    if (part->driver->operation(part->driver, fs_op_open, filename, &fileEntry, 0) != S_OK)
     {
         printf("Failed to get directory entry for '%s', does it really exist?\n", filename);
         return INVALID_HANDLE;
     }
 
+    printf("Fs_open Opened file size: %d\n", fileEntry->size);
+
     direntry_open* entry = (direntry_open*)pcalloc(sizeof(direntry_open), 1);
+    printf("Allocated entry at: 0x%h\n", entry);
     entry->mode = mode;
     entry->offset = 0;
     entry->entry = fileEntry;
 
-    part->open_dirs[part->num_open_dirs++] = entry;
+    printf("Stored size: %d\n", entry->entry->size);
+
+    // Find the first empty slot in our array to store it in (God I wish I had List<T>!)
+    int freeIndex = -1;
+    unsigned int i;
+    for (i = 0; i < 10; i++)
+    {
+        if (part->open_dirs[i] == 0)
+        {
+            freeIndex = i;
+            break;
+        }
+    }
+
+    if (freeIndex == -1)
+    {
+        printf("Could not find an empty slot for direntry_open, what happened here?\n");
+        phree(entry);
+        return INVALID_HANDLE;
+    }
+    printf("Allocated entry at 2: 0x%h\n", entry);
+
+    part->open_dirs[freeIndex] = entry;
+
+    printf("fs_open, stored, addr: 0x%h\n", part->open_dirs[freeIndex]);
+
+    part->num_open_dirs++;
 
     // Add open filed index to the handle by sticking it in the low 8 bits and return it
-    return ((part->num_open_dirs - 1) & 0xFF);
+    return freeIndex & 0xFF;
 }
 
 int fs_close(int handle)
@@ -277,5 +333,89 @@ int fs_close(int handle)
     phree(part->open_dirs[fileIndex]);
     part->open_dirs[fileIndex] = 0;
     part->num_open_dirs--;
+
+    return S_OK;
 }
 
+int fs_read(int handle, char* buffer, long long bytesToRead)
+{
+    int devIndex = (handle >> 16) & 0xFF;
+    int partIndex = (handle >> 8) & 0xFF;
+    int fileIndex = handle & 0xFF;
+
+    if (devIndex == -1 || partIndex == -1 || fileIndex == -1 ||
+        devIndex >= gFs->numDevices || partIndex >= gFs->devices[devIndex]->num_partitions)
+    {
+        printf("Can't close invalid file handle(d:%d,p:%d,f:%d)\n", devIndex, partIndex, fileIndex);
+        return -1; // Invalid handle
+    }
+
+    partition* part = gFs->devices[devIndex]->partitions[partIndex];
+
+    return part->driver->operation(part->driver, fs_op_read, part->open_dirs[fileIndex]->entry, buffer, bytesToRead);
+}
+
+long long fs_tell(int handle)
+{
+    partition* part = 0;
+    int fileIndex = fs_get_part_from_handle(handle, &part);
+
+    if (fileIndex == -1)
+    {
+        printf("Invalid handle\n");
+        return -1;
+    }
+
+    direntry_open* de = part->open_dirs[fileIndex];
+
+    return de->offset;
+}
+
+int fs_seek(int handle, long long offsetL, seek_origin origin)
+{
+    unsigned int offset = offsetL & 0xFFFFFFFF; // HAck, no long support?
+    printf("fs_seek(%d, %d, %d)", handle, offset, origin);
+
+    partition* part = 0;
+    int fileIndex = fs_get_part_from_handle(handle, &part);
+
+    if (fileIndex == -1)
+    {
+        printf("Invalid handle\n");
+        return -1;
+    }
+
+    printf("handle obtained\n");
+    direntry_open* de = part->open_dirs[fileIndex];
+
+    printf("Got open dir\n");
+
+    direntry* entry = de->entry;
+
+    printf("Got entry!\n");
+
+    unsigned int size = entry->size;
+
+    printf("Got partition, Opened file size: %d\n", size);
+
+    switch (origin)
+    {
+    case seek_relative:
+        printf("seeking relative\n");
+        de->offset = (de->offset + offset <= size) ? de->offset + offset : size;
+        break;
+    case seek_end:
+        printf("seeking to end\n");
+        de->offset = size;
+        break;
+    case seek_begin:
+        printf("seeking from begin\n");
+        de->offset = (offset > size) ? size : offset;
+        break;
+    default:
+        printf("Invalid seek origin passed to fs_seek\n");
+        return -1;
+    }
+
+    return S_OK;
+}
