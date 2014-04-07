@@ -117,10 +117,20 @@ int cmain(void)
         unsigned int fileSize = fs_tell(cmdHandle) & 0xFFFFFFFF;
         fs_seek(cmdHandle, 0, seek_begin);
 
-        printf("Main, size: %d\n", fileSize);
+        printf("cmdline.txt size: %d\n", fileSize);
 
+
+        printf("~~~~~~~~~~~~~~~~~~~~~~\n");
+        char* buffer = (char*)palloc(fileSize + 1);
+        buffer[fileSize] = 0;
+        fs_read(cmdHandle, buffer, fileSize);
+        printf(buffer);
+        printf("~~~~~~~~~~~~~~~~~~~~~~\n");
+        
         fs_close(cmdHandle);
     }
+
+    printf("Not sure what to do now...\n");
 
     // Timer temporarily disabled as it messes with execution of relocated code
 	// Enable timer intterrupts and set up timer

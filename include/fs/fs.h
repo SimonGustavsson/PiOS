@@ -106,7 +106,7 @@ typedef enum {
 
 typedef struct {
     direntry* entry;
-    long long offset;
+    unsigned int offset;
     file_mode mode;
 } direntry_open;
 
@@ -162,7 +162,7 @@ typedef struct {
     char* name;
     unsigned int name_len;
     fs_type type;
-    long long size;
+    unsigned int size;
     direntry_open* open_dirs[10];
     unsigned int num_open_dirs;
 } partition;
@@ -170,7 +170,7 @@ typedef struct {
 typedef struct {
     int initialized;
     BlockDevice* device;
-    long long size;
+    unsigned int size;
     partition* partitions[4];
     unsigned int num_partitions;
 } storage_device;
@@ -197,9 +197,9 @@ int fs_add_device(BlockDevice*);
 
 int fs_open(char* filename, file_mode mode);
 int fs_close(int handle);
-int fs_read(int handle, char* buffer, long long bytesToRead);
-long long fs_tell(int handle);
-int fs_seek(int handle, long long offset, seek_origin origin);
+int fs_read(int handle, char* buffer, unsigned int bytesToRead);
+unsigned int fs_tell(int handle);
+int fs_seek(int handle, unsigned int offset, seek_origin origin);
 
 
 #endif

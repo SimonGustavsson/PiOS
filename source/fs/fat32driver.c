@@ -310,19 +310,12 @@ static char* fat32_timeToString(short time)
     return res;
 }
 
-static int fat32_driver_read(fat32_driver_info* info, long handle, char* buf, long long bytesToRead)
+static int fat32_driver_read(fat32_driver_info* info, direntry_open* file, char* buf, unsigned int bytesToRead)
 {
-    printf("Fat32_driver_read(info, %d, 0x%h, %d\n", handle, &buf, bytesToRead);
-
     int result = 0;
-    unsigned int openFileIndex = (handle & 0xFF);
-
-    if (openFileIndex > 4)
-        return -1; // Invalid file index
 
     char* argBuf = (char*)buf;
-    direntry_open* file = 0; // HOW DO WE GET A HOLD OF THE OPEN INSTANCE? &partition->openFiles[openFileIndex];
-
+    
     // Figure out how many bytes to read
     unsigned long int bytesLeftInFile = file->entry->size - file->offset;
     if (bytesLeftInFile < bytesToRead)
@@ -345,7 +338,7 @@ static int fat32_driver_read(fat32_driver_info* info, long handle, char* buf, lo
             unsigned int sectorToRead = fileFirstSector + i;
             
             ReturnOnFailureF(result = info->basic.device->operation(OpRead, &sectorToRead, info->basic.device->buffer),
-                "Failed to read sector %d for file with handle %d.\n", sectorToRead, handle);
+                "Failed to read sector %d for file.\n", sectorToRead);
 
             unsigned int bytesRead = bytesToRead > 512 ? 512 : bytesToRead;
 
@@ -373,7 +366,7 @@ static int fat32_driver_read(fat32_driver_info* info, long handle, char* buf, lo
                 unsigned int lba = (info->root_dir_sector + ((currentCluster - 2) * info->boot_sector.sectors_per_cluster)) + j;
                 
                 ReturnOnFailureF(result = info->basic.device->operation(OpRead, &lba, info->basic.device->buffer), 
-                    "Failed to read sector %d for file with handle %d. Cluster: %d\n", lba, handle, currentCluster);
+                    "Failed to read sector %d for file . Cluster: %d\n", lba, currentCluster);
 
                 unsigned int bytesRead = bytesToRead > 512 ? 512 : bytesToRead;
 
@@ -482,7 +475,7 @@ int fat32_driver_operation(fs_driver_info* info, fs_op operation, void* arg1, vo
     switch (operation)
     {
     case fs_op_read:
-        return fat32_driver_read((fat32_driver_info*)info, (unsigned int)arg1, arg2, (long long)arg3);
+        return fat32_driver_read((fat32_driver_info*)info, (direntry*)arg1, (char*)arg2, (unsigned int)arg3);
     case fs_op_open:
         return fat32_getDirEntry((fat32_driver_info*)info, (char*)arg1, (direntry**)arg2);
     default:

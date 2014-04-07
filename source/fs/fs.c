@@ -303,7 +303,7 @@ int fs_close(int handle)
     return S_OK;
 }
 
-int fs_read(int handle, char* buffer, long long bytesToRead)
+int fs_read(int handle, char* buffer, unsigned int bytesToRead)
 {
     int devIndex = (handle >> 16) & 0xFF;
     int partIndex = (handle >> 8) & 0xFF;
@@ -318,10 +318,10 @@ int fs_read(int handle, char* buffer, long long bytesToRead)
 
     partition* part = gFs->devices[devIndex]->partitions[partIndex];
 
-    return part->driver->operation(part->driver, fs_op_read, part->open_dirs[fileIndex]->entry, buffer, bytesToRead);
+    return part->driver->operation(part->driver, fs_op_read, part->open_dirs[fileIndex], buffer, bytesToRead);
 }
 
-long long fs_tell(int handle)
+unsigned int fs_tell(int handle)
 {
 
     int devIndex = (handle >> 16) & 0xFF;
@@ -348,10 +348,8 @@ long long fs_tell(int handle)
     return de->offset;
 }
 
-int fs_seek(int handle, long long offsetL, seek_origin origin)
+int fs_seek(int handle, unsigned int offset, seek_origin origin)
 {
-    unsigned int offset = offsetL & 0xFFFFFFFF; // HAck, no long support?
-    
     int devIndex = (handle >> 16) & 0xFF;
     int partIndex = (handle >> 8) & 0xFF;
     int fileIndex = handle & 0xFF;
