@@ -11,28 +11,6 @@ static file_system* gFs;
 // NOTE: This function expects ABSOLUTE paths, /dev/hdd0/....
 int fs_get_partition(char* filename, partition** part);
 
-// On Success returns open file index, on failure returns -1
-static int fs_get_part_from_handle(int handle, partition** part)
-{
-    printf("Getting part from handle\n");
-    int devIndex = (handle >> 16) & 0xFF;
-    int partIndex = (handle >> 8) & 0xFF;
-    int fileIndex = handle & 0xFF;
-
-    if (devIndex == -1 || partIndex == -1 || fileIndex == -1 ||
-        devIndex >= gFs->numDevices || partIndex >= gFs->devices[devIndex]->num_partitions)
-    {
-        printf("Could not find partition for handle %d\n", handle);
-        return -1; // Invalid handle
-    }
-
-    part = gFs->devices[devIndex]->partitions[partIndex];
-
-    printf("Partition found\n");
-
-    return fileIndex;
-}
-
 // NOTE: This function expects ABSOLUTE paths, /dev/hdd0/....
 int fs_get_partition(char* filename, partition** part)
 {
@@ -262,15 +240,10 @@ int fs_open(char* filename, file_mode mode)
         return INVALID_HANDLE;
     }
 
-    printf("Fs_open Opened file size: %d\n", fileEntry->size);
-
     direntry_open* entry = (direntry_open*)pcalloc(sizeof(direntry_open), 1);
-    printf("Allocated entry at: 0x%h\n", entry);
     entry->mode = mode;
     entry->offset = 0;
     entry->entry = fileEntry;
-
-    printf("Stored size: %d\n", entry->entry->size);
 
     // Find the first empty slot in our array to store it in (God I wish I had List<T>!)
     int freeIndex = -1;
@@ -290,11 +263,8 @@ int fs_open(char* filename, file_mode mode)
         phree(entry);
         return INVALID_HANDLE;
     }
-    printf("Allocated entry at 2: 0x%h\n", entry);
-
+    
     part->open_dirs[freeIndex] = entry;
-
-    printf("fs_open, stored, addr: 0x%h\n", part->open_dirs[freeIndex]);
 
     part->num_open_dirs++;
 
@@ -304,8 +274,6 @@ int fs_open(char* filename, file_mode mode)
 
 int fs_close(int handle)
 {
-    printf("fs - Closing %d\n", handle);
-
     // Handles look like this:
     // uuuuuuuu dddddddd pppppppp oooooooo
     // u = Unused, d = device index, p = partition index, o = open file index
@@ -325,8 +293,6 @@ int fs_close(int handle)
         printf("Can't close invalid file handle(d:%d,p:%d,f:%d)\n", devIndex, partIndex, fileIndex);
         return -1; // Invalid handle
     }
-
-    printf("Found dir entry from handle(d:%d,p:%d,f:%d)\n", devIndex, partIndex, fileIndex);
 
     partition* part = gFs->devices[devIndex]->partitions[partIndex];
 
@@ -357,8 +323,19 @@ int fs_read(int handle, char* buffer, long long bytesToRead)
 
 long long fs_tell(int handle)
 {
-    partition* part = 0;
-    int fileIndex = fs_get_part_from_handle(handle, &part);
+
+    int devIndex = (handle >> 16) & 0xFF;
+    int partIndex = (handle >> 8) & 0xFF;
+    int fileIndex = handle & 0xFF;
+
+    if (devIndex == -1 || partIndex == -1 || fileIndex == -1 ||
+        devIndex >= gFs->numDevices || partIndex >= gFs->devices[devIndex]->num_partitions)
+    {
+        printf("Could not find partition for handle %d\n", handle);
+        return -1; // Invalid handle
+    }
+
+    partition* part = gFs->devices[devIndex]->partitions[partIndex];
 
     if (fileIndex == -1)
     {
@@ -374,42 +351,33 @@ long long fs_tell(int handle)
 int fs_seek(int handle, long long offsetL, seek_origin origin)
 {
     unsigned int offset = offsetL & 0xFFFFFFFF; // HAck, no long support?
-    printf("fs_seek(%d, %d, %d)", handle, offset, origin);
+    
+    int devIndex = (handle >> 16) & 0xFF;
+    int partIndex = (handle >> 8) & 0xFF;
+    int fileIndex = handle & 0xFF;
 
-    partition* part = 0;
-    int fileIndex = fs_get_part_from_handle(handle, &part);
-
-    if (fileIndex == -1)
+    if (devIndex == -1 || partIndex == -1 || fileIndex == -1 ||
+        devIndex >= gFs->numDevices || partIndex >= gFs->devices[devIndex]->num_partitions)
     {
-        printf("Invalid handle\n");
-        return -1;
+        printf("Could not find partition for handle %d\n", handle);
+        return -1; // Invalid handle
     }
 
-    printf("handle obtained\n");
+    partition* part = gFs->devices[devIndex]->partitions[partIndex];
     direntry_open* de = part->open_dirs[fileIndex];
 
-    printf("Got open dir\n");
-
     direntry* entry = de->entry;
-
-    printf("Got entry!\n");
-
     unsigned int size = entry->size;
-
-    printf("Got partition, Opened file size: %d\n", size);
 
     switch (origin)
     {
     case seek_relative:
-        printf("seeking relative\n");
         de->offset = (de->offset + offset <= size) ? de->offset + offset : size;
         break;
     case seek_end:
-        printf("seeking to end\n");
         de->offset = size;
         break;
     case seek_begin:
-        printf("seeking from begin\n");
         de->offset = (offset > size) ? size : offset;
         break;
     default:

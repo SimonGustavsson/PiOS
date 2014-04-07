@@ -119,8 +119,6 @@ int fat32_getDirEntry(fat32_driver_info* part, char* filename, direntry** entry)
 
     ReturnOnFailureF((file == 0), "Couldn't find file with name '%s'\n", filename);
 
-    printf("Get entry, size: %d\n", file->size);
-
     // Allocate a new entry with the data so that it isn't tied to the arg
     *entry = (direntry*)pcalloc(sizeof(direntry), 1);
     my_memcpy(*entry, file, sizeof(direntry));

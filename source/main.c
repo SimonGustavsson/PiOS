@@ -115,10 +115,9 @@ int cmain(void)
         fs_seek(cmdHandle, 0, seek_end);
 
         unsigned int fileSize = fs_tell(cmdHandle) & 0xFFFFFFFF;
-        //fs_seek(cmdHandle, 0, seek_begin);
+        fs_seek(cmdHandle, 0, seek_begin);
 
         printf("Main, size: %d\n", fileSize);
-
 
         fs_close(cmdHandle);
     }
