@@ -109,25 +109,25 @@ int cmain(void)
 	Terminal_PrintPrompt();
 
     // Example of opening a file
-    int cmdHandle = fs_open("/dev/sd0/cmdline.txt", file_read);
-    if (cmdHandle != INVALID_HANDLE)
+    int handle = fs_open("/dev/sd0/2blockfile.txt", file_read);
+    if (handle != INVALID_HANDLE)
     {
-        fs_seek(cmdHandle, 0, seek_end);
+        fs_seek(handle, 0, seek_end);
 
-        unsigned int fileSize = fs_tell(cmdHandle) & 0xFFFFFFFF;
-        fs_seek(cmdHandle, 0, seek_begin);
+        unsigned int fileSize = fs_tell(handle) & 0xFFFFFFFF;
+        fs_seek(handle, 0, seek_begin);
 
-        printf("cmdline.txt size: %d\n", fileSize);
+        printf("2blockfile.txt size: %d\n", fileSize);
 
 
         printf("~~~~~~~~~~~~~~~~~~~~~~\n");
         char* buffer = (char*)palloc(fileSize + 1);
         buffer[fileSize] = 0;
-        fs_read(cmdHandle, buffer, fileSize);
+        fs_read(handle, buffer, fileSize);
         printf(buffer);
         printf("~~~~~~~~~~~~~~~~~~~~~~\n");
         
-        fs_close(cmdHandle);
+        fs_close(handle);
     }
 
     printf("Not sure what to do now...\n");

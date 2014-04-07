@@ -2,6 +2,8 @@
 #include "fs/fat32driver.h"
 #include "types/string.h"
 
+#define MAX_DIRENTRIES_IN_DIRECTORY 30
+
 // Forward declare static functions
 static direntry* fat32_listDirectory(fat32_driver_info* part, unsigned int firstSector, unsigned int* pFilesFound);
 static int fat32_getFatEntry(fat32_driver_info* driver, unsigned int cluster);
@@ -100,6 +102,8 @@ int fat32_getDirEntry(fat32_driver_info* part, char* filename, direntry** entry)
     char* fatFilename = (char*)palloc(11);
     ReturnOnFailureF((result = fat32_translateTo83FatName(filename, fatFilename)), "Failed to translate '%s' to 8.3 format.\n", filename);
    
+    printf("Get entry, found %d file entries\n", filesFound);
+
     direntry* file = 0;
     unsigned int i;
     unsigned int max = filesFound + 1;
@@ -109,11 +113,25 @@ int fat32_getDirEntry(fat32_driver_info* part, char* filename, direntry** entry)
         if (entries[i].attribute.bits.directory)
             continue;
 
-        if (my_strcmp_s((char*)entries[i].name, 11, fatFilename) == 0)// || 
-            //my_strcmp((char*)entries[i].longName, filename) == 1)
+        printf("Comparing %s and %s\n", entries[i].name, fatFilename);
+        
+        if (my_strcmp_s((char*)entries[i].name, 11, fatFilename) == 0)
         {
             file = &entries[i];
             break; // Found it!
+        }
+        else
+        {
+            if (entries[i].hasLongName == 1)
+            {
+                printf("Comparing Long %s and %s\n", entries[i].longName, filename);
+
+                if (my_strcmp(entries[i].longName, filename) == 1)
+                {
+                    file = &entries[i];
+                    break; // Found!
+                }
+            }
         }
     }
 
@@ -152,8 +170,16 @@ static int fat32_unicode16ToLongName(fat32_lfe* dest, unsigned short* src, unsig
 
 static direntry* fat32_listDirectory(fat32_driver_info* part, unsigned int firstSector, unsigned int* pFilesFound)
 {
-    direntry* entries = (direntry*)pcalloc(sizeof(direntry), 19);
-    fat32_lfe* entries_long = (fat32_lfe*)pcalloc(sizeof(fat32_lfe), 19);
+    //
+    // Currently this does NOT read entries that span multiple clusters, meaning it will only ever
+    // Read at most 16 entries, with long file name entries, this only leaves about 8 files :-(
+    // We need to examine the fat entry, get the cluster to read (see old fat code for reading
+    // multi cluster files for example on how to), and continue reading the directory until
+    // 1) There are no more entries in the current cluster, and 
+    // 2) The cluster chain indicates an invalid/empty entry.
+    //
+    direntry* entries = (direntry*)pcalloc(sizeof(direntry), MAX_DIRENTRIES_IN_DIRECTORY);
+    fat32_lfe* entries_long = (fat32_lfe*)pcalloc(sizeof(fat32_lfe), MAX_DIRENTRIES_IN_DIRECTORY);
 
     unsigned int lfn_count = 0;
     unsigned int last_lfn = 0;
@@ -162,7 +188,7 @@ static direntry* fat32_listDirectory(fat32_driver_info* part, unsigned int first
     unsigned int doneReading = 0;
 
     unsigned int blockOffset = 0;
-    while (!doneReading)
+    while (!doneReading && file_index < MAX_DIRENTRIES_IN_DIRECTORY)
     {
         // Read a block (NOTE: This fails miserably on multi-cluster directories)
         unsigned int blockToRead = firstSector + blockOffset;
@@ -464,6 +490,18 @@ int fat32_driver_factory(BlockDevice* device, part_info* pInfo, fs_driver_info**
     info->root_dir_sector = info->first_sector + info->boot_sector.num_reserved_sectors + 
         (info->boot_sector.num_fats * info->boot_sector.sectors_per_fat);
     
+    // Partition size is info->boot_large_sectors * info->boot_sector.bytes_per_sector
+    printf("First sector to read: %d\n", firstSectorToRead);
+    printf("root dir sector is %d\n", info->root_dir_sector);
+    printf("sectors per cluster %d\n", info->boot_sector.sectors_per_cluster);
+    printf("bytes per sector: %d\n", info->boot_sector.bytes_per_sector);
+    printf("Larges sectors: %d\n", info->boot_sector.large_sectors);
+    printf("SMall sectors: %d\n", info->boot_sector.small_sectors);
+    printf("root dir entries: %d\n", info->boot_sector.root_entries);
+    printf("root dir start: %d\n", info->boot_sector.root_dir_start);
+    printf("root start sector: %d\n", info->boot_sector.root_start_sector);
+    printf("Reserved sectors: %d\n", info->boot_sector.num_reserved_sectors);
+
     // Assign the return value
     *driver_info = (fs_driver_info*)info;
    
