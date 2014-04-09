@@ -1,6 +1,7 @@
 #include "fs/fs.h"
 #include "fs/fat32driver.h"
 #include "types/string.h"
+#include "memory.h"
 
 #define MAX_DIRENTRIES_IN_DIRECTORY 48
 
@@ -362,8 +363,8 @@ static int fat32_driver_read(fat32_driver_info* info, direntry_open* file, char*
 {
     int result = 0;
 
-    char* argBuf = (char*)buf;
-    
+    char* argBuf = buf;
+
     // Figure out how many bytes to read
     unsigned long int bytesLeftInFile = file->entry->size - file->offset;
     if (bytesLeftInFile < bytesToRead)
@@ -378,7 +379,8 @@ static int fat32_driver_read(fat32_driver_info* info, direntry_open* file, char*
 
     unsigned int totalBytesRead = 0;
     unsigned int i;
-    if (sectorsToRead < info->boot_sector.sectors_per_cluster)
+
+    if (sectorsToRead < 8) //info->boot_sector.sectors_per_cluster) // Sectors_per_cluster is currently reporting the wrong thing :S
     {
         // Oh joy! We only have to read one cluster
         for (i = 0; i < sectorsToRead; i++)
@@ -388,17 +390,20 @@ static int fat32_driver_read(fat32_driver_info* info, direntry_open* file, char*
             ReturnOnFailureF(result = info->basic.device->operation(OpRead, &sectorToRead, info->basic.device->buffer),
                 "Failed to read sector %d for file.\n", sectorToRead);
 
-            unsigned int bytesRead = bytesToRead > 512 ? 512 : bytesToRead;
+            // If we're supposed to read less than a block
+            unsigned int bytes_read_to_copy = bytesToRead > 512 ? 512 : bytesToRead;
 
-            my_memcpy((argBuf + totalBytesRead), info->basic.device->buffer, bytesRead);
+            my_memcpy(&argBuf[totalBytesRead], info->basic.device->buffer, bytes_read_to_copy);
 
-            bytesToRead -= bytesRead;
-            totalBytesRead += bytesRead;
+            bytesToRead -= bytes_read_to_copy;
+            totalBytesRead += bytes_read_to_copy;
         }
+        argBuf[totalBytesRead] = 0;
     }
     else
     {
-        
+        printf("File spans clusters\n");
+
         // THe file is spread across multiple clusters - we need the FAT for this one
         unsigned int clustersToRead = sectorsToRead / info->boot_sector.sectors_per_cluster;
         clustersToRead += sectorsToRead % info->boot_sector.sectors_per_cluster != 0 ? 1 : 0;
@@ -418,7 +423,7 @@ static int fat32_driver_read(fat32_driver_info* info, direntry_open* file, char*
 
                 unsigned int bytesRead = bytesToRead > 512 ? 512 : bytesToRead;
 
-                my_memcpy(argBuf + totalBytesRead, info->basic.device->buffer, bytesRead);
+                my_memcpy(buf + totalBytesRead, info->basic.device->buffer, bytesRead);
 
                 bytesToRead -= bytesRead;
                 totalBytesRead += bytesRead;

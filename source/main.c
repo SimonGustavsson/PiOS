@@ -118,14 +118,16 @@ int cmain(void)
         fs_seek(handle, 0, seek_begin);
 
         printf("blockfile.txt size: %d\n", fileSize);
-
-
+        
         printf("~~~~~~~~~~~~~~~~~~~~~~\n");
+        
         char* buffer = (char*)palloc(fileSize + 1);
         buffer[fileSize] = 0;
+
         fs_read(handle, buffer, fileSize);
+        
         printf(buffer);
-        printf("~~~~~~~~~~~~~~~~~~~~~~\n");
+        printf("\n~~~~~~~~~~~~~~~~~~~~~~\n");
         
         fs_close(handle);
     }
