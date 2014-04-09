@@ -2,18 +2,24 @@
 #include "fs/fat32driver.h"
 #include "types/string.h"
 
-#define MAX_DIRENTRIES_IN_DIRECTORY 30
+#define MAX_DIRENTRIES_IN_DIRECTORY 48
 
 // Forward declare static functions
 static direntry* fat32_listDirectory(fat32_driver_info* part, unsigned int firstSector, unsigned int* pFilesFound);
 static int fat32_getFatEntry(fat32_driver_info* driver, unsigned int cluster);
 int fat32_getDirEntry(fat32_driver_info* part, char* filename, direntry** entry);
 
+static int fat32_cluster_to_lba(fat32_driver_info* info, unsigned int cluster)
+{
+    // Ignore 4 high bits
+    return (info->root_dir_sector + ((cluster - 2) * info->boot_sector.sectors_per_cluster)) & 0x0FFFFFFF;
+}
+
 static int fat32_getFatEntry(fat32_driver_info* driver, unsigned int cluster)
 {
     int fatEntry = -1;
 
-    unsigned int indexOfEntryInCluster = cluster % BLOCK_SIZE;
+    unsigned int indexOfEntryInCluster = (cluster % BLOCK_SIZE) * sizeof(int);
     unsigned int fatbegin = driver->first_sector + driver->boot_sector.num_reserved_sectors;
     unsigned int sectorToRead = fatbegin + (cluster / BLOCK_SIZE);
 
@@ -23,6 +29,9 @@ static int fat32_getFatEntry(fat32_driver_info* driver, unsigned int cluster)
 
     // Extract the entry from the block we just read
     fatEntry = byte_to_int(&driver->basic.device->buffer[indexOfEntryInCluster]);
+
+   // printf("Reading FAT entry for cluster %d, sector to read: %d, entry: %d, index into is %d\n", 
+    //    cluster, sectorToRead, fatEntry, indexOfEntryInCluster);
     
 fExit:
     return fatEntry;
@@ -102,7 +111,7 @@ int fat32_getDirEntry(fat32_driver_info* part, char* filename, direntry** entry)
     char* fatFilename = (char*)palloc(11);
     ReturnOnFailureF((result = fat32_translateTo83FatName(filename, fatFilename)), "Failed to translate '%s' to 8.3 format.\n", filename);
    
-    printf("Get entry, found %d file entries\n", filesFound);
+    //printf("Get entry, found %d file entries\n", filesFound);
 
     direntry* file = 0;
     unsigned int i;
@@ -113,25 +122,13 @@ int fat32_getDirEntry(fat32_driver_info* part, char* filename, direntry** entry)
         if (entries[i].attribute.bits.directory)
             continue;
 
-        printf("Comparing %s and %s\n", entries[i].name, fatFilename);
+        //printf("Comparing %s and %s\n", entries[i].name, fatFilename);
         
-        if (my_strcmp_s((char*)entries[i].name, 11, fatFilename) == 0)
+        if (my_strcmp_s((char*)entries[i].name, 11, fatFilename) == 0 || // Short entry
+            (entries[i].hasLongName == 1 && my_strcmp(entries[i].longName, filename) == 1)) // Long entry
         {
             file = &entries[i];
             break; // Found it!
-        }
-        else
-        {
-            if (entries[i].hasLongName == 1)
-            {
-                printf("Comparing Long %s and %s\n", entries[i].longName, filename);
-
-                if (my_strcmp(entries[i].longName, filename) == 1)
-                {
-                    file = &entries[i];
-                    break; // Found!
-                }
-            }
         }
     }
 
@@ -170,14 +167,6 @@ static int fat32_unicode16ToLongName(fat32_lfe* dest, unsigned short* src, unsig
 
 static direntry* fat32_listDirectory(fat32_driver_info* part, unsigned int firstSector, unsigned int* pFilesFound)
 {
-    //
-    // Currently this does NOT read entries that span multiple clusters, meaning it will only ever
-    // Read at most 16 entries, with long file name entries, this only leaves about 8 files :-(
-    // We need to examine the fat entry, get the cluster to read (see old fat code for reading
-    // multi cluster files for example on how to), and continue reading the directory until
-    // 1) There are no more entries in the current cluster, and 
-    // 2) The cluster chain indicates an invalid/empty entry.
-    //
     direntry* entries = (direntry*)pcalloc(sizeof(direntry), MAX_DIRENTRIES_IN_DIRECTORY);
     fat32_lfe* entries_long = (fat32_lfe*)pcalloc(sizeof(fat32_lfe), MAX_DIRENTRIES_IN_DIRECTORY);
 
@@ -187,11 +176,12 @@ static direntry* fat32_listDirectory(fat32_driver_info* part, unsigned int first
 
     unsigned int doneReading = 0;
 
-    unsigned int blockOffset = 0;
-    while (!doneReading && file_index < MAX_DIRENTRIES_IN_DIRECTORY)
+    unsigned int blockToRead = firstSector;
+    unsigned int currentCluster = 2;
+
+    while (!doneReading)
     {
         // Read a block (NOTE: This fails miserably on multi-cluster directories)
-        unsigned int blockToRead = firstSector + blockOffset;
         if (part->basic.device->operation(OpRead, &blockToRead, part->basic.device->buffer) != S_OK)
         {
             printf("Failed to read sector %d\n", blockToRead);
@@ -207,13 +197,13 @@ static direntry* fat32_listDirectory(fat32_driver_info* part, unsigned int first
             unsigned int currentEntryOffset = i * 32; // Entries are 32 byte
             if (buf[0 + currentEntryOffset] == 0)
             {
-                doneReading = 1;
-                break;
+                break;// done reading these entries
             }
-            else if (buf[0 + currentEntryOffset] == 0xE5) // Free entry
-                continue;
-
-            if (buf[11 + currentEntryOffset] == LONG_FILE_ENTRY_SIG)
+            else if (buf[0 + currentEntryOffset] == 0xE5)
+            {
+                continue; // Free directory entry, keep reading...
+            }
+            else if (buf[11 + currentEntryOffset] == LONG_FILE_ENTRY_SIG)
             {
                 // Long entry
                 unsigned char lfn_index = ((buf[0 + currentEntryOffset] - 1) & ~0x40); // Just ignore the "last lfn entry" flag
@@ -234,6 +224,8 @@ static direntry* fat32_listDirectory(fat32_driver_info* part, unsigned int first
             else
             {
                 // Short entry
+
+                // Was the last entry a long entry? If so it's the long name of this entry
                 if (last_lfn)
                 {
                     char lfn[255];
@@ -252,6 +244,8 @@ static direntry* fat32_listDirectory(fat32_driver_info* part, unsigned int first
                     entries[file_index].hasLongName = 1;
 
                     last_lfn = 0;
+                    lfn_count = 0;
+                    lfn_index = 0;
                 }
 
                 // Copy the entire short entry to the dir entry
@@ -261,7 +255,35 @@ static direntry* fat32_listDirectory(fat32_driver_info* part, unsigned int first
             }
         }
 
-        blockOffset++; // Read next block
+        // We are done reading this block of entries
+        // Check the FAT to see if there's another one
+        int fat_entry = fat32_getFatEntry(part, currentCluster);
+
+        //printf("Fat entry for cluster %d is %d\n", currentCluster, fat_entry);
+
+        // Ignore the 4 high bits
+        fat_entry &= 0x0FFFFFFF;
+
+        if (fat_entry >= 0x0FFFFFF8)
+        {
+            //  printf("Fat entry for directory indicates no more clusters to read.\n");
+            doneReading = 1;
+            continue;
+        }
+        else if (fat_entry == 0x0FFFFFF7)
+        {
+            //printf("Bad cluster encountered while listing directory, cluster %d\n", currentCluster);
+            doneReading = 1; // Bad cluster :-(
+            continue;
+        }
+        else if (fat_entry == 0)
+        {
+            doneReading = 1;
+            //printf("Fat entry is pointing to nothing, done reading directory\n");
+            continue;
+        }
+        blockToRead = fat32_cluster_to_lba(part, fat_entry);
+        currentCluster = fat_entry;
     }
 
     *pFilesFound = file_index - 1; // 0 based
@@ -491,7 +513,7 @@ int fat32_driver_factory(BlockDevice* device, part_info* pInfo, fs_driver_info**
         (info->boot_sector.num_fats * info->boot_sector.sectors_per_fat);
     
     // Partition size is info->boot_large_sectors * info->boot_sector.bytes_per_sector
-    printf("First sector to read: %d\n", firstSectorToRead);
+  /*  printf("First sector to read: %d\n", firstSectorToRead);
     printf("root dir sector is %d\n", info->root_dir_sector);
     printf("sectors per cluster %d\n", info->boot_sector.sectors_per_cluster);
     printf("bytes per sector: %d\n", info->boot_sector.bytes_per_sector);
@@ -501,6 +523,8 @@ int fat32_driver_factory(BlockDevice* device, part_info* pInfo, fs_driver_info**
     printf("root dir start: %d\n", info->boot_sector.root_dir_start);
     printf("root start sector: %d\n", info->boot_sector.root_start_sector);
     printf("Reserved sectors: %d\n", info->boot_sector.num_reserved_sectors);
+    printf("Sectors per fat: %d\n", info->boot_sector.sectors_per_fat);
+    printf("Number of FATs: %d\n", info->boot_sector.num_fats);*/
 
     // Assign the return value
     *driver_info = (fs_driver_info*)info;

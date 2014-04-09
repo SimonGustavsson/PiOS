@@ -2,7 +2,7 @@
 #include "fs/fs.h"
 #include "util/utilities.h"
 
-#define LONG_FILE_ENTRY_SIG 0x0
+#define LONG_FILE_ENTRY_SIG 0x0F
 
 typedef struct {
     unsigned char name[255];

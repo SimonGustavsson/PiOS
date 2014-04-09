@@ -109,7 +109,7 @@ int cmain(void)
 	Terminal_PrintPrompt();
 
     // Example of opening a file
-    int handle = fs_open("/dev/sd0/2blockfile.txt", file_read);
+    int handle = fs_open("/dev/sd0/blockfile.txt", file_read);
     if (handle != INVALID_HANDLE)
     {
         fs_seek(handle, 0, seek_end);
@@ -117,7 +117,7 @@ int cmain(void)
         unsigned int fileSize = fs_tell(handle) & 0xFFFFFFFF;
         fs_seek(handle, 0, seek_begin);
 
-        printf("2blockfile.txt size: %d\n", fileSize);
+        printf("blockfile.txt size: %d\n", fileSize);
 
 
         printf("~~~~~~~~~~~~~~~~~~~~~~\n");
