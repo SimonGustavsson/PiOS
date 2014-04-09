@@ -224,7 +224,7 @@ void printf(char* text, ...)
 	va_list ap;
 	va_start(ap, text);
 
-	char res[256];
+	char res[2048];
 	char* result = res;
 	
 	// scan all characters in the string and look for format specifiers
