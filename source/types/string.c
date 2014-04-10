@@ -221,9 +221,23 @@ void printf_i(char* text, ...)
 
 void printf(char* text, ...)
 {
-	va_list ap;
-	va_start(ap, text);
+    va_list args;
+    va_start(args, text);
 
+
+    vprintf_s(text, 2048, args);
+}
+
+void printf_s(char* text, unsigned int length, ...)
+{
+    va_list args;
+    va_start(args, length);
+
+    vprintf_s(text, length, args);
+}
+
+void vprintf_s(char* text, unsigned int length, va_list ap)
+{
 	char res[2048];
 	char* result = res;
 	

@@ -11,5 +11,7 @@ unsigned int my_strcasecmp(char* str1, char* str2);
 void itoa(int number, char* buf);
 void printf(char* text, ...);
 void printf_i(char* text, ...);
+void printf_s(char* text, unsigned int length, ...);
+void vprintf_s(char* text, unsigned int length, va_list args);
 
 #endif // STRINGUTIL_H

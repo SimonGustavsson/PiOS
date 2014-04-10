@@ -125,7 +125,9 @@ int cmain(void)
         buffer[fileSize] = 0;
 
         fs_read(handle, buffer, fileSize);
-        
+     
+        printf_s(buffer, fileSize + 20);
+
         printf(buffer);
         printf("\n~~~~~~~~~~~~~~~~~~~~~~\n");
         
