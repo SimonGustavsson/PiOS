@@ -109,7 +109,7 @@ int cmain(void)
 	Terminal_PrintPrompt();
 
     // Example of opening a file
-    int handle = fs_open("/dev/sd0/blockfile.txt", file_read);
+    int handle = fs_open("/dev/sd0/dummy1.img", file_read);
     if (handle != INVALID_HANDLE)
     {
         fs_seek(handle, 0, seek_end);
@@ -117,16 +117,27 @@ int cmain(void)
         unsigned int fileSize = fs_tell(handle) & 0xFFFFFFFF;
         fs_seek(handle, 0, seek_begin);
 
-        printf("blockfile.txt size: %d\n", fileSize);
+        printf("dummy1.img size: %d\n", fileSize);
         
         printf("~~~~~~~~~~~~~~~~~~~~~~\n");
         
+
+
         char* buffer = (char*)palloc(fileSize + 1);
         buffer[fileSize] = 0;
 
         fs_read(handle, buffer, fileSize);
-     
-        printf_s(buffer, fileSize + 20);
+
+        unsigned int one = buffer[0] & 0xFF;
+        unsigned int two = buffer[1] & 0xFF;
+        unsigned int three = buffer[2] & 0xFF;
+        unsigned int four = buffer[3] & 0xFF;
+        unsigned int five = buffer[4] & 0xFF;
+
+
+        printf("First 5 bytes 0x%h 0x%h 0x%h 0x%h 0x%h", one, two, three, four, five);
+
+        //printf_s(buffer, fileSize + 20);
 
         printf(buffer);
         printf("\n~~~~~~~~~~~~~~~~~~~~~~\n");
