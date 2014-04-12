@@ -119,13 +119,15 @@ void dec_to_hex(char* buf, unsigned int dec)
 		dec = dec / 16;	
 		length++;
 	}
-
-
+    
 	int i;
 	for(i = length - 1; i >= 0; i--)
 	{
 		switch(reminder[i])
 		{
+            case 0:
+                *buf_ptr++ = '0';
+                break;
 			case 10:
 				*buf_ptr++ = 'A';
 				break;
@@ -141,6 +143,13 @@ void dec_to_hex(char* buf, unsigned int dec)
 			case 14:
 				*buf_ptr++ = 'E';
 				break;
+            case 15:
+                *buf_ptr++ = 'F';
+                break;
+            case 16:
+                *buf_ptr++ = '1';
+                *buf_ptr++ = '0';
+                break;
 			default:
 				{
 					// Display as digits
@@ -238,8 +247,8 @@ void printf_s(char* text, unsigned int length, ...)
 
 void vprintf_s(char* text, unsigned int length, va_list ap)
 {
-	char res[2048];
-	char* result = res;
+    char res[4096];
+    char* result = res;
 	
 	// scan all characters in the string and look for format specifiers
 	do
@@ -291,5 +300,5 @@ void vprintf_s(char* text, unsigned int length, va_list ap)
 		*result++ = *text;
 	}while(*text++ != '\0');
 	
-	Terminal_Print(res, my_strlen(res));
+    Terminal_Print(res, my_strlen(res));
 }
