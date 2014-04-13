@@ -375,10 +375,10 @@ static int fat32_driver_read(fat32_driver_info* info, direntry_open* file, char*
 
     // The fat thing says this is the first cluster, but it might not actually point to the first
     // sector of the cluster, calculate the first one
-    unsigned int fileStartSector = file->entry->first_cluster_high << 16 | file->entry->first_cluster_low;
-    unsigned int tempClust = fileStartSector / 8;
-
-    unsigned int sectorToRead = ((tempClust) * 8) + info->root_dir_sector + (tempClust % 8) - 2;
+    unsigned int firstClusterOfFile = file->entry->first_cluster_high << 16 | file->entry->first_cluster_low;
+    
+    //info->boot_sector.sectors_per_cluster
+    unsigned int sectorToRead = info->root_dir_sector + ((firstClusterOfFile - 2) * info->boot_sector.sectors_per_cluster);
 
     unsigned int sectorsToRead = bytesToRead / 512;
     sectorsToRead += bytesToRead % 512 != 0 ? 1 : 0;
@@ -386,7 +386,7 @@ static int fat32_driver_read(fat32_driver_info* info, direntry_open* file, char*
     unsigned int totalBytesRead = 0;
     unsigned int i;
 
-    if (sectorsToRead < 8) //info->boot_sector.sectors_per_cluster) // Sectors_per_cluster is currently reporting the wrong thing :S
+    if (sectorsToRead <= info->boot_sector.sectors_per_cluster)
     {
         // Oh joy! We only have to read one cluster
         for (i = 0; i < sectorsToRead; i++)
@@ -409,18 +409,14 @@ static int fat32_driver_read(fat32_driver_info* info, direntry_open* file, char*
     }
     else
     {
-        // THe file is spread across multiple clusters - we need the FAT for this one
-        unsigned int clustersToRead = sectorsToRead / 8;
-        clustersToRead += (sectorsToRead % 8) != 0 ? 1 : 0;
+        // The file is spread across multiple clusters - we need the FAT for this one
+        unsigned int clustersToRead = sectorsToRead / info->boot_sector.sectors_per_cluster;
 
         for (i = 0; i < clustersToRead; i++)
         {
-            // Read the cluster (8 * 512 byte blocks, 4096 bytes)
             unsigned int j;
-            for (j = 0; j < 8; j++)
+            for (j = 0; j < info->boot_sector.sectors_per_cluster; j++)
             {
-                //unsigned int lba = (info->root_dir_sector + ((currentCluster - 2) * 8)) + j;
-             
                 ReturnOnFailureF(result = info->basic.device->operation(OpRead, &sectorToRead, info->basic.device->buffer),
                     "Failed to read sector %d for file . Cluster: %d\n", sectorToRead, i);
 
@@ -428,26 +424,37 @@ static int fat32_driver_read(fat32_driver_info* info, direntry_open* file, char*
 
                 my_memcpy(&argBuf[totalBytesRead], info->basic.device->buffer, bytesRead);
 
-                printf("Read %d bytes %d -> 0x%h\n", bytesRead, sectorToRead, &argBuf[totalBytesRead]);
+                unsigned int lastChar = argBuf[totalBytesRead + bytesRead - 1] & 0xFF;
+                unsigned int lastBuf = info->basic.device->buffer[511] & 0xFF;
+
+                /*printf("Read %d bytes from sector %d -> into %d, last 0x%h, last buf: 0x%h\n", 
+                    bytesRead, sectorToRead, &argBuf[totalBytesRead], lastChar, lastBuf);
+                */
 
                 bytesToRead -= bytesRead;
                 totalBytesRead += bytesRead;
 
                 if (bytesToRead <= 0)
+                {
+                    printf("bytes to read <= 0\n");
                     goto fExit;
+                }
 
                 // Read next sector in block
                 sectorToRead++;
             }
 
-            unsigned int currentCluster = (sectorToRead - info->root_dir_sector) / 8;
-            unsigned int fatEntry = fat32_getFatEntry(info, currentCluster);
-            if (fatEntry == -1)
-            {
-                printf("Failed to retrieve FAT entry for cluster. :-(");
-                break;
-            }
+            // We overstep the sector in the loop and it's important we maintain it
+            // To make sure we can correctly calculate the next cluster to read
+            sectorToRead--;
+
+            unsigned int currentCluster = ((sectorToRead - info->root_dir_sector) / info->boot_sector.sectors_per_cluster) + 2;
             
+            unsigned int fatEntry = fat32_getFatEntry(info, currentCluster);
+
+            ReturnOnFailureF(((result = fatEntry) == -1), "Failed to retrieve FAT entry for cluster %d, entry: %d\n", 
+                currentCluster, fatEntry);
+
             // Ignore the 4 high bits
             fatEntry &= 0x0FFFFFFF;
 
@@ -457,9 +464,11 @@ static int fat32_driver_read(fat32_driver_info* info, direntry_open* file, char*
                 break; // Bad cluster :-( Report to user?
 
             // Calculate the LBA of the next sector to read
-            // Note sure why we do -1?
-            sectorToRead = (info->root_dir_sector + ((fatEntry) * 8)) - 1;
+            sectorToRead = info->root_dir_sector + ((fatEntry - 2) * info->boot_sector.sectors_per_cluster);
         }
+
+        // Looks good?
+        result = 0;
     }
 
 fExit:
