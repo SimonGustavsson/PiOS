@@ -398,9 +398,7 @@ static int fat32_driver_read(fat32_driver_info* info, direntry_open* file, char*
             unsigned int bytes_read_to_copy = bytesToRead > 512 ? 512 : bytesToRead;
 
             my_memcpy(&argBuf[totalBytesRead], info->basic.device->buffer, bytes_read_to_copy);
-            printf("read %d bytes\n", bytes_read_to_copy);
-
-
+           
             bytesToRead -= bytes_read_to_copy;
             totalBytesRead += bytes_read_to_copy;
 

@@ -8,10 +8,10 @@
 #include "terminal.h"
 #include "taskScheduler.h"
 #include "memory.h"
-//#include "fs/filesystem.h"
 #include "hardware/device/sdBlockDevice.h"
 #include "fs/fs.h"
 #include "fs/fat32driver.h"
+#include "util/utilities.h"
 
 // Windows doesn't have __attribute__ :(
 #ifdef _MSC_VER
@@ -109,29 +109,35 @@ int cmain(void)
 	Terminal_PrintPrompt();
 
     // Example of opening a file
-    int handle = fs_open("/dev/sd0/cluster.txt", file_read);
+    int handle = fs_open("/dev/sd0/dummy1.img", file_read);
     if (handle != INVALID_HANDLE)
     {
+        // Find the file size
         fs_seek(handle, 0, seek_end);
-
         unsigned int fileSize = fs_tell(handle) & 0xFFFFFFFF;
         fs_seek(handle, 0, seek_begin);
 
-        printf("cluster.txt size: %d\n", fileSize);
+        printf("Opened /dev/sd0/dummy1.img size: %d Reading content...\n", fileSize);
         
         char* buffer = (char*)palloc(fileSize + 1);
+
+        // Make it print friendly
         buffer[fileSize] = 0;
 
+        // Read the entire file
         fs_read(handle, buffer, fileSize);
 
-        printf("~~~~~~~~~~~~~~~~~~~~~~\n");
-
-        // Note: Due to a limit in printf, this will NOT print strings longer than MAX_PRINTF_LENGTH
-        printf(buffer);
-
-        printf("\n~~~~~~~~~~~~~~~~~~~~~~\n");
-        
+        // Don't need the file anymore
         fs_close(handle);
+
+        printf("/dev/sd0/dummy1.img read, jumping to it! :D\n");
+
+        // Throw it at a random location and jump to i, for fun
+        my_memcpy((unsigned int*)FINAL_USER_START_VA, buffer, fileSize);
+
+        int(*usr)(void) = (task_main_func)FINAL_USER_START_VA;
+
+        usr(); // :D
     }
 
     printf("Not sure what to do now...\n");
