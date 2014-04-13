@@ -3,6 +3,8 @@
 
 #include <stdarg.h> // Needed for varying argument length
 
+#define MAX_PRINTF_LENGTH 4096
+
 int my_strlen(char* str);
 char* my_strcpy(const char* src, char* dst);
 unsigned int my_strcmp(char* str1, char* str2);

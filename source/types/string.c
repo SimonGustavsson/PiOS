@@ -247,7 +247,7 @@ void printf_s(char* text, unsigned int length, ...)
 
 void vprintf_s(char* text, unsigned int length, va_list ap)
 {
-    char res[4096];
+    char res[MAX_PRINTF_LENGTH];
     char* result = res;
 	
 	// scan all characters in the string and look for format specifiers
