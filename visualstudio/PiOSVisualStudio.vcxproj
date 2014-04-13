@@ -109,10 +109,6 @@
     <ClCompile Include="..\source\util\utilities.c" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\include\fs\fat32.old" />
-    <None Include="..\include\fs\filesystem.old" />
-    <None Include="..\source\fs\fat32.old" />
-    <None Include="..\source\fs\filesystem.old" />
     <None Include="..\source\start.s" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

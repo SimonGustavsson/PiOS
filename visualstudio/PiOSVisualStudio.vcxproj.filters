@@ -211,17 +211,5 @@
     <None Include="..\source\start.s">
       <Filter>Source Files</Filter>
     </None>
-    <None Include="..\include\fs\fat32.old">
-      <Filter>Header Files\fs</Filter>
-    </None>
-    <None Include="..\include\fs\filesystem.old">
-      <Filter>Header Files\fs</Filter>
-    </None>
-    <None Include="..\source\fs\fat32.old">
-      <Filter>Source Files\fs</Filter>
-    </None>
-    <None Include="..\source\fs\filesystem.old">
-      <Filter>Source Files\fs</Filter>
-    </None>
   </ItemGroup>
 </Project>
