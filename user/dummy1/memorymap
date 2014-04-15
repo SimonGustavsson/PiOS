@@ -1,7 +1,7 @@
 MEMORY
 {
 	/* Hardcoded 1 MB max application size */
-    ram : ORIGIN = 0x0000, LENGTH = 1M
+    ram : ORIGIN = 0x00F00000, LENGTH = 1M
 }
 
 SECTIONS
@@ -15,4 +15,5 @@ SECTIONS
 	.data : { *(.data) } > ram
 	.rodata : { *(.rodata) } > ram
 	.rodata.str1.4 : { *(.rodata.str1.4) } > ram
+	.rel.plt : { *(.rel.plt) } > ram
 }

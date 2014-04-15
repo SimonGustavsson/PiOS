@@ -19,7 +19,7 @@ OBJ_DIR = $(BUILD_DIR)/obj
 
 # Flags
 CFLAGS = -Wall -nostdlib -nostartfiles -ffreestanding --no-common -Wpadded -march=armv6j -mtune=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard -fno-omit-frame-pointer
-LINKER_FLAGS = --no-wchar-size-warning --no-undefined -fpie -shared -Map $(BUILD_DIR)/$(APP_NAME).map -T memorymap
+LINKER_FLAGS = --no-wchar-size-warning --no-undefined --Map $(BUILD_DIR)/$(APP_NAME).map -T memorymap
 
 CHEADERS := $(wildcard include/*.h)
 CSOURCE := $(wildcard $(SOURCE_DIR)/*.c)
