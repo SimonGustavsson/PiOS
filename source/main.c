@@ -132,12 +132,14 @@ int cmain(void)
 
         printf("/dev/sd0/dummy1.img read, jumping to it! :D\n");
 
+        printf("User is at 0x%h\n", FINAL_USER_START_VA);
+
         // Throw it at a random location and jump to i, for fun
         my_memcpy((unsigned int*)FINAL_USER_START_VA, buffer, fileSize);
 
-        int(*usr)(void) = (task_main_func)FINAL_USER_START_VA;
+        branchTo((unsigned int *)(FINAL_USER_START_VA));
 
-        usr(); // :D
+        printf("\nBack in kernel!\n");
     }
 
     printf("Not sure what to do now...\n");
