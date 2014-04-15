@@ -54,6 +54,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\debugging.h" />
+    <ClInclude Include="..\include\elf.h" />
     <ClInclude Include="..\include\fs\fat32driver.h" />
     <ClInclude Include="..\include\fs\fs.h" />
     <ClInclude Include="..\include\hardware\device\blockDevice.h" />
@@ -80,6 +81,7 @@
     <ClInclude Include="..\include\hardware\timer.h" />
     <ClInclude Include="..\include\hardware\uart.h" />
     <ClInclude Include="..\include\util\utilities.h" />
+    <ClInclude Include="..\source\elf.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\debugging.c" />
