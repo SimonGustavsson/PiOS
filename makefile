@@ -89,6 +89,7 @@ $(OBJ_DIR)/$(notdir %).o: %.c
 
 #build s files (Assembly)
 $(OBJ_DIR)/%.o: $(SOURCE_DIR)/%.s
+	@echo Building $< from $@
 	@$(TOOL)-as $(ASSEMBLER_FLAGS) $< -o $@
 	
 directories:
