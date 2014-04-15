@@ -261,14 +261,17 @@ undefined:
 
 swi:
     ;@ Save registers and LR onto stack
+	stmfd sp!, {r4-r5,lr}
 
-	stmfd sp!, {r0-r12,lr}
+    ;@ Don't touch r0-r2 as they contain arguments
+    ;@ To the SWI
 
 	;@ SWI number is stored in top 8 bits of the instruction
-	ldr r0, [lr, #-4]
-	bic r0, r0, #0xFF000000
+	ldr r3, [lr, #-4]
+	bic r3, r0, #0xFF000000
 
 	bl c_swi_handler
 
 	;@ Restore registers and return
-	LDMFD sp!,{r0-r12,pc}^
+	LDMFD sp!, {r4, r5, pc}^
+    

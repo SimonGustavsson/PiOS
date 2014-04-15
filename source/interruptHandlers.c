@@ -51,10 +51,14 @@ void c_abort_instruction_handler(unsigned int address, unsigned int errorType)
     wait(INTERRUPT_HANDLER_DELAY);
 }
 
-void c_swi_handler(unsigned int swi)
+void c_swi_handler(unsigned int r0, unsigned int r1, unsigned int r2, unsigned int swi)
 {
     switch (swi)
     {
+    case 12: // sys_print
+        // r0 should be a char*, TODO: add validation
+        printf("r0: 0x%h - %s\n", r0, (char*)(r0));
+        break;
     case 95:
         // Print example
         printf("Swi example print call(95)\n");
