@@ -1,7 +1,6 @@
 #define EI_NIDENT 16
 
-/*
-    Elf data sizes and their meanings:
+/*            Elf data sizes and their meanings:
     ___Name________|_Size___|_Alignment_|_______Purpose___________
     |Elf32_Addr    |   4    |    4      | Unsigned Program Address|
     |Elf32_Half    |   2    |    2      | Unsigned medium integer |
@@ -16,7 +15,6 @@
     Elf32_Off    = unsigned int
     Elf32_Sword  = int
     Elf32_Word   = unsigned int
-
 */
 
 typedef enum {
@@ -88,7 +86,7 @@ typedef struct {
 } elf32_header;
 
 typedef struct {
-
+    // Hmm?
 } elf_shentry;
 
 // These indices in the section header table are reserved
@@ -211,9 +209,7 @@ ________________________________________________________________________________
 
 */
 
-/*            Symbol Table
-
-*/
+/*            Symbol Table            */
 
 // Symbol table entry
 typedef struct {
@@ -269,3 +265,93 @@ typedef struct {
     // Specifies a constant addend used to compute the value to be stored into the relocatable field
     unsigned short addend;
 } elf_rela;
+
+typedef struct {
+    unsigned int type;     // Which type of segment this array element describes
+    unsigned int offset;   // Offset to first byte of segment from start of file
+    unsigned int vaddr;    // Virtual address the first byte resides at in memory
+    unsigned int paddr;    // Physical address the first byte resides at in memory
+    unsigned int filesz;   // Size of segment in file image (in bytes) in file image
+    unsigned int memsz;    // Size of segment in file image (in bytes) in memory image
+    unsigned int flags;    // Flags relevant to the section
+    unsigned int align;    // The alignment of segments in memory & file (0 = no alignment)
+} elf_ph;
+
+typedef enum {
+    PT_NULL     = 0,          // Array element is unused
+    PT_LOAD     = 1,          // Loadable segment
+    PT_DYNAMIC  = 2,          // Dynamic linking information
+    PT_INTERP   = 3,          // Location and size of null-terminated path name to invoke as an interpreter
+    PT_NOTE     = 4,          // Size and location of auxiliary information
+    PT_SHLIB    = 5,          // Reserved, unspecified semantics. not ABI conformant
+    PT_PHDR     = 6,          // Location and size of program header table
+    PT_LOPROC   = 0x70000000, // Values between PT_LOPROC --> PT_HIPROC are
+    PT_HIPROC   = 0x7FFFFFFF  //   reserved for processor specific semantics
+} elf_segtype;
+
+typedef struct {
+    unsigned short tag;    // Determines how to interpret un
+    union {
+        unsigned int val;  // Various interpretations
+        unsigned int addr; // Program virtual address
+    } un;
+} elf_dyn;
+
+/*     This table shows which value of "un" to use for different elf_dyntypes
+        un                Exec            Shared
+        DT_NULL            ignored      -  Mandatory    -   Mandatory
+        DT_NEEDED          val          -  Optional     -   Optional
+        DT_PLTRELSZ        val          -  Optional     -   Optional
+        DT_PLTGOT          ptr          -  Optional     -   Optional
+        DT_HASH            ptr          -  Mandatory    -   Mandatory
+        DT_STRTAB          ptr          -  Mandatory    -   Manatory
+        DT_SYMTAB          ptr          -  Mandatory    -   Manatory
+        DT_RELA            ptr          -  Mandatory    -   Optional
+        DT_RELASZ          val          -  Mandatory    -   Optional
+        DT_RELAENT         val          -  Mandatory    -   Optional
+        DT_STRSZ           val          -  Mandatory    -   Mandatory
+        DT_SYMENT          val          -  Mandatory    -   Manatory
+        DT_INIT            ptr          -  Optional     -   Optional
+        DT_FINI            ptr          -  Optional     -   Optional
+        DT_SONAME          val          -  ignored      -   Optional
+        DT_RPATH           val          -  Optional     -   Ignored
+        DT_SYMBOLIC        ignored      -  Ignored      -   Optional
+        DT_REL             ptr          -  Mandatory    -   Optional
+        DT_RELSZ           val          -  Mandatory    -   Optional
+        DT_RELENT          val          -  Mandatory    -   Optional
+        DT_PLTREL          val          -  Optional     -   Optional
+        DT_DEBUG           ptr          -  Optional     -   Optional
+        DT_TEXTREL         ignored      -  Optional     -   Optional
+        DT_JMPREL          ptr          -  Optional     -   Optional
+        DT_LOPROC          unspecified  -  Unspecified  -   Unspecified
+        DT_HIPROC          unspecified  -  Unspecified  -   Unspecified
+*/
+
+typedef enum {                 
+    DT_NULL       = 0,         // Marks the end of the _DYNAMIC array
+    DT_NEEDED     = 1,         // String table offset of a null-terminated string, offset is index into table in the DT_STRTAB entry
+    DT_PLTRELSZ   = 2,         // Total size (in bytes) of relocation entries
+    DT_PLTGOT     = 3,         // Address associated with procedure linkage table or GOT
+    DT_HASH       = 4,         // Address of symbol hash table
+    DT_STRTAB     = 5,         // Address of string table
+    DT_SYMTAB     = 6,         // Adress of symbol table
+    DT_RELA       = 7,         // Address of relocation table (entries have explicit addends)
+    DT_RELASZ     = 8,         // Total size of the DT_RELA relocation table (in bytes)
+    DT_RELAENT    = 9,         // Size of DT_RELA relocation entry
+    DT_STRSZ      = 10,        // Size (in bytes) of string table
+    DT_SYMENT     = 11,        // Size (in bytes) of symbol table entry
+    DT_INIT       = 12,        // Address of initialization function
+    DT_FINI       = 13,        // Address of termination function
+    DT_SONAME     = 14,        // String able offset of name of shared object
+    DT_RPATH      = 15,        // String table offset of library search path string
+    DT_SYMBOLIC   = 16,        // This element’s presence in a shared object library alters the dynamic linker’s symbol resolution algorithm for references within the library.
+    DT_REL        = 17,        // Same as DT_RELA but with implicit addends
+    DT_RELSZ      = 18,        // Total size of relocation table (in bytes)
+    DT_RELENT     = 19,        // Size of relocation entry (in bytes)
+    DT_PLTREL     = 20,        // The type of the relocation entries, val holds DT_REL or DT_RELA
+    DT_DEBUG      = 21,        // Used for debugging
+    DT_TEXTREL    = 22,        // The absence of this specifies that no relocation entry should cause modified to a non-writable segment
+    DT_JMPREL     = 23,        // If present, ptr memer holds the address of relocation entries associated solely for the procedure linkage table
+    DT_LOPROC     = 0x70000000,// reserved
+    DT_HIPROC     = 0x7FFFFFFF // reserved
+} elf_dyntype;
