@@ -434,7 +434,6 @@ static int fat32_driver_read(fat32_driver_info* info, direntry_open* file, char*
 
                 if (bytesToRead <= 0)
                 {
-                    printf("bytes to read <= 0\n");
                     goto fExit;
                 }
 
