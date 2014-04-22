@@ -18,8 +18,9 @@ SOURCE_DIR = source
 OBJ_DIR = $(BUILD_DIR)/obj
 
 # Flags
-CFLAGS = -Wall -nostdlib -nostartfiles -ffreestanding --no-common -Wpadded -march=armv6j -mtune=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard -fno-omit-frame-pointer
-LINKER_FLAGS = --no-wchar-size-warning --no-undefined --Map $(BUILD_DIR)/$(APP_NAME).map -T memorymap
+# Note that this creates a relocatable ELF (Required for PiOS)
+CFLAGS = -Wall -nostdlib -nostartfiles -ffreestanding --no-common -Wpadded -march=armv6j -mtune=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard -fno-omit-frame-pointer -fpic
+LINKER_FLAGS = --no-wchar-size-warning --no-undefined --Map $(BUILD_DIR)/$(APP_NAME).map -T memorymap -pie
 
 CHEADERS := $(wildcard include/*.h)
 CSOURCE := $(wildcard $(SOURCE_DIR)/*.c)
@@ -45,10 +46,10 @@ $(BUILD_DIR)/symbols.txt: $(BUILD_DIR)/$(APP_NAME).elf
 # Link all of the objects
 $(BUILD_DIR)/$(APP_NAME).elf: $(COBJECT)
 	@$(TOOL)-ld $(LINKER_FLAGS) $(COBJECT) -o $(BUILD_DIR)/$(APP_NAME).elf
-
+	
 # Build C files
 $(OBJ_DIR)/%.o: $(SOURCE_DIR)/%.c $(CHEADERS)
-	@$(TOOL)-gcc -c $< -o $@ $(CFLAGS) 
+	$(TOOL)-gcc -c $< -o $@ $(CFLAGS) 
 
 # Create directories
 directories:
