@@ -129,9 +129,6 @@
     <ClInclude Include="..\include\fs\fat32driver.h">
       <Filter>Header Files\fs</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\elf.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\elf.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -211,6 +208,9 @@
     </ClCompile>
     <ClCompile Include="..\source\fs\fat32driver.c">
       <Filter>Source Files\fs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\elf.c">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -81,10 +81,10 @@
     <ClInclude Include="..\include\hardware\timer.h" />
     <ClInclude Include="..\include\hardware\uart.h" />
     <ClInclude Include="..\include\util\utilities.h" />
-    <ClInclude Include="..\source\elf.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\debugging.c" />
+    <ClCompile Include="..\source\elf.c" />
     <ClCompile Include="..\source\fs\fat32driver.c" />
     <ClCompile Include="..\source\fs\fs.c" />
     <ClCompile Include="..\source\hardware\device\sdBlockDevice.c" />
