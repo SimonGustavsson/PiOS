@@ -35,23 +35,30 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
 
 /* Define __gnuc_va_list.  */
 
-#ifndef __GNUC_VA_LIST
-#define __GNUC_VA_LIST
-typedef __builtin_va_list __gnuc_va_list;
-#endif
 
 /* Define the standard macros for the user,
    if this invocation was from the user program.  */
 #ifdef _STDARG_H
 
-#define va_start(v,l)	__builtin_va_start(v,l)
-#define va_end(v)	__builtin_va_end(v)
-#define va_arg(v,l)	__builtin_va_arg(v,l)
-#if !defined(__STRICT_ANSI__) || __STDC_VERSION__ + 0 >= 199900L || defined(__GXX_EXPERIMENTAL_CXX0X__)
-#define va_copy(d,s)	__builtin_va_copy(d,s)
-#endif
-#define __va_copy(d,s)	__builtin_va_copy(d,s)
+    /* Hack to get intellisense to shut up about builtin_va_list */
+#ifdef _MSC_VER
+    #define va_start _crt_va_start
+    #define va_arg _crt_va_arg
+    #define va_end _crt_va_end
+#else
+    #ifndef __GNUC_VA_LIST
+        #define __GNUC_VA_LIST
+        typedef __builtin_va_list __gnuc_va_list;
+    #endif
 
+    #define va_start(v,l)	__builtin_va_start(v,l)
+    #define va_end(v)	__builtin_va_end(v)
+    #define va_arg(v,l)	__builtin_va_arg(v,l)
+    #if !defined(__STRICT_ANSI__) || __STDC_VERSION__ + 0 >= 199900L || defined(__GXX_EXPERIMENTAL_CXX0X__)
+    #define va_copy(d,s)	__builtin_va_copy(d,s)
+    #endif
+    #define __va_copy(d,s)	__builtin_va_copy(d,s)
+#endif
 /* Define va_list, if desired, from __gnuc_va_list. */
 /* We deliberately do not define va_list when called from
    stdio.h, because ANSI C says that stdio.h is not supposed to define
@@ -99,7 +106,11 @@ typedef __gnuc_va_list va_list;
 #ifndef _VA_LIST_T_H
 /* The macro __va_list__ is used by BeOS.  */
 #ifndef __va_list__
-typedef __gnuc_va_list va_list;
+#ifdef _MSC_VER
+   typedef char * va_list;
+#else
+    typedef __gnuc_va_list va_list;
+#endif
 #endif /* not __va_list__ */
 #endif /* not _VA_LIST_T_H */
 #endif /* not _VA_LIST */

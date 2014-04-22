@@ -132,6 +132,9 @@
     <ClInclude Include="..\include\elf.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\stdarg.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\main.c">

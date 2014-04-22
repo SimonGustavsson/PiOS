@@ -68,6 +68,7 @@
     <ClInclude Include="..\include\hardware\keyboard.h" />
     <ClInclude Include="..\include\hardware\mailbox.h" />
     <ClInclude Include="..\include\memory.h" />
+    <ClInclude Include="..\include\stdarg.h" />
     <ClInclude Include="..\include\terminalCommands.h" />
     <ClInclude Include="..\include\types\queue.h" />
     <ClInclude Include="..\include\types\string.h" />
