@@ -12,6 +12,7 @@
 #include "fs/fs.h"
 #include "fs/fat32driver.h"
 #include "util/utilities.h"
+#include "elf.h"
 
 // Windows doesn't have __attribute__ :(
 #ifdef _MSC_VER
@@ -96,6 +97,33 @@ int system_initialize(void)
     return result;
 }
 
+char* get_dummy1(char** buffer)
+{
+    int handle = fs_open("/dev/sd0/dummy1.elf", file_read);
+    if (handle == INVALID_HANDLE)
+    {
+        printf("Failed to open dummy1.elf\n");
+        return -1;
+    }
+
+    // Find the file size
+    fs_seek(handle, 0, seek_end);
+    unsigned int fileSize = fs_tell(handle) & 0xFFFFFFFF;
+    fs_seek(handle, 0, seek_begin);
+
+    printf("Opened /dev/sd0/dummy1.elf size: %d Reading content...\n", fileSize);
+
+    *buffer = (char*)palloc(fileSize + 1);
+
+    // Read the entire file
+    fs_read(handle, *buffer, fileSize);
+
+    // Don't need the file anymore
+    fs_close(handle);
+
+    return fileSize;
+}
+
 int cmain(void)
 {
     if (system_initialize() != 0)
@@ -108,38 +136,41 @@ int cmain(void)
 	Terminal_PrintWelcome();
 	Terminal_PrintPrompt();
 
-    // Example of opening a file
-    int handle = fs_open("/dev/sd0/dummy1.img", file_read);
-    if (handle != INVALID_HANDLE)
+    char* dummy1 = -1;
+    int size = get_dummy1(&dummy1);
+
+    if (size != -1)
     {
-        // Find the file size
-        fs_seek(handle, 0, seek_end);
-        unsigned int fileSize = fs_tell(handle) & 0xFFFFFFFF;
-        fs_seek(handle, 0, seek_begin);
+        elf32_header* hdr = (elf32_header*)dummy1;
+        if (elf_verify_header_ident(hdr) == 0)
+        {
+            printf("Loading elf into memory\n");
 
-        printf("Opened /dev/sd0/dummy1.img size: %d Reading content...\n", fileSize);
-        
-        char* buffer = (char*)palloc(fileSize + 1);
+            if (elf_load(dummy1, size, FINAL_USER_START_VA) == 0)
+            {
+                wait(3000);
 
-        // Make it print friendly
-        buffer[fileSize] = 0;
+                char* usr = (char*)(FINAL_USER_START_VA);
 
-        // Read the entire file
-        fs_read(handle, buffer, fileSize);
+                printf("Dumping copied user data region in memory\n");
+                unsigned int k;
+                for (k = 0; k < 48; k++)
+                {
+                    printf("%c ", usr[k]);
+                    if (k % 4 == 0)
+                    {
+                        printf("\n");
+                    }
+                }
 
-        // Don't need the file anymore
-        fs_close(handle);
+                // Jump!? :D
+                //branchTo((unsigned int *)(FINAL_USER_START_VA));
+            }
+        }
 
-        printf("/dev/sd0/dummy1.img read, jumping to it! :D\n");
+        printf("freeing file buffer\n");
 
-        printf("User is at 0x%h\n", FINAL_USER_START_VA);
-
-        // Throw it at a random location and jump to i, for fun
-        my_memcpy((unsigned int*)FINAL_USER_START_VA, buffer, fileSize);
-
-        branchTo((unsigned int *)(FINAL_USER_START_VA));
-
-        printf("\nBack in kernel!\n");
+        phree(dummy1);
     }
 
     printf("Not sure what to do now...\n");
