@@ -71,7 +71,40 @@ int elf_get_strtab(unsigned char* table_data, unsigned int size, char*** result)
     return strings_found;
 }
 
-int elf_load(unsigned char* file, int file_size, unsigned int addr)
+char* elf_get_sh_type(elf_shtype type)
+{
+    switch (type)
+    {
+    case SHT_NULL:
+        return "Empty";
+    case SHT_PROGBITS:
+        return "Code";
+    case SHT_SYMTAB:
+        return "Symbol table";
+    case SHT_STRTAB:
+        return "String table";
+    case SHT_RELA:
+        return "Relocation (addend)";
+    case SHT_REL:
+        return "Relocation";
+    case SHT_HASH:
+        return "Hash table";
+    case SHT_DYNAMIC:
+        return "Dynamic";
+    case SHT_NOTE:
+        return "Note";
+    case SHT_NOBITS:
+        return "bss";
+    case SHT_SHLIB:
+        return "reserved (shtlib)";
+    case SHT_DYNSYM:
+        return "Symbol table (minimal)";
+    default:
+        return "reserved/unknown";
+    }
+}
+
+int elf_load(unsigned char* file, int file_size, unsigned int mem_base)
 {
     // Make sure the data is large enough
     if (file_size < sizeof(elf32_header) + sizeof(elf_ph))
@@ -81,21 +114,48 @@ int elf_load(unsigned char* file, int file_size, unsigned int addr)
     }
 
     // Parse & verify elf header
-    elf32_header* header = (elf32_header*)palloc(sizeof(elf32_header));
-    my_memcpy(header, file, sizeof(elf32_header));
-    
+    elf32_header* header = (elf32_header*)file;    
     if (elf_verify_header_ident(header) != 0)
     {
         printf("Invalid ELF header\n");
         return -1;
     }
 
-    // Throw program header into struct we can interpret
     unsigned int phsize = header->phentsize * header->phnum;
-    elf_ph* ph = (elf_ph*)palloc(phsize);
-    my_memcpy(ph, &file[header->phoff], phsize);
+    elf_ph* prog_hdrs = (elf_ph*)&file[header->phoff];
 
-    // TODO: Actually do something
+    // Copy sections into memory
+    unsigned int i;
+    for (i = 0; i < header->phnum; i++)
+    {
+        elf_ph* cur = &prog_hdrs[i];
+        unsigned int dest_addr = mem_base + cur->vaddr;
+
+        if (cur->type != SHT_PROGBITS)
+            continue;
+        
+        if (cur->filesz > 0)
+        {
+            // Copy data from file
+            
+            my_memcpy((char*)dest_addr, file[cur->offset], cur->filesz);
+            printf("Section '%s' => %d bytes from 0x%h in file to memory: 0x%h\n",
+                elf_get_sh_type(cur->type), 
+                cur->filesz, 
+                cur->offset, 
+                dest_addr);
+            printf("memsz: %d\n", cur->memsz);
+        }
+        else
+        {
+            // Just fill target with 0s
+            my_memset((char*)dest_addr, 0, cur->memsz);
+            printf("Section %s => Zeroed out %d bytes at 0x%h\n",
+                elf_get_sh_type(cur->type),
+                cur->memsz, 
+                dest_addr);
+        }
+    }
 
     return 0;
 }
