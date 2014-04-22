@@ -20,7 +20,7 @@ OBJ_DIR = $(BUILD_DIR)/obj
 # Flags
 # Note that this creates a relocatable ELF (Required for PiOS)
 CFLAGS = -Wall -nostdlib -nostartfiles -ffreestanding --no-common -Wpadded -march=armv6j -mtune=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard -fno-omit-frame-pointer -fpic
-LINKER_FLAGS = --no-wchar-size-warning --no-undefined --Map $(BUILD_DIR)/$(APP_NAME).map -T memorymap -pie
+LINKER_FLAGS = --no-wchar-size-warning --no-undefined --Map $(BUILD_DIR)/$(APP_NAME).map -T memorymap -pie --nmagic
 
 CHEADERS := $(wildcard include/*.h)
 CSOURCE := $(wildcard $(SOURCE_DIR)/*.c)
