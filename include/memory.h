@@ -17,4 +17,6 @@ void* palloc(unsigned int size);
 // Example: pcalloc(sizeof(int), 4); // Allocates an array of 4 ints
 void* pcalloc(unsigned int itemSize, unsigned int size);
 
+void* my_memset(void* dest, unsigned char c, unsigned int size);
+
 void phree(void* pointer);

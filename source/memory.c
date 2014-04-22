@@ -253,14 +253,14 @@ void* palloc(unsigned int size)
     return ptr;
 }
 
-void* my_memset(void* s, unsigned char c, unsigned int size)
+void* my_memset(void* dest, unsigned char c, unsigned int size)
 {
-    unsigned char* ptr = (unsigned char*)s;
+    unsigned char* ptr = (unsigned char*)dest;
 
     while (size--)
         *ptr++ = c;
 
-    return s;
+    return dest;
 }
 
 void* pcalloc(unsigned int itemSize, unsigned int size)
