@@ -17,8 +17,16 @@ void sys_print(const char* str);
 
 int main(void)
 {
-	sys_print("Hello, user program!");
+	unsigned int i;
+	while(1)
+	{
+		sys_print("Hello, I'm dummy1!\n");
+		
+		// Wait a bit
+		for(i = 0; i < 9999999; i++);
+	}
 	
+	// We don't actually return
 	return 4;
 }
 
