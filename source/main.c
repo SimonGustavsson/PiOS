@@ -90,42 +90,11 @@ int system_initialize(void)
     // Add the SD card to the file system
     fs_add_device(gSd);
 
-	//taskScheduler_Init();
+    TaskScheduler_Initialize();
 	
 	printf("System initialization complete, result: %d\n", result);
 
     return result;
-}
-
-char* get_file_data(char* filename, char** buffer)
-{
-    int handle = fs_open(filename, file_read);
-    if (handle == INVALID_HANDLE)
-    {
-        printf("Failed to open %s\n", filename);
-        return -1;
-    }
-
-    // Find the file size
-    fs_seek(handle, 0, seek_end);
-    unsigned int fileSize = fs_tell(handle) & 0xFFFFFFFF;
-    fs_seek(handle, 0, seek_begin);
-
-    *buffer = (char*)palloc(fileSize);
-
-    if (*buffer == 0)
-    {
-        printf("Failed to allocate buffer for '%s'\n", filename);
-        return -1;
-    }
-
-    // Read the entire file
-    fs_read(handle, *buffer, fileSize);
-
-    // Don't need the file anymore
-    fs_close(handle);
-
-    return fileSize;
 }
 
 int cmain(void)
@@ -140,31 +109,30 @@ int cmain(void)
 	Terminal_PrintWelcome();
 	Terminal_PrintPrompt();
 
-    char* dummy1 = -1;
-    int size = get_file_data("/dev/sd0/dummy1.elf", &dummy1);
+    // Create two dummy tasks and add them to the scheduler
+    task_entry_func dummy1_entry = Task_LoadElf("/dev/sd0/dummy1.elf", FINAL_USER_START_VA);
+    task_entry_func dummy2_entry = Task_LoadElf("/dev/sd0/dummy2.elf", FINAL_USER_START_VA + 0x100000);
 
-    if (size != -1)
+    Task* dummy1 = 0;
+    Task* dummy2 = 0;
+
+    if (dummy1_entry != -1)
     {
-        elf32_header* hdr = (elf32_header*)dummy1;
-        if (elf_verify_header_ident(hdr) == 0 && elf_load(dummy1, size, FINAL_USER_START_VA) == 0)
-        {
-            printf("Jumping to entry point of ELF\n");
-
-            // Jump!? :D
-            char* usr = (char*)(FINAL_USER_START_VA);
-            branchTo((unsigned int *)(FINAL_USER_START_VA));
-        }
-
-        phree(dummy1);
+        dummy1 = Task_Create(dummy1_entry, "Dummy1");
+        TaskScheduler_EnqueueTask(dummy1);
     }
 
-    printf("\nNot sure what to do now...\n");
+    if (dummy2_entry != -1)
+    {
+        dummy2 = Task_Create(dummy2_entry, "Dummy2");
+        TaskScheduler_EnqueueTask(dummy2);
+    }
 
-    // Timer temporarily disabled as it messes with execution of relocated code
-	// Enable timer intterrupts and set up timer
-    /*timer_sp_clearmatch();
-    timer_sp_setinterval(TASK_SCHEDULER_TICK_MS);
-	arm_irq_enable(interrupt_source_system_timer); */
+    printf("Starting task scheduler...\n");
+
+    //TaskScheduler_Start();
+
+    printf("\nNot sure what to do now...\n");
     while (1)
     {
         Terminal_Update();

@@ -5,12 +5,14 @@
 #include "hardware/mmu.h"
 #include "hardware/timer.h"
 #include "types/queue.h"
+#include "hardware/interrupts.h"
 
 // This is really the heart of PiOS - this is where PiOS sits constantly
 volatile extern unsigned int gTaskSchedulerTick;
 volatile extern unsigned int* get_sp();
 
 static taskScheduler* gScheduler;
+static unsigned int gNextTID;
 
 void TaskScheduler_Initialize(void)
 {
@@ -20,6 +22,21 @@ void TaskScheduler_Initialize(void)
 	gScheduler->tasks.back = 0;
 	gScheduler->tasks.front = 0;
 	gScheduler->tasks.numNodes = 0;
+
+    gNextTID = 0;
+}
+
+void TaskScheduler_Start(void)
+{
+    Timer_Clear();
+    Timer_SetInterval(TASK_SCHEDULER_TICK_MS);
+    Arm_IrqEnable(interrupt_source_system_timer);
+}
+
+unsigned int TaskScheduler_GetNextTID(void)
+{
+    // For now: Just an incremental integer, need to do someting better in the future
+    return gNextTID++;
 }
 
 // This is probably not going to be "task" but rather "StartInfo" or similar
@@ -29,11 +46,21 @@ void TaskScheduler_EnqueueTask(Task* task)
 
 	// Add it to the queue for processing
 	Queue_Enqueue(&gScheduler->tasks, task);
+
+    gScheduler->tasksRunning++;
+
+    printf("Enqueud task (%d) %s\n", task->id, task->name);
 }
 
 void TaskScheduler_TimerTick(registers* regs)
 {
+    printf("Task scheduler tick!\n");
+
     return;
+
+    // if the current task's "started" value == 0, call Task_StartupFunction()
+
+
 
     //unsigned int shouldSwitchTask = 0;
     //if (gScheduler->currentTask != 0)

@@ -12,11 +12,13 @@ typedef struct {
 	unsigned int tasksRunning;
 } taskScheduler;
 
-// Switches to the next task in line
-// Save registers and call this function from assembly
-void TaskScheduler_TimerTick(registers* registers);
 void TaskScheduler_Initialize(void);
+void TaskScheduler_Start(void);
+
+// Switches to the next task in line Save registers and call this function from assembly
+void TaskScheduler_TimerTick(registers* registers);
 Task* TaskScheduler_CreateTask(void(*mainFunction)(void));
 void TaskScheduler_EnqueueTask(Task* task);
+unsigned int TaskScheduler_GetNextTID(void);
 
 #endif

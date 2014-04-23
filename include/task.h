@@ -5,6 +5,8 @@
 
 #define MAX_TASK_MEMORY_MB 10
 
+typedef int(*task_entry_func)(void);
+
 typedef enum {
 	Running, // Currently executing
 	Waiting, // Waiting for resource/IO etc
@@ -47,14 +49,19 @@ typedef struct {
 	// The memory mapping, a process can at most 
 	MemoryMapping memoryMappings[MAX_TASK_MEMORY_MB];
 
-	unsigned int id;
-	taskPriority priority;
-	unsigned int timeElapsed;
-	unsigned int active;
-	taskState state;
+	unsigned int    id;          // 
+	taskPriority    priority;    // The priority of the task
+	unsigned int    timeElapsed; // How long this task has been running since it was switched in
+	unsigned int    active;      // Whether this task is currently executing
+	taskState       state;       // Current state of task
+    task_entry_func entry;       // Entry point of task in memory
+    unsigned int    started;     // Whether the task has started
+    int             result;      // The return value of the entry function
+    char*           name;        // Print friendly name 
 } Task;
 
+task_entry_func Task_LoadElf(char* filename, unsigned int addr);
 void Task_StartupFunction(Task* task);
-Task* Task_Create(void(*mainFunction)(void));
+Task* Task_Create(task_entry_func, char* name);
 
 #endif
