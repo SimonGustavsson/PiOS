@@ -142,38 +142,19 @@ int cmain(void)
     if (size != -1)
     {
         elf32_header* hdr = (elf32_header*)dummy1;
-        if (elf_verify_header_ident(hdr) == 0)
+        if (elf_verify_header_ident(hdr) == 0 && elf_load(dummy1, size, FINAL_USER_START_VA) == 0)
         {
-            printf("Loading elf into memory\n");
+            printf("Jumping to entry point of ELF\n");
 
-            if (elf_load(dummy1, size, FINAL_USER_START_VA) == 0)
-            {
-                wait(3000);
-
-                char* usr = (char*)(FINAL_USER_START_VA);
-
-                printf("Dumping copied user data region in memory\n");
-                unsigned int k;
-                for (k = 0; k < 48; k++)
-                {
-                    printf("%c ", usr[k]);
-                    if (k % 4 == 0)
-                    {
-                        printf("\n");
-                    }
-                }
-
-                // Jump!? :D
-                //branchTo((unsigned int *)(FINAL_USER_START_VA));
-            }
+            // Jump!? :D
+            char* usr = (char*)(FINAL_USER_START_VA);
+            branchTo((unsigned int *)(FINAL_USER_START_VA));
         }
-
-        printf("freeing file buffer\n");
 
         phree(dummy1);
     }
 
-    printf("Not sure what to do now...\n");
+    printf("\nNot sure what to do now...\n");
 
     // Timer temporarily disabled as it messes with execution of relocated code
 	// Enable timer intterrupts and set up timer
