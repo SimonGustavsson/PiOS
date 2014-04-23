@@ -130,7 +130,7 @@ int cmain(void)
 
     printf("Starting task scheduler...\n");
 
-    //TaskScheduler_Start();
+    TaskScheduler_Start();
 
     printf("\nNot sure what to do now...\n");
     while (1)

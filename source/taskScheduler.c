@@ -8,7 +8,6 @@
 #include "hardware/interrupts.h"
 
 // This is really the heart of PiOS - this is where PiOS sits constantly
-volatile extern unsigned int gTaskSchedulerTick;
 volatile extern unsigned int* get_sp();
 
 static taskScheduler* gScheduler;
@@ -31,6 +30,8 @@ void TaskScheduler_Start(void)
     Timer_Clear();
     Timer_SetInterval(TASK_SCHEDULER_TICK_MS);
     Arm_IrqEnable(interrupt_source_system_timer);
+
+    // Switch in first task?
 }
 
 unsigned int TaskScheduler_GetNextTID(void)
@@ -55,6 +56,10 @@ void TaskScheduler_EnqueueTask(Task* task)
 void TaskScheduler_TimerTick(registers* regs)
 {
     printf("Task scheduler tick!\n");
+
+    // Restart the timer
+    Timer_Clear();
+    Timer_SetInterval(TASK_SCHEDULER_TICK_MS);
 
     return;
 

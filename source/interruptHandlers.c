@@ -5,8 +5,7 @@
 #include "types/string.h"
 #include "util/utilities.h"
 #include "debugging.h"
-// Imported via extern in taskScheduler
-volatile unsigned int gTaskSchedulerTick;
+#include "taskScheduler.h"
 
 // Because I sometimes mess up and end up getting spammed with
 // Abort interrupts of various types, this adds a delay to the abort handlers
@@ -81,12 +80,8 @@ void c_irq_handler(volatile unsigned int* r0)
     case interrupt_source_system_timer:
         {
             // Note IRQ has no acccess to peripherals? :(
-
-            //taskScheduler_TimerTick((registers*)r0);
-
-            //// Restart the timer again
-            //timer_sp_clearmatch();
-            //timer_sp_setinterval(TASK_SCHEDULER_TICK_MS);
+            
+            TaskScheduler_TimerTick((registers*)r0);
 
             //gTaskSchedulerTick = 1;
             break;

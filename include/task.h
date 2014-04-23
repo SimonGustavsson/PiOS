@@ -47,7 +47,7 @@ typedef struct {
 	registers* registers;
 
 	// The memory mapping, a process can at most 
-	MemoryMapping memoryMappings[MAX_TASK_MEMORY_MB];
+	//MemoryMapping memoryMappings[MAX_TASK_MEMORY_MB];
 
 	unsigned int    id;          // 
 	taskPriority    priority;    // The priority of the task
