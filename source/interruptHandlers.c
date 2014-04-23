@@ -57,7 +57,7 @@ void c_swi_handler(unsigned int r0, unsigned int r1, unsigned int r2, unsigned i
     {
     case 12: // sys_print
         // r0 should be a char*, TODO: add validation
-        printf("r0: 0x%h - %s\n", r0, (char*)(r0));
+        printf("%s", (char*)(r0));
         break;
     case 95:
         // Print example
