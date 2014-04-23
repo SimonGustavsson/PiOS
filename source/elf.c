@@ -121,40 +121,23 @@ int elf_load(unsigned char* file, int file_size, unsigned int mem_base)
         return -1;
     }
 
-    unsigned int phsize = header->phentsize * header->phnum;
-    elf_ph* prog_hdrs = (elf_ph*)&file[header->phoff];
+    elf_shdr* shdrs = (elf_shdr*)&file[header->shoff];
 
     // Copy sections into memory
     unsigned int i;
-    for (i = 0; i < header->phnum; i++)
+    for (i = 0; i < header->shnum; i++)
     {
-        elf_ph* cur = &prog_hdrs[i];
-        unsigned int dest_addr = mem_base + cur->vaddr;
+        elf_shdr* cur = &shdrs[i];
 
-        if (cur->type != SHT_PROGBITS)
-            continue;
-        
-        if (cur->filesz > 0)
-        {
-            // Copy data from file
-            
-            my_memcpy((char*)dest_addr, file[cur->offset], cur->filesz);
-            printf("Section '%s' => %d bytes from 0x%h in file to memory: 0x%h\n",
-                elf_get_sh_type(cur->type), 
-                cur->filesz, 
-                cur->offset, 
-                dest_addr);
-            printf("memsz: %d\n", cur->memsz);
-        }
+        if ((cur->flags & SHF_ALLOC) != SHF_ALLOC)
+            continue; // Skip sections that don't get loaded into memory
+
+        unsigned int dest_addr = mem_base + cur->addr;
+
+        if (cur->type == SHT_NOBITS)
+            my_memset((char*)dest_addr, 0, cur->size);
         else
-        {
-            // Just fill target with 0s
-            my_memset((char*)dest_addr, 0, cur->memsz);
-            printf("Section %s => Zeroed out %d bytes at 0x%h\n",
-                elf_get_sh_type(cur->type),
-                cur->memsz, 
-                dest_addr);
-        }
+            my_memcpy((char*)dest_addr, &file[cur->offset], cur->size);
     }
 
     return 0;

@@ -137,7 +137,7 @@ typedef struct {
     unsigned int flags;     // see elf_shflag
     unsigned int addr;      // If section will appear as a process in memory this field contains the address the first byte of the section should be loaded to
     unsigned int offset;    // File offset of this section. Note: Does not apply to section SHT_NOBITS
-    unsigned int size;      // Section size (in bytes). Note: SHT_NOBITS might have a value, but does not occupy any space
+    unsigned int size;      // Section size (in bytes). Note: SHT_NOBITS might have a value, but does not occupy any space in file
     unsigned int link;      // Contains the section header table index link. See below on how to interpret this field
     unsigned int info;      // See below on how to interpret this field
     unsigned int addralign; // Specifies alignment requirement. Valid values: 0 and ^2. Value 0 and 1 means no alignment constraint
