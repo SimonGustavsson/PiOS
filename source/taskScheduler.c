@@ -53,18 +53,13 @@ void TaskScheduler_EnqueueTask(Task* task)
     printf("Enqueud task (%d) %s\n", task->id, task->name);
 }
 
-void TaskScheduler_TimerTick(registers* regs)
+void TaskScheduler_NextTask(void)
 {
-    printf("Task scheduler tick!\n");
-
-    // Restart the timer
-    Timer_Clear();
-    Timer_SetInterval(TASK_SCHEDULER_TICK_MS);
-
-    return;
-
-    // if the current task's "started" value == 0, call Task_StartupFunction()
-
+    Task* old = gScheduler->currentTask;
+    if (old != 0)
+    {
+        // Switch out the old task
+    }
 
 
     //unsigned int shouldSwitchTask = 0;
@@ -102,6 +97,19 @@ void TaskScheduler_TimerTick(registers* regs)
 
     //    gScheduler->currentTask = task;
     //}
+
+    // if the new task's "started" value == 0, call Task_StartupFunction()
+}
+
+void TaskScheduler_TimerTick(registers* regs)
+{
+    printf("Task scheduler tick!\n");
+
+    // Restart the timer
+    Timer_Clear();
+    Timer_SetInterval(TASK_SCHEDULER_TICK_MS);
+
+    //TaskScheduler_NextTask();
 }
 
 Task* TaskScheduler_CreateTask(void(*mainFunction)(void))

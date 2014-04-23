@@ -20,5 +20,8 @@ void TaskScheduler_TimerTick(registers* registers);
 Task* TaskScheduler_CreateTask(void(*mainFunction)(void));
 void TaskScheduler_EnqueueTask(Task* task);
 unsigned int TaskScheduler_GetNextTID(void);
+// Switches to the next task in the list
+void TaskScheduler_NextTask(void);
+
 
 #endif
