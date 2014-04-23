@@ -431,6 +431,6 @@ file_size: The size of the file (in bytes).
 addr: The address to load the file to.
 Returns: 0 on success, otherwise an error code.
 */
-int elf_load(unsigned char* file, int file_size, unsigned int addr);
+int elf_load(char* file, int file_size, unsigned int mem_base);
 
 char* elf_get_sh_type(elf_shtype type);

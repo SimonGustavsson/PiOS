@@ -104,7 +104,7 @@ char* elf_get_sh_type(elf_shtype type)
     }
 }
 
-int elf_load(unsigned char* file, int file_size, unsigned int mem_base)
+int elf_load(char* file, int file_size, unsigned int mem_base)
 {
     // Make sure the data is large enough
     if (file_size < sizeof(elf32_header) + sizeof(elf_ph))
