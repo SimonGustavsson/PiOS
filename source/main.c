@@ -97,12 +97,12 @@ int system_initialize(void)
     return result;
 }
 
-char* get_dummy1(char** buffer)
+char* get_file_data(char* filename, char** buffer)
 {
-    int handle = fs_open("/dev/sd0/dummy1.elf", file_read);
+    int handle = fs_open(filename, file_read);
     if (handle == INVALID_HANDLE)
     {
-        printf("Failed to open dummy1.elf\n");
+        printf("Failed to open %s\n", filename);
         return -1;
     }
 
@@ -111,9 +111,13 @@ char* get_dummy1(char** buffer)
     unsigned int fileSize = fs_tell(handle) & 0xFFFFFFFF;
     fs_seek(handle, 0, seek_begin);
 
-    printf("Opened /dev/sd0/dummy1.elf size: %d Reading content...\n", fileSize);
+    *buffer = (char*)palloc(fileSize);
 
-    *buffer = (char*)palloc(fileSize + 1);
+    if (*buffer == 0)
+    {
+        printf("Failed to allocate buffer for '%s'\n", filename);
+        return -1;
+    }
 
     // Read the entire file
     fs_read(handle, *buffer, fileSize);
@@ -137,7 +141,7 @@ int cmain(void)
 	Terminal_PrintPrompt();
 
     char* dummy1 = -1;
-    int size = get_dummy1(&dummy1);
+    int size = get_file_data("/dev/sd0/dummy1.elf", &dummy1);
 
     if (size != -1)
     {
