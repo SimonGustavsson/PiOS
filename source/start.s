@@ -268,7 +268,7 @@ swi:
 
 	;@ SWI number is stored in top 8 bits of the instruction
 	ldr r3, [lr, #-4]
-	bic r3, r0, #0xFF000000
+	bic r3, r3, #0xFF000000
 
 	bl c_swi_handler
 
