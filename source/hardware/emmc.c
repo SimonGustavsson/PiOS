@@ -227,12 +227,12 @@ unsigned int Emmc_switchClockRate(unsigned int base_clock, unsigned int target_r
 
 	// Wait for command line, and DAT line to become available
 	while(gEmmc->Status.bits.CmdInhibit == 1 || gEmmc->Status.bits.DatInhibit == 1)
-		wait(100);
+		wait(10);
 
 	// Turn the clock off
 	gEmmc->Control1.raw &= ~(1 << 2);
 
-	wait(200);
+	wait(20);
 
 	// Write the new divider
 	unsigned int control1 = gEmmc->Control1.raw;
@@ -241,13 +241,13 @@ unsigned int Emmc_switchClockRate(unsigned int base_clock, unsigned int target_r
 
 	gEmmc->Control1.raw = control1;
 
-	wait(100);
+	wait(20);
 
 	// Re enable the SD clock with the new speed
 	control1 |= (1 << 2);
 	gEmmc->Control1.raw = control1;
 
-	wait(200);
+	wait(20);
 
 	return 1;
 }
@@ -335,11 +335,11 @@ int Emmc_Initialise(void)
 	// Wait for the clock to stabalize
 	while((gEmmc->Control1.raw & 0x2) != 0);
 
-	wait(100);
+	wait(10);
 
 	gEmmc->Control1.raw |= 4; // Enable the clock
 
-	wait(100);
+	wait(10);
 
 	gEmmc->IrptEn.raw = 0; // Disable ARM interrupts
 	gEmmc->Interrupt.raw = 0xFFFFFFFF;
@@ -350,7 +350,7 @@ int Emmc_Initialise(void)
 
 	gEmmc->IrptMask.raw = irpt_mask;
 	
-	wait(100);
+	wait(10);
 
 	if(!Emmc_issueCommand(GoIdleState, 0)) // CMD0, should add timeout?
 	{
@@ -418,7 +418,7 @@ int Emmc_Initialise(void)
 			break;
 		}
 
-		wait(500);
+		wait(50);
 	}
 
    /* TODO: Store this for later use?
@@ -431,7 +431,7 @@ int Emmc_Initialise(void)
 	// We have an SD card which supports SDR12 mode at 25MHz - Set frequency
 	Emmc_switchClockRate(base_clock, SdClockNormal);
 	
-	wait(100); // Wait for clock rate to change
+	wait(20); // Wait for clock rate to change
 
 	if(card_supports_voltage_switch)
 	{
@@ -469,7 +469,7 @@ int Emmc_Initialise(void)
 		// Set 1.8V signal enable to 1
 		gEmmc->Control0.raw |= (1 << 8);
 
-		wait(50);
+		wait(20);
 
 		// Check to make sure signal enable is still set
 		if(((gEmmc->Control0.raw >> 8) & 0x1) == 0)
@@ -702,7 +702,7 @@ int Emmc_powerCycle(void)
 		return -1;
 	}	
 	
-	wait(100);
+	wait(50);
 	
 	if((res = Emmc_powerOn()) < 0)
 		printf("ssed - Failed to power on\n");
@@ -799,10 +799,7 @@ static void Emmc_handleInterrupt()
 	if(irpt & (1 << 8))
 	{
 		printf("ssed - Interrupt: Card interrupt.\n");
-		volatile unsigned int wait = 0;
-		while (wait < 2000000){
-			wait++;
-		}
+
 		Emmc_handleCardInterrupt();
 		reset_mask = (1 << 8);
 	}
@@ -953,7 +950,7 @@ int Emmc_issueCommandInt(unsigned int command, unsigned int argument)
 		return -1;
 	}
 
-	wait(100);
+	wait(5);
 
 	// Get response data
 	switch(command & SD_CMD_RSPNS_TYPE_MASK)
@@ -1104,7 +1101,7 @@ int Emmc_issueCommandInt(unsigned int command, unsigned int argument)
 
 					gEmmc->Cmdtm.raw = CMD[StopTransmitting];
 
-					wait(2000);
+					wait(200);
 				}
 				gLastError = irpts & 0xFFFF0000;
 				return -1;
