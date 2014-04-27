@@ -135,6 +135,9 @@
     <ClInclude Include="..\include\stdarg.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\hardware\paging.h">
+      <Filter>Header Files\hardware</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\main.c">
@@ -214,6 +217,9 @@
     </ClCompile>
     <ClCompile Include="..\source\elf.c">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\hardware\paging.c">
+      <Filter>Source Files\hardware</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

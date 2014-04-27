@@ -63,6 +63,7 @@
     <ClInclude Include="..\include\hardware\framebuffer.h" />
     <ClInclude Include="..\include\hardware\gpio.h" />
     <ClInclude Include="..\include\hardware\miniUart.h" />
+    <ClInclude Include="..\include\hardware\paging.h" />
     <ClInclude Include="..\include\interruptHandlers.h" />
     <ClInclude Include="..\include\hardware\interrupts.h" />
     <ClInclude Include="..\include\hardware\keyboard.h" />
@@ -93,6 +94,7 @@
     <ClCompile Include="..\source\hardware\framebuffer.c" />
     <ClCompile Include="..\source\hardware\gpio.c" />
     <ClCompile Include="..\source\hardware\miniUart.c" />
+    <ClCompile Include="..\source\hardware\paging.c" />
     <ClCompile Include="..\source\interruptHandlers.c" />
     <ClCompile Include="..\source\hardware\interrupts.c" />
     <ClCompile Include="..\source\hardware\keyboard.c" />
