@@ -1,6 +1,9 @@
 #include "types/string.h"
 #include "terminal.h"
 
+#define INT_MIN (-2147483647 - 1)
+#define INT_MAX 2147483647
+
 int my_strlen(char* str)
 {
 	int length = 0;
@@ -165,6 +168,124 @@ void dec_to_hex(char* buf, unsigned int dec)
 	}
 
 	*buf_ptr = '\0';
+}
+
+// Counts number of digits in an integer
+static int int_digit_count(int n) {
+    if (n < 0) n = (n == INT_MIN) ? INT_MAX : -n;
+    if (n < 10) return 1;
+    if (n < 100) return 2;
+    if (n < 1000) return 3;
+    if (n < 10000) return 4;
+    if (n < 100000) return 5;
+    if (n < 1000000) return 6;
+    if (n < 10000000) return 7;
+    if (n < 100000000) return 8;
+    if (n < 1000000000) return 9;
+    return 10;
+}
+
+int my_scanf(char* buf, unsigned int buf_len, char* str, ...)
+{
+    va_list ap;
+    va_start(ap, str);
+
+    char* res = buf;
+
+    // Flags:
+    /*
+    - : Left justify (wut?)
+    + : Preceed number with + or -
+    # : Used with x and X to print 0x, for a,e,f,g print comma
+    0-9 : Specifies number of chars to write. padds if less
+    * : Width specified with next argument
+
+
+    */
+    unsigned int chars_written = 0;
+    unsigned int max_len = 0;
+    int reading_len = 0;
+    int arg_chars_read = 0;
+    char* curArg = 0;
+    do
+    {
+        chars_written++;
+
+        char cur = *str;
+        char next = *(str + 1);
+        if (cur != '%' && reading_len != 1)
+        {
+            *res++ = cur;
+            continue;
+        }
+
+        switch (next)
+        {
+        case 'c':
+            // Character
+            break;
+        case 'd':
+        {
+                    // Signed decimal int
+                    int arg = va_arg(ap, int);
+
+                    itoa(arg, res);
+                    str += int_digit_count(arg);
+        }
+            break;
+        case 's':
+            // String
+            curArg = (char*)va_arg(ap, int);
+            do
+            {
+                *res++ = *curArg++;
+                arg_chars_read++;
+                chars_written++;
+            } while (*curArg != 0 && (max_len == 0 || arg_chars_read < max_len));
+
+            str++;
+            break;
+        case 'x':
+            // unsigned hexadecimal int
+            break;
+        case 'X':
+            // unsigned hexadecimal int (uppercase)
+            break;
+        case 'f':
+            // Decimal float
+            break;
+        case 'a':
+            // Hexadecimal float
+            break;
+        case 'A':
+            // Hexadecimal float (uppercase)
+            break;
+        case 'p':
+            // Pointer address
+            break;
+        case '%':
+            // Escaped %
+            *res++ = cur;
+            str += 2;
+            break;
+        default:
+            if (next >= '0' && next <= '9')
+            {
+                max_len = (max_len * 10) + (next - '0');
+                // Length specifier
+                reading_len = 1;
+
+                if (max_len > buf_len)
+                    return -1; // Invalid
+
+                continue;
+            }
+            break;
+        }
+        reading_len = 0;
+    } while (*str++ != 0);
+
+    return 0;
 }
 
 void printf_i(char* text, ...)
