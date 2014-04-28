@@ -8,21 +8,29 @@ void kernel_pt_set(unsigned int* pt, unsigned int pa, unsigned int va, unsigned 
     *(pt + va_base) = (pa_base << 20) | PAGE_PRESENT | PAGE_AP_SVCRW | flags | PT_TYPE_SECTION;
 }
 
-int kernel_pt_initialize(unsigned int* pt)
+int kernel_pt_initialize(unsigned int* pt, unsigned int* tmp_ttb0)
 {
     // Kernel 
     unsigned int i;
     for (i = 0; i < KRL_LEVEL1_ENTRIES; i++)
         *(pt + i) = PT_TYPE_FAULT; // STMIA?
 
-    // Map first 200MB of kernels Virtual memory to the first 200 MB in physical memory
-    // So that Virtual address 0x80000000 = Physical 0x00000000
+    // First things first - Create the persistent TTB1 and fill it with 1MB sections covering the first 200MB
     for (i = 0; i < 200; i++)
-        kernel_pt_set(pt, KERNEL_PA_START + (100000 * i), KERNEL_VA_START + (100000 * i), PAGE_CACHEABLE | PAGE_BUFFERABLE);
+        kernel_pt_set(pt, KERNEL_PA_START + (0x100000 * i), KERNEL_VA_START + (0x100000 * i), PAGE_CACHEABLE | PAGE_BUFFERABLE);
 
-    // Map peripherals 
+    // Addtionally, add 256 1MB sections to cover the peripherals
     for (i = 0; i < 256; i++)
-        kernel_pt_set(pt, 0x20000000 + (100000 * i), PERIPHERAL_VA_START + (100000 * i), 0);
+        kernel_pt_set(pt, 0x20000000 + (0x100000 * i), PERIPHERAL_VA_START + (0x100000 * i), 0);
+
+    // Create temporary ttb0 with identity mapping that will be used
+    // during the very early stages of boot while we're enabling paging
+    // and before we have a chance to jump into the high-memory mapping of the kernel
+    // Note that TTB0 does NOT map the peripherals, we have to jump to high-memory before accessing them
+    for (i = 0; i < 200; i++)
+        kernel_pt_set(tmp_ttb0, 0x100000 * i, 0x100000 * i, PAGE_CACHEABLE | PAGE_BUFFERABLE);
+
+
 
     //
     // TODO: 
