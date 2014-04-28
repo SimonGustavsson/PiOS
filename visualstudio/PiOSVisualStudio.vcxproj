@@ -114,7 +114,8 @@
     <ClCompile Include="..\source\util\utilities.c" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\source\start.s" />
+    <None Include="..\source\asm\interrupt_handlers.s" />
+    <None Include="..\source\asm\start.s" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

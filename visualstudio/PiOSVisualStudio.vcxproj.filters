@@ -43,6 +43,9 @@
     <Filter Include="Source Files\hardware\device">
       <UniqueIdentifier>{130ff0a2-96a5-41bf-8178-0eb8708bb28b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\asm">
+      <UniqueIdentifier>{db50f4a1-3691-45f0-adf2-8999b8dab25f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="readme.txt" />
@@ -223,8 +226,11 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\source\start.s">
-      <Filter>Source Files</Filter>
+    <None Include="..\source\asm\interrupt_handlers.s">
+      <Filter>Source Files\asm</Filter>
+    </None>
+    <None Include="..\source\asm\start.s">
+      <Filter>Source Files\asm</Filter>
     </None>
   </ItemGroup>
 </Project>

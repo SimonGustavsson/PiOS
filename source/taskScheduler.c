@@ -8,7 +8,6 @@
 #include "hardware/interrupts.h"
 
 // This is really the heart of PiOS - this is where PiOS sits constantly
-volatile extern unsigned int* get_sp();
 
 static taskScheduler* gScheduler;
 static unsigned int gNextTID;

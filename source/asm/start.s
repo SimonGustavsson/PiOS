@@ -9,7 +9,7 @@ _start:
 	ldr pc,unused_handler
 	ldr pc,irq_handler
 	ldr pc,fiq_handler
-
+    
 	;@ Route handlers to the appropriate function
 	reset_handler:      .word reset
 	undefined_handler:  .word undefined
@@ -61,29 +61,6 @@ reset:
     mov r0,#0xD3 ;@ PSR_SVC_MODE (0x13) PSR_FIQ_DIS (0x40) | PSR_IRQ_DIS (0x80)
     msr cpsr_c,r0
     ldr sp, =0xC08000
-		
-    ;@ Disabled clearing BSS for now as it's cleared by the linker due to
-    ;@ The fact that we have a section after it, and it pads the img with 0's
-    ;@ To get to the section after, also I believe the _bss_end  symbol currently
-    ;@ Points to the wrong thing, causing this to clear the .data section as well
-	;@ Clear out bss
-	;@	ldr	r4, =_bss_start
-	;@	ldr	r9, =_bss_end
-	;@	mov	r5, #0
-	;@	mov	r6, #0
-	;@	mov	r7, #0
-	;@	mov	r8, #0
-	;@		b       2f
-	;@ 
-	;@	1:
-	;@		;@ store multiple at r4.
-	;@		stmia	r4!, {r5-r8}
-	;@	 
-	;@		;@ If we are still below bss_end, loop.
-	;@	2:
-	;@		cmp	r4, r9
-	;@		blo	1b
-	;@ ---------------------------------------------
 	
 	;@ Jump into main function in C (main.c)
 	bl cmain
@@ -92,21 +69,12 @@ reset:
 hang: 
 	b hang
 
+;@ Gets the current Frame Pointer, used for stack trace
 .align 2
 .globl get_frame_pointer ;@ int* get_frame_pointer(void)
 get_frame_pointer:
     mov r0, fp
     mov pc, lr
-
-.globl PUT32 ;@ void PUT32(unsigned int address, unsigned int value)
-PUT32:
-	str r1, [r0]
-	bx lr
-
-.globl GET32 ;@ unsigned int GET32(unsigned int address)
-GET32:
-	ldr r0, [r0]
-	bx lr
 	
 .globl branchTo ;@ branchTo(unsigned int* addr)
 branchTo:
@@ -118,16 +86,7 @@ branchTo:
     pop {fp, lr}
     
     bx lr
-    
-.globl dummy ;@ void dummy(void)
-dummy:
-	bx lr
 
-.globl get_sp
-get_sp:
-	mov r0, sp
-	bx lr
-	
 .globl enable_irq ;@ void enable_irq(void)
 enable_irq:
     mrs r0, cpsr     ;@ Retrieve status
@@ -189,89 +148,3 @@ enable_mmu_and_cache:
 	mcr p15, 0, r1, c1, c0, 0
 
 	bx lr
-
-irq:
-    ;@ We have no idea what might be in these registers, so make sure they're
-	;@ saved so we can go back to the previous state once the interrupt has been handled
-	;@ TODO: Use STMFD?
-    push {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,lr}
-
-    ;@ Pass in a pointer to the registers as a param to the irq handler
-    mov r0, sp
-
-	;@ Jump to C Handler
-    bl c_irq_handler
-
-	;@ TODO: Use LDMFD?
-    pop  {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,lr}
-	
-	;@ Due to the CPU pipeline, we have to manipulate the return address
-	;@ The value stored in LR will include an offset which we need to subtract
-	;@ Offset: FIQ=4, IRQ=4, Pre-Fetch=4, SWI=0, Undefined=0, DataAbort=8, Reset=n/a
-    subs pc,lr,#4
-
-data_abort:	
-	push {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,lr}
-    
-	;@ Address where it happened
-	subs r0, lr, #8
-
-	;@ Get the error type
-	mrc p15, 0, r1, c5, c0, 0
-	and r1, r1, #0xF
-	
-	;@ Get address that was accessed
-	mrc p15, 0, r2, c6, c0, 0
-
-    ;@ Throw in the stack pointer aswell for stack trace
-    mov r3, sp
-
-	bl c_abort_data_handler
-	
-	pop  {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,lr}
-	
-	subs PC, lr, #4
-
-instruction_abort:
-	push {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,lr}
-    
-	;@ Get the address that caused it
-	subs r0, lr, #4
-
-	;@ Get the error type
-	mrc p15, 0, r1, c5, c0, 0
-	and r1, r1, #0xF
-
-	bl c_abort_instruction_handler
-	
-	pop  {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,lr}
-	
-	subs PC, lr, #4
-
-undefined:
-    push {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,lr}
-	
-    mov r0, lr
-
-	bl c_undefined_handler
-	
-    pop  {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,lr}
-
-	subs PC, lr, #4
-
-swi:
-    ;@ Save registers and LR onto stack
-	stmfd sp!, {r4-r5,lr}
-
-    ;@ Don't touch r0-r2 as they contain arguments
-    ;@ To the SWI
-
-	;@ SWI number is stored in top 8 bits of the instruction
-	ldr r3, [lr, #-4]
-	bic r3, r3, #0xFF000000
-
-	bl c_swi_handler
-
-	;@ Restore registers and return
-	LDMFD sp!, {r4, r5, pc}^
-    

@@ -31,7 +31,7 @@ VPATH := $(subst $(SPACE),:,$(C_INCLUDE_PATH))
 
 CHEADERS := $(shell find $(INCLUDE_DIR)/ -name '*.h')
 CSOURCE := $(shell find $(SOURCE_DIR)/ -name '*.c')
-ASOURCE := $(wildcard $(SOURCE_DIR)/*.s)
+ASOURCE := $(shell find $(SOURCE_DIR)/ -name '*.s')
 
 _COBJECT := $(patsubst %.c,%.o, $(CSOURCE))
 _AOBJECT := $(patsubst %.s,%.o, $(ASOURCE))
@@ -88,7 +88,7 @@ $(OBJ_DIR)/$(notdir %).o: %.c
 	@rm -f $(DEPENDENCY_DIR)/$*.d.tmp
 
 #build s files (Assembly)
-$(OBJ_DIR)/%.o: $(SOURCE_DIR)/%.s
+$(OBJ_DIR)/%.o: %.s
 	@echo Building $< from $@
 	@$(TOOL)-as $(ASSEMBLER_FLAGS) $< -o $@
 	

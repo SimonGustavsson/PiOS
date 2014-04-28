@@ -5,8 +5,6 @@ volatile timer* gTimer = (timer*)TIMER_BASE;
 // The timer has 4 channels, we use the forth channel for period interrupts
 const unsigned int TIMER_PERIODIC_CHANNEL = 3;
 
-extern unsigned int GET32(unsigned int);
-
 unsigned int Timer_Initialize(void)
 {
 	// Setup period irq interval before enabling interrupts
