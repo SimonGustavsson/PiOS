@@ -73,7 +73,7 @@ $(BUILD_DIR)/kernel.elf: $(AOBJECT) $(COBJECT)
 #build c files
 # The dependency stuff here is a hack, shouldn't have to do this?
 $(OBJ_DIR)/$(notdir %).o: %.c
-	@echo Building $< from $@
+	@echo Building $<
 	@$(TOOL)-gcc -c $< -o $@ $(CFLAGS) $(GCC_INCLUDE) -MD -MF $(DEPENDENCY_DIR)/$*.d 
 	
 # Create a temp file
@@ -89,7 +89,7 @@ $(OBJ_DIR)/$(notdir %).o: %.c
 
 #build s files (Assembly)
 $(OBJ_DIR)/%.o: %.s
-	@echo Building $< from $@
+	@echo Building $<
 	@$(TOOL)-as $(ASSEMBLER_FLAGS) $< -o $@
 	
 directories:
