@@ -318,7 +318,7 @@ int fs_read(int handle, char* buffer, unsigned int bytesToRead)
 
     partition* part = gFs->devices[devIndex]->partitions[partIndex];
 
-    return part->driver->operation(part->driver, fs_op_read, part->open_dirs[fileIndex], buffer, bytesToRead);
+    return part->driver->operation(part->driver, fs_op_read, part->open_dirs[fileIndex], buffer, &bytesToRead);
 }
 
 unsigned int fs_tell(int handle)

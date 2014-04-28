@@ -1,3 +1,4 @@
+#include "stddef.h"
 #include "task.h"
 #include "hardware/mmu.h"
 #include "elf.h"
@@ -16,7 +17,7 @@ void Task_StartupFunction(Task* task)
 	// Do system call to tell the scheduler this task is no longer running
 }
 
-char* Task_GetElfData(char* filename, char** buffer)
+int Task_GetElfData(char* filename, char** buffer)
 {
     int handle = fs_open(filename, file_read);
     if (handle == INVALID_HANDLE)
@@ -49,24 +50,24 @@ char* Task_GetElfData(char* filename, char** buffer)
 
 task_entry_func Task_LoadElf(char* filename, unsigned int addr)
 {
-    char* file_data = -1;
+    char* file_data = NULL;
     unsigned int file_size = Task_GetElfData(filename, &file_data);
 
     if (file_size == -1)
     {
         printf("Failed to load '%s'\n", filename);
-        return (void*)-1;
+        return NULL;
     }
 
     elf32_header* hdr = (elf32_header*)file_data;
     if (elf_verify_header_ident(hdr) != 0)
     {
-        return (void*)-1;
+        return NULL;
     }
 
     if (elf_load(file_data, file_size, addr) != 0)
     {
-        return (void*)-1;
+        return NULL;
     }
 
     return (task_entry_func)addr;

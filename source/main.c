@@ -1,3 +1,5 @@
+#include "stddef.h"
+
 #include "hardware/emmc.h"
 #include "hardware/interrupts.h"
 #include "hardware/timer.h"
@@ -116,13 +118,13 @@ int cmain(void)
     Task* dummy1 = 0;
     Task* dummy2 = 0;
 
-    if (dummy1_entry != -1)
+    if (dummy1_entry != NULL)
     {
         dummy1 = Task_Create(dummy1_entry, "Dummy1");
         TaskScheduler_EnqueueTask(dummy1);
     }
 
-    if (dummy2_entry != -1)
+    if (dummy2_entry != NULL)
     {
         dummy2 = Task_Create(dummy2_entry, "Dummy2");
         TaskScheduler_EnqueueTask(dummy2);

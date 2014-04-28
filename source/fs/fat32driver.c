@@ -129,7 +129,7 @@ int fat32_getDirEntry(fat32_driver_info* part, char* filename, direntry** entry)
         //printf("Comparing %s and %s\n", entries[i].name, fatFilename);
         
         if (my_strcmp_s((char*)entries[i].name, 11, fatFilename) == 0 || // Short entry
-            (entries[i].hasLongName == 1 && my_strcmp(entries[i].longName, filename) == 1)) // Long entry
+            (entries[i].hasLongName == 1 && my_strcmp((char*)entries[i].longName, filename) == 1)) // Long entry
         {
             file = &entries[i];
             break; // Found it!
@@ -421,14 +421,7 @@ static int fat32_driver_read(fat32_driver_info* info, direntry_open* file, char*
                 unsigned int bytesRead = bytesToRead > 512 ? 512 : bytesToRead;
 
                 my_memcpy(&argBuf[totalBytesRead], info->basic.device->buffer, bytesRead);
-
-                unsigned int lastChar = argBuf[totalBytesRead + bytesRead - 1] & 0xFF;
-                unsigned int lastBuf = info->basic.device->buffer[511] & 0xFF;
-
-                /*printf("Read %d bytes from sector %d -> into %d, last 0x%h, last buf: 0x%h\n", 
-                    bytesRead, sectorToRead, &argBuf[totalBytesRead], lastChar, lastBuf);
-                */
-
+                
                 bytesToRead -= bytesRead;
                 totalBytesRead += bytesRead;
 
@@ -562,7 +555,7 @@ int fat32_driver_operation(fs_driver_info* info, fs_op operation, void* arg1, vo
     switch (operation)
     {
     case fs_op_read:
-        return fat32_driver_read((fat32_driver_info*)info, (direntry*)arg1, (char*)arg2, (unsigned int)arg3);
+        return fat32_driver_read((fat32_driver_info*)info, (direntry_open*)arg1, (char*)arg2, (unsigned int)arg3);
     case fs_op_open:
         return fat32_getDirEntry((fat32_driver_info*)info, (char*)arg1, (direntry**)arg2);
     default:
