@@ -6,6 +6,7 @@ MEMORY
 
 SECTIONS
 {
+	.text.boot : { *(.text.boot*) } > ram
     .text : { *(.text*) } > ram
     . = ALIGN(4096); /* align to page size */
 	
