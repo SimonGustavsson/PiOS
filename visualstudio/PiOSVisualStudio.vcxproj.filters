@@ -141,6 +141,9 @@
     <ClInclude Include="..\include\hardware\paging.h">
       <Filter>Header Files\hardware</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\asm.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\main.c">
@@ -174,9 +177,6 @@
       <Filter>Source Files\hardware</Filter>
     </ClCompile>
     <ClCompile Include="..\source\hardware\mailbox.c">
-      <Filter>Source Files\hardware</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\hardware\mmu.c">
       <Filter>Source Files\hardware</Filter>
     </ClCompile>
     <ClCompile Include="..\source\hardware\uart.c">
@@ -224,12 +224,24 @@
     <ClCompile Include="..\source\hardware\paging.c">
       <Filter>Source Files\hardware</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\hardware\mmu_c.c">
+      <Filter>Source Files\hardware</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\source\asm\interrupt_handlers.s">
       <Filter>Source Files\asm</Filter>
     </None>
     <None Include="..\source\asm\start.s">
+      <Filter>Source Files\asm</Filter>
+    </None>
+    <None Include="..\source\asm\utility.s">
+      <Filter>Source Files\asm</Filter>
+    </None>
+    <None Include="..\source\asm\mmu.s">
+      <Filter>Source Files\asm</Filter>
+    </None>
+    <None Include="..\source\asm\irq.s">
       <Filter>Source Files\asm</Filter>
     </None>
   </ItemGroup>

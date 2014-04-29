@@ -1,3 +1,7 @@
+;@
+;@ Interrupt vector functions - do NOT call these from C code!
+;@ 
+
 .globl irq
 irq:
     ;@ We have no idea what might be in these registers, so make sure they're

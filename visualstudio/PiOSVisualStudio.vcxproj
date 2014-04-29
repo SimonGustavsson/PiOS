@@ -53,6 +53,7 @@
     <Text Include="readme.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\include\asm.h" />
     <ClInclude Include="..\include\debugging.h" />
     <ClInclude Include="..\include\elf.h" />
     <ClInclude Include="..\include\fs\fat32driver.h" />
@@ -101,7 +102,7 @@
     <ClCompile Include="..\source\hardware\mailbox.c" />
     <ClCompile Include="..\source\main.c" />
     <ClCompile Include="..\source\memory.c" />
-    <ClCompile Include="..\source\hardware\mmu.c" />
+    <ClCompile Include="..\source\hardware\mmu_c.c" />
     <ClCompile Include="..\source\platform.c" />
     <ClCompile Include="..\source\task.c" />
     <ClCompile Include="..\source\taskScheduler.c" />
@@ -115,7 +116,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\source\asm\interrupt_handlers.s" />
+    <None Include="..\source\asm\irq.s" />
+    <None Include="..\source\asm\mmu.s" />
     <None Include="..\source\asm\start.s" />
+    <None Include="..\source\asm\utility.s" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
