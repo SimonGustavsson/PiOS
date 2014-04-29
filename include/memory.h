@@ -4,6 +4,18 @@
 #define MAX_ALLOCATED_SLICES (MAX_ALLOCATED_BYTES / BYTES_PER_SLICE)
 #define EXTENDED_SIZE_BYTE_FLAG (1 << 7)
 
+//
+// System memory map
+//
+// Physical addresses
+#define KERNEL_PA_START 0x00000000
+#define PERIHERAL_PA_START 0x20000000
+
+// Virtual addresses
+#define PERIPHERAL_VA_START 0xA0000000
+#define KERNEL_VA_START 0x80000000
+#define USR_VA_START 0x00000000
+
 //#define DEBUG_MEM
 
 void DataMemoryBarrier(void);
