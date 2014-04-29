@@ -144,6 +144,9 @@
     <ClInclude Include="..\include\asm.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\memory_map.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\main.c">
@@ -232,9 +235,6 @@
     <None Include="..\source\asm\interrupt_handlers.s">
       <Filter>Source Files\asm</Filter>
     </None>
-    <None Include="..\source\asm\start.s">
-      <Filter>Source Files\asm</Filter>
-    </None>
     <None Include="..\source\asm\utility.s">
       <Filter>Source Files\asm</Filter>
     </None>
@@ -242,6 +242,9 @@
       <Filter>Source Files\asm</Filter>
     </None>
     <None Include="..\source\asm\irq.s">
+      <Filter>Source Files\asm</Filter>
+    </None>
+    <None Include="..\source\asm\start.S">
       <Filter>Source Files\asm</Filter>
     </None>
   </ItemGroup>

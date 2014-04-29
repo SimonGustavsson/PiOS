@@ -70,6 +70,7 @@
     <ClInclude Include="..\include\hardware\keyboard.h" />
     <ClInclude Include="..\include\hardware\mailbox.h" />
     <ClInclude Include="..\include\memory.h" />
+    <ClInclude Include="..\include\memory_map.h" />
     <ClInclude Include="..\include\stdarg.h" />
     <ClInclude Include="..\include\terminalCommands.h" />
     <ClInclude Include="..\include\types\queue.h" />
@@ -118,7 +119,7 @@
     <None Include="..\source\asm\interrupt_handlers.s" />
     <None Include="..\source\asm\irq.s" />
     <None Include="..\source\asm\mmu.s" />
-    <None Include="..\source\asm\start.s" />
+    <None Include="..\source\asm\start.S" />
     <None Include="..\source\asm\utility.s" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -32,9 +32,10 @@ VPATH := $(subst $(SPACE),:,$(C_INCLUDE_PATH))
 CHEADERS := $(shell find $(INCLUDE_DIR)/ -name '*.h')
 CSOURCE := $(shell find $(SOURCE_DIR)/ -name '*.c')
 ASOURCE := $(shell find $(SOURCE_DIR)/ -name '*.s')
+ASOURCE += $(shell find $(SOURCE_DIR)/ -name '*.S')
 
 _COBJECT := $(patsubst %.c,%.o, $(CSOURCE))
-_AOBJECT := $(patsubst %.s,%.o, $(ASOURCE))
+_AOBJECT := $(patsubst %.S,%.o, $(patsubst %.s,%.o, $(ASOURCE)))
 AOBJECT := $(addprefix $(OBJ_DIR)/, $(notdir $(_AOBJECT)))
 COBJECT := $(addprefix $(OBJ_DIR)/, $(notdir $(_COBJECT)))
 
@@ -91,6 +92,11 @@ $(OBJ_DIR)/$(notdir %).o: %.c
 $(OBJ_DIR)/%.o: %.s
 	@echo Building $<
 	@$(TOOL)-as $(ASSEMBLER_FLAGS) $< -o $@
+	
+# Uppercase S indicates header includes, run it through GCC instead of as
+$(OBJ_DIR)/%.o: %.S
+	@echo "Building $< (gcc)"
+	@$(TOOL)-gcc -c $< -o $@ $(ASSEMBLER_FLAGS) $(GCC_INCLUDE)
 	
 directories:
 	@mkdir -p $(OBJ_DIR)

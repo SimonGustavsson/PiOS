@@ -50,7 +50,7 @@ int system_initialize(void)
 	}
     
     // Now that the terminal is setup, enable virtual memory
-    unsigned int* basePageTable = (unsigned int *)0x000F8000;
+    unsigned int* basePageTable = (unsigned int *)KERNEL_PA_PT;
     Mmu_Initialize(basePageTable);
 
     Pallocator_Initialize();
