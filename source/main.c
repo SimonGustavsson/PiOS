@@ -1,41 +1,25 @@
-#include "stddef.h"
-
-#include "hardware/emmc.h"
-#include "hardware/interrupts.h"
-#include "hardware/timer.h"
-#include "hardware/mmu.h"
-#include "hardware/uart.h"
-#include "types/string.h"
-#include "util/utilities.h"
-#include "terminal.h"
-#include "taskScheduler.h"
+#include "asm.h"
 #include "memory.h"
-#include "hardware/device/sdBlockDevice.h"
+#include "stddef.h"
+#include "taskScheduler.h"
+#include "terminal.h"
 #include "fs/fs.h"
 #include "fs/fat32driver.h"
+#include "hardware/emmc.h"
+#include "hardware/interrupts.h"
+#include "hardware/mmu.h"
+#include "hardware/uart.h"
+#include "hardware/device/sdBlockDevice.h"
+#include "types/string.h"
 #include "util/utilities.h"
-#include "elf.h"
-#include "asm.h"
-
-// Windows doesn't have __attribute__ :(
-#ifdef _MSC_VER
-#define __attribute__(a)
-#define asm 
-#endif
 
 // user_code gets relocated to a section in memory where user mode has access
-#define user_code __attribute__((section(".user"))) __attribute__ ((noinline))
-#define SVC_INSTRUCTION(number) asm volatile("svc %0" : : "I" (number))
 #define FINAL_USER_START_VA 0x00F00000
-#define task_main_func int(*)(void)
 
 // This variable makes sure we have something in the .data section,
 // Because we place .bss before data, this will make sure that the compiler
 // Zeroes out the .bss region for us, as it pads it with 0's
 volatile unsigned int dataVarForPadding = 42;
-
-volatile extern Emmc* gEmmc;
-BlockDevice* gSd;
 
 void system_initialize_serial(void)
 {
@@ -76,10 +60,10 @@ int system_initialize(void)
     *((unsigned int*)0x10E00000) = 2;
 	
     // Initialize the SD card and filesystem
-    gSd = (BlockDevice*)palloc(sizeof(BlockDevice));
+    BlockDevice* sd = (BlockDevice*)palloc(sizeof(BlockDevice));
 
     // Initialize the SD block device
-    Sd_Register(gSd);
+    Sd_Register(sd);
 
     // Initialize global filesystem
     fs_initialize();
@@ -88,7 +72,7 @@ int system_initialize(void)
     fs_register_driver_factory(&fat32_driver_factory);
 
     // Add the SD card to the file system
-    fs_add_device(gSd);
+    fs_add_device(sd);
 
     TaskScheduler_Initialize();
 	
@@ -133,10 +117,12 @@ int cmain(void)
     TaskScheduler_Start();
 
     printf("\nNot sure what to do now...\n");
+    unsigned int i;
     while (1)
     {
         Terminal_Update();
 
-        wait(200);
+        // Wait a bit
+        for (i = 0; i < 10000; i++);
     }
 }
