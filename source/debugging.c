@@ -1,14 +1,13 @@
 #include "debugging.h"
 #include "types/string.h" // printf(...)
-
-extern int* get_frame_pointer(void); // defined in start.s
+#include "asm.h" // get_fp()
 
 void Debug_PrintCallstack(void)
 {
     printf("Stack trace: ");
     int lr = 0;
     int depth = 0;
-    int* fp = get_frame_pointer();
+    int* fp = get_fp();
 
     printf("From: 0x%h -> ", (int)fp);
     do

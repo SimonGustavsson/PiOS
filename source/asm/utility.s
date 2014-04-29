@@ -7,8 +7,8 @@
 ;@ C Signature: int* get_frame_pointer(void)
 ;@
 .align 2
-.globl get_frame_pointer
-get_frame_pointer:
+.globl get_fp
+get_fp:
     mov r0, fp
     mov pc, lr
 

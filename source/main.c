@@ -15,6 +15,7 @@
 #include "fs/fat32driver.h"
 #include "util/utilities.h"
 #include "elf.h"
+#include "asm.h"
 
 // Windows doesn't have __attribute__ :(
 #ifdef _MSC_VER
@@ -32,9 +33,6 @@
 // Because we place .bss before data, this will make sure that the compiler
 // Zeroes out the .bss region for us, as it pads it with 0's
 volatile unsigned int dataVarForPadding = 42;
-
-extern void enable_irq(void);
-extern void branchTo(unsigned int*);
 
 volatile extern Emmc* gEmmc;
 BlockDevice* gSd;

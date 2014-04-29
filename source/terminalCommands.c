@@ -7,11 +7,11 @@
 #include "hardware/mailbox.h"
 #include "hardware/emmc.h"
 
-extern char gPrompt[TERMINAL_PROMPT_MAX_LENGTH];
+extern char gPrompt[TERMINAL_PROMPT_MAX_LENGTH]; // Defined in terminal.c
 TerminalCommand gCommands[MAX_COMMAND_COUNT];
 unsigned int gCommandCount = 0;
 
-extern volatile Emmc* gEmmc;
+extern volatile Emmc* gEmmc; // Defined in emmc.h
 
 void TerminalCommands_registerCommand(char* name, char* description, unsigned int (*execute)(char**, unsigned int))
 {

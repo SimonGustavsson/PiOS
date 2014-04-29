@@ -1,8 +1,7 @@
 #include "hardware/mmu.h"
 #include "types/string.h"
 #include "memory.h"
-
-extern void enable_mmu_and_cache(unsigned int* pageTableBase);
+#include "asm.h"
 
 Pfa* gPfa;
 unsigned int* gPageTableBase;
