@@ -1,3 +1,5 @@
+#include "memory_map.h"
+
 .section .text.boot
 .globl _start
 _start:
@@ -36,32 +38,32 @@ reset:
 	;@ IRQ
     mov r0,#0xD2 ;@ PSR_IRQ_MODE (0x12) | PSR_FIQ_DIS(0x40) | PSR_IRQ_DIS (0x80)
     msr cpsr_c,r0
-    mov sp,#0x7900
+    ldr sp, =IRQ_STACK_PA_START
 
 	;@ FIQ
     mov r0,#0xD1 ;@ PSR_FIQ_MODE (0x11) |PSR_FIQ_DIS (0x40) | PSR_IRQ_DIS (0x80)
     msr cpsr_c,r0
-    mov sp,#0x4000
+    ldr sp, =FIQ_STACK_PA_START
 
 	;@ ABORT PSR_ABORT_MODE (0x17) | PSR_FIQ_DIS (0x40) | PSR_IRQ_DIS (0x80)
 	mov r0, #0xD7
 	msr cpsr_c,r0
-	ldr sp, =0x1208000
+	ldr sp, =ABORT_STACK_PA_START
 
 	;@ SYSTEM PSR_SYSTEM_MODE (0x1F) | PSR_FIQ_DIS(0x40) | PSR_IRQ_DIS (0x80)
 	mov r0, #0xDF ;@ 001 1111
 	msr cpsr_c, r0
-	ldr sp, =0x0A827000
+	ldr sp, =SM_STACK_PA_START
 
 	;@ UNDEFINED PSR_UNDEFINED_MODE (0x1B) | PSR_FIQ_DIS (0x40) | PSR_IRQ_DIS (0x80)
 	mov r0, #0xDB
 	msr cpsr_c, r0
-	ldr sp, =0x01008000
+	ldr sp, =UD_STACK_PA_START
 	        
 	;@ SVC
     mov r0,#0xD3 ;@ PSR_SVC_MODE (0x13) PSR_FIQ_DIS (0x40) | PSR_IRQ_DIS (0x80)
     msr cpsr_c,r0
-    ldr sp, =0xC08000
+    ldr sp, =SVC_STACK_PA_START
 	
 	;@ Jump into main function in C (main.c)
 	bl cmain
