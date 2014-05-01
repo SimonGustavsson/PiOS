@@ -77,7 +77,7 @@
     <ClInclude Include="..\include\types\string.h" />
     <ClInclude Include="..\include\types\types.h" />
     <ClInclude Include="..\include\util\mmio.h" />
-    <ClInclude Include="..\include\hardware\mmu.h" />
+    <ClInclude Include="..\include\hardware\mmu_c.h" />
     <ClInclude Include="..\include\myfont.h" />
     <ClInclude Include="..\include\task.h" />
     <ClInclude Include="..\include\taskScheduler.h" />

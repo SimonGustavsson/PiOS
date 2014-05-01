@@ -2,7 +2,7 @@
 #ifndef UTILITIES_H
 #define UTILITIES_H
 
-//#define MMU_DEBUG
+#define MMU_DEBUG
 
 typedef struct {
 	unsigned int sectionTypeIdentifier : 2; // Must be 2 (b10)

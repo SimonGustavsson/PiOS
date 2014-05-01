@@ -1,6 +1,6 @@
 #include "stddef.h"
 #include "task.h"
-#include "hardware/mmu.h"
+#include "hardware/mmu_c.h"
 #include "elf.h"
 #include "fs/fs.h"
 #include "memory.h"

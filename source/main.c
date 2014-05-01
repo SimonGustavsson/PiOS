@@ -7,7 +7,7 @@
 #include "fs/fat32driver.h"
 #include "hardware/emmc.h"
 #include "hardware/interrupts.h"
-#include "hardware/mmu.h"
+#include "hardware/mmu_c.h"
 #include "hardware/uart.h"
 #include "hardware/device/sdBlockDevice.h"
 #include "types/string.h"

@@ -1,4 +1,4 @@
-#include "hardware/mmu.h"
+#include "hardware/mmu_c.h"
 #include "types/string.h"
 #include "memory.h"
 #include "asm.h"
@@ -31,7 +31,7 @@ void Mmu_Initialize(unsigned int* pageTableBase)
 	// mmuMapSection(0x008C00000, 0xB0000000, 5, ReadWrite, true, true);
     Mmu_MapSection(0x0A827000, 0xC0000000, 5, APReadWrite, 1, 1);
 
-	enable_mmu_and_cache(pageTableBase);
+    enable_mmu_and_cache(pageTableBase);
 
 	printf("mmu - Initializing complete\n");
 }

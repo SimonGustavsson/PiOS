@@ -90,9 +90,6 @@
     <ClInclude Include="..\include\hardware\mailbox.h">
       <Filter>Header Files\hardware</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\hardware\mmu.h">
-      <Filter>Header Files\hardware</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\hardware\timer.h">
       <Filter>Header Files\hardware</Filter>
     </ClInclude>
@@ -146,6 +143,9 @@
     </ClInclude>
     <ClInclude Include="..\include\memory_map.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\hardware\mmu_c.h">
+      <Filter>Header Files\hardware</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

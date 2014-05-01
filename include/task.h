@@ -1,7 +1,7 @@
 #ifndef TASK_H
 #define TASK_H
 
-#include "hardware/mmu.h"
+#include "hardware/mmu_c.h"
 
 #define MAX_TASK_MEMORY_MB 10
 

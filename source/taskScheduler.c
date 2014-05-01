@@ -2,7 +2,7 @@
 #include "memory.h"
 #include "types/string.h"
 #include "util/utilities.h"
-#include "hardware/mmu.h"
+#include "hardware/mmu_c.h"
 #include "hardware/timer.h"
 #include "types/queue.h"
 #include "hardware/interrupts.h"
