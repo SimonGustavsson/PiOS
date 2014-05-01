@@ -35,7 +35,7 @@ set_ttbc:
 .globl disable_page_coloring
 disable_page_coloring:
   
-    mov r0, #0  
+    ;@ Set bit 6 in the Auxiliary Control Register (3.2.8)
     mrc p15, 0, r0, c1, c0, 1
 	orr r1, #0x40
 	mcr p15, 0, r0, c1, c0, 1
@@ -44,12 +44,13 @@ disable_page_coloring:
 
 ;@
 ;@ Sets the domain register
-;@ C Signature: void set_domain_register(unsigned int val)
+;@ C Signature: void set_domain_access(unsigned int val)
 ;@              val: The value to set
 ;@
-.globl set_domain_register
-set_domain_register:
-    ldr r0, =0x55555555
+.globl set_domain_access
+set_domain_access:
+
+    ;@ Write to the Domain Access Control register
     mcr p15, 0, r0, c3, c0, 0
     
     bx lr

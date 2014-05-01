@@ -31,7 +31,7 @@ void Mmu_Initialize(unsigned int* pageTableBase)
     Mmu_MapSection(0x0A827000, 0xC0000000, 5, APReadWrite, 1, 1);
 
     disable_page_coloring();
-    set_domain_register(0x55555555);
+    set_domain_access(DAC_CLIENT);
     set_ttbc(TTBC_PD0_ENABLED | TTBC_PD1_ENABLED | TTBC_SPLIT_16KB);
     set_ttb0(pageTableBase, PT_CACHEABLE);
     invalidate_cache();

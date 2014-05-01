@@ -19,6 +19,18 @@
 #define TTBC_PD1_DISABLE (1 << 5)
 #define TTBC_PD1_ENABLED (0 << 5)
 
+// Client - Memory access is controlled by TLB entry
+#define DAC_CLIENT 0x55555555
+
+// Client - No access (Reset value)
+#define DAC_NONE 0x00000000
+
+// Reserved - Any access generates domain fault
+#define DAC_RESERVED 0xAAAAAAAA
+
+// Manager - TLB entry is not checked for access, no domain faults are generated
+#define DAC_MANAGER 0xFFFFFFFF
+
 //
 // irq.s
 //
@@ -41,8 +53,8 @@ extern void enable_mmu();
 // Invalidates the data and prefetch cache
 extern void invalidate_cache();
 
-// Sets the domain register
-extern void set_domain_register(unsigned int x);
+// Sets the Domain Access control register (see DAC_)
+extern void set_domain_access(unsigned int dac);
 
 // Restricts cache size to 16KB (Disables page coloring)
 extern void disable_page_coloring();
