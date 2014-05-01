@@ -8,6 +8,7 @@
 #include "hardware/emmc.h"
 #include "hardware/interrupts.h"
 #include "hardware/mmu_c.h"
+#include "hardware/paging.h"
 #include "hardware/uart.h"
 #include "hardware/device/sdBlockDevice.h"
 #include "types/string.h"
@@ -51,6 +52,11 @@ int system_initialize(void)
     
     // Now that the terminal is setup, enable virtual memory
     unsigned int* basePageTable = (unsigned int *)KERNEL_PA_PT;
+    unsigned int* base_ttb0 = (unsigned int*)KERNEL_PA_TMP_TTB0;
+
+    // Currently doesn't work, page table setup incorrectly?
+    //kernel_pt_initialize(basePageTable, base_ttb0);
+    
     Mmu_Initialize(basePageTable);
 
     Pallocator_Initialize();
