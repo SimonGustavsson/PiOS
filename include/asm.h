@@ -1,6 +1,9 @@
 #ifndef ASM_H
 #define ASM_H
 
+#define PT_CACHEABLE 1
+#define PT_NONCACHEABLE 0
+
 //
 // irq.s
 //
@@ -14,7 +17,7 @@ extern void disable_fiq(void);
 //
 
 // Sets the translation table base 0 register
-extern void set_ttb0(unsigned int* pt, unsigned int n);
+void set_ttb0(unsigned int* pt, unsigned int cacheable);
 
 // Enables the MMU in the Control register configuration data
 extern void enable_mmu();

@@ -4,13 +4,13 @@
 
 ;@
 ;@ Sets TTB0
-;@ C Signature: void set_ttb0(unsigned int* pt, unsigned int n)
-;@               n: Represents the split between TTB0 and TTB1
+;@ C Signature: void set_ttb0(unsigned int* pt, unsigned int cacheable)
 ;@              pt: Physical address of the page table to install into ttb0
+;@              cacheable: Whether the memory is cacheable. 1 = Cacheable, 0 = Noncacheable
 .globl set_ttb0
 set_ttb0:
     ;@ Add Inner cacheable flag to address
-    orr r0, #1
+    orr r0, r1
 
     ;@ Set TTB0: (using defaults: No outer cacheable PT walks, not shared)
     mcr p15, 0, r0, c2, c0, 0

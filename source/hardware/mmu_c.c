@@ -33,7 +33,7 @@ void Mmu_Initialize(unsigned int* pageTableBase)
     disable_page_coloring();
     set_domain_register(0x55555555);
     set_ttbc(0, 0, 0);
-    set_ttb0(pageTableBase, 0);
+    set_ttb0(pageTableBase, PT_CACHEABLE);
     invalidate_cache();
     enable_mmu();
 
