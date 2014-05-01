@@ -19,18 +19,11 @@ set_ttb0:
     
 ;@
 ;@ Update TTBC
-;@ C Signature: void set_ttbc(unsigned int ttb0, unsigned int ttb1, unsigned int b)
-;@              ttb0: 1 = Disable TTB0, 0 = Enable TTB0
-;@              ttb1: 1 = Disable TTB1, 0 = Enable TTB0
-;@              n: TTB0 Boundry
+;@ C Signature: void set_ttbc(unsigned int val)
 ;@
 .globl set_ttbc
 set_ttbc:
-    ;@ TODO: Add error checking!
-    ;@and r2, r2, r0, lsl #4
-    ;@and r2, r2, r1, lsl #5
-
-    mov r0, #0
+    ;@ TODO: Error checking?
 	mcr p15, 0, r0, c2, c0, 2
 
     bx lr
