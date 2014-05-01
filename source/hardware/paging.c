@@ -1,4 +1,5 @@
 #include "hardware/paging.h"
+#include "asm.h"
 
 void kernel_pt_set(unsigned int* pt, unsigned int pa, unsigned int va, unsigned int flags)
 {
@@ -30,16 +31,14 @@ int kernel_pt_initialize(unsigned int* pt, unsigned int* tmp_ttb0)
     for (i = 0; i < 200; i++)
         kernel_pt_set(tmp_ttb0, 0x100000 * i, 0x100000 * i, PAGE_CACHEABLE | PAGE_BUFFERABLE);
 
-
-
-    //
-    // TODO: 
-    //     * Install PT into TTB1
-    //     * Set n in TTBCR to 2
-    //
-
-    // TODO: Install temporary kernel table in TTB0 during kernel startup?
-
+    disable_page_coloring();
+    set_domain_access(DAC_CLIENT);
+    set_ttb0(tmp_ttb0, PT_CACHEABLE);
+    set_ttb1(pt, PT_CACHEABLE);
+    set_ttbc(TTBC_PD0_ENABLED | TTBC_PD1_ENABLED | TTBC_SPLIT_4KB);
+    invalidate_cache();
+    enable_mmu();
+    
     return 0;
 }
 
