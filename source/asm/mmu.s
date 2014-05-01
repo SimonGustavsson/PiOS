@@ -18,6 +18,19 @@ set_ttb0:
     bx lr
     
 ;@
+;@ Sets TTB1
+;@ C Signature: void set_ttb1(unsigned int* pt, unsigned int cacheable)
+;@
+.globl set_ttb1
+set_ttb1:
+    ;@ Add inner cacheable flag to address
+    orr r0, r1
+
+    mcr p15, 0, r0, c2, c0, 1
+
+    bx lr
+
+;@
 ;@ Update TTBC
 ;@ C Signature: void set_ttbc(unsigned int val)
 ;@

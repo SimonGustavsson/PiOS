@@ -47,6 +47,10 @@ extern void disable_fiq(void);
 // NOTE: If cacheable is set, make sure pt is stored in Inner-write through memory
 void set_ttb0(unsigned int* pt, unsigned int cacheable);
 
+// Sets the translation table base 1 register
+// NOTE: If cacheable is set, make sure pt is stored in Inner-write through memory
+void set_ttb1(unsigned int* pt, unsigned int cacheable);
+
 // Enables the MMU in the Control register configuration data
 extern void enable_mmu();
 
