@@ -8,7 +8,6 @@ unsigned int* gPageTableBase;
 
 void Mmu_Initialize(unsigned int* pageTableBase)
 {
-
 	gPageTableBase = pageTableBase;
 
 	// Initialize all PTEs to translation fault (0)
@@ -31,7 +30,12 @@ void Mmu_Initialize(unsigned int* pageTableBase)
 	// mmuMapSection(0x008C00000, 0xB0000000, 5, ReadWrite, true, true);
     Mmu_MapSection(0x0A827000, 0xC0000000, 5, APReadWrite, 1, 1);
 
-    enable_mmu_and_cache(pageTableBase);
+    disable_page_coloring();
+    set_domain_register(0x55555555);
+    set_ttbc(0, 0, 0);
+    set_ttb0(pageTableBase, 0);
+    invalidate_cache();
+    enable_mmu();
 
 	printf("mmu - Initializing complete\n");
 }
