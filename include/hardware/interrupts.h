@@ -1,8 +1,6 @@
 #ifndef INTERRUPTS_H
 #define INTERRUPTS_H
 
-#define INTERRUPT_BASE 0x2000B200
-
 // Note: Read-only
 typedef union {
 	unsigned int raw;

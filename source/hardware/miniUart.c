@@ -1,13 +1,14 @@
 #include "hardware/miniUart.h"
 #include "hardware/gpio.h"
+#include "memory_map.h"
 
 static gpio_reg *gGpio;
 static MiniUart *gUart;
 
 unsigned int MiniUart_Initialize(void)
 {
-	gGpio = (gpio_reg*)GPIO_BASE;
-	gUart = (MiniUart*)MINI_UART_BASE;
+    gGpio = (gpio_reg*)PERIPHERAL_VA_GPIO;
+    gUart = (MiniUart*)PERIPHERAL_VA_MINIUART;
 
 	// Setup the uart
 	gUart->enables.raw = 1; // Can't set individual bits

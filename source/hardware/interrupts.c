@@ -1,10 +1,11 @@
+#include "memory_map.h"
 #include "hardware/interrupts.h"
 
 static ArmInterrupts* gInterrupts;
 
 void Arm_InterruptInitialize(void)
 {
-	gInterrupts = (ArmInterrupts*)(INTERRUPT_BASE);
+    gInterrupts = (ArmInterrupts*)(PERIPHERAL_VA_IRPT);
 }
 
 void Arm_IrqEnable(interrupt_source source)

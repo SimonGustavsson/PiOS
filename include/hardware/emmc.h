@@ -1,6 +1,8 @@
-#define EMMC_BASE 0x20300000
+#include "memory_map.h"
 
-#define SD_CMD_RSPNS_TYPE_NONE	0			// For no response
+#define EMMC_BASE PERIPHERAL_VA_EMMC
+
+#define SD_CMD_RSPNS_TYPE_NONE	0			    // For no response
 #define SD_CMD_RSPNS_TYPE_136	(1 << 16)		// For response R2 (with CRC), R3,4 (no CRC)
 #define SD_CMD_RSPNS_TYPE_48	(2 << 16)		// For responses R1, R5, R6, R7 (with CRC)
 #define SD_CMD_RSPNS_TYPE_48B	(3 << 16)		// For responses R1b, R5b (with CRC)
@@ -8,15 +10,15 @@
 
 #define SD_CMD_CRCCHK_EN	(1 << 19)
 #define SD_RESP_NONE        SD_CMD_RSPNS_TYPE_NONE
-#define SD_RESP_R1          (SD_CMD_RSPNS_TYPE_48 | SD_CMD_CRCCHK_EN)
+#define SD_RESP_R1          (SD_CMD_RSPNS_TYPE_48  | SD_CMD_CRCCHK_EN)
 #define SD_RESP_R1b         (SD_CMD_RSPNS_TYPE_48B | SD_CMD_CRCCHK_EN)
 #define SD_RESP_R2          (SD_CMD_RSPNS_TYPE_136 | SD_CMD_CRCCHK_EN)
 #define SD_RESP_R3          SD_CMD_RSPNS_TYPE_48
 #define SD_RESP_R4          SD_CMD_RSPNS_TYPE_136
-#define SD_RESP_R5          (SD_CMD_RSPNS_TYPE_48 | SD_CMD_CRCCHK_EN)
+#define SD_RESP_R5          (SD_CMD_RSPNS_TYPE_48  | SD_CMD_CRCCHK_EN)
 #define SD_RESP_R5b         (SD_CMD_RSPNS_TYPE_48B | SD_CMD_CRCCHK_EN)
-#define SD_RESP_R6          (SD_CMD_RSPNS_TYPE_48 | SD_CMD_CRCCHK_EN)
-#define SD_RESP_R7          (SD_CMD_RSPNS_TYPE_48 | SD_CMD_CRCCHK_EN)
+#define SD_RESP_R6          (SD_CMD_RSPNS_TYPE_48  | SD_CMD_CRCCHK_EN)
+#define SD_RESP_R7          (SD_CMD_RSPNS_TYPE_48  | SD_CMD_CRCCHK_EN)
 
 #define IS_APP_CMD              0x80000000
 

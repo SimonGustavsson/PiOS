@@ -1,5 +1,3 @@
-#define MINI_UART_BASE 0x20215000
-
 typedef union {
 	unsigned int raw;
 	

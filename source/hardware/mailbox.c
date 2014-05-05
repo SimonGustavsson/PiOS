@@ -1,11 +1,12 @@
 #include "hardware/mailbox.h"
 #include "memory.h"
+#include "memory_map.h"
 #include "types/string.h"
 #include "hardware/timer.h"
 
-static volatile unsigned int *gMailbox0Read = (unsigned int *)(0x2000b880);
-static volatile unsigned int *gMailbox0Status = (unsigned int *)(0x2000b898);
-static volatile unsigned int *gMailbox0Write = (unsigned int *)(0x2000b8a0);
+static volatile unsigned int *gMailbox0Read =   (unsigned int *)(PERIPHERAL_VA_MAILBOX_BASE);
+static volatile unsigned int *gMailbox0Status = (unsigned int *)(PERIPHERAL_VA_MAILBOX_BASE + 0x18);
+static volatile unsigned int *gMailbox0Write =  (unsigned int *)(PERIPHERAL_VA_MAILBOX_BASE + 0x20);
 
 unsigned int Mailbox_Read(unsigned int channel)
 {

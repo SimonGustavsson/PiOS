@@ -1,5 +1,3 @@
-#define GPIO_BASE 0x20200000
-
 typedef enum {
 	fsel_input = 0,  // 000b
 	fsel_output = 1, // 001b
