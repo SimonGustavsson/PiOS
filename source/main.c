@@ -54,11 +54,8 @@ int system_initialize(void)
     unsigned int* basePageTable = (unsigned int *)KERNEL_PA_PT;
     unsigned int* base_ttb0 = (unsigned int*)KERNEL_PA_TMP_TTB0;
 
-    // Currently doesn't work, page table setup incorrectly?
-    //kernel_pt_initialize(basePageTable, base_ttb0);
+    kernel_pt_initialize(basePageTable, base_ttb0);
     
-    Mmu_Initialize(basePageTable);
-
     Pallocator_Initialize();
 
     // Verify page table by attempting to access unmapped memory
@@ -120,7 +117,7 @@ int cmain(void)
 
     printf("Starting task scheduler...\n");
 
-    TaskScheduler_Start();
+    //TaskScheduler_Start();
 
     printf("\nNot sure what to do now...\n");
     unsigned int i;

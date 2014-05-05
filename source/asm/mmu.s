@@ -2,6 +2,49 @@
 ;@ This file contains functions to set up page tables and enable the MMU
 ;@
 
+
+;@ C Signature void do_mmu(uint* ttb0, uint* ttb1, uint split)
+.globl do_mmu
+do_mmu:
+    ;@ r0 = ttb0 address
+    ;@ r1 = ttb1 address 
+    ;@ r2 = n
+    ;@ r3 = temp - USE THIS
+        
+    ;@ Disable page coloring
+    mrc p15, 0, r3, c1, c0, 1 ;@ DONT USE r0!
+	orr r3, #0x40             ;@ DONT USE r0!
+	mcr p15, 0, r3, c1, c0, 1 ;@ DONT USE r0!
+
+    ;@ Setup domains
+    ldr r3, =0x55555555
+    mcr p15, 0, r3, c3, c0, 0 ;@ USE ARG
+
+    ;@ Setup TTBC
+    mcr p15, 0, r2, c2, c0, 2 ;@ Uses arg 2
+
+    ;@ Setup TTB0 (always cacheable)
+    orr r0, #1
+    mcr p15, 0, r0, c2, c0, 0
+
+    ;@ Setup TTB1 (always cacheable)
+    orr r1, #1
+    mcr p15, 0, r1, c2, c0, 1
+    
+    ;@ Invalidate cache
+    mov r1, #0
+	mcr p15, 0, r1, c7, c5, 4
+	mcr p15, 0, r1, c7, c6, 0
+
+    ;@ Enable MMU
+    mov r1, #0
+    mrc p15, 0, r1, c1, c0, 0 ;@ Control register configuration data
+    ldr r2, =0x0480180D
+    orr r1, r2 
+    mcr p15, 0, r1, c1, c0, 0    
+
+    bx lr
+    
 ;@
 ;@ Sets TTB0
 ;@ C Signature: void set_ttb0(unsigned int* pt, unsigned int cacheable)
@@ -18,116 +61,6 @@ set_ttb0:
     bx lr
     
 ;@
-;@ Sets TTB1
-;@ C Signature: void set_ttb1(unsigned int* pt, unsigned int cacheable)
-;@
-.globl set_ttb1
-set_ttb1:
-    ;@ Add inner cacheable flag to address
-    orr r0, r1
-
-    mcr p15, 0, r0, c2, c0, 1
-
-    bx lr
-
-;@
-;@ Update TTBC
-;@ C Signature: void set_ttbc(unsigned int val)
-;@
-.globl set_ttbc
-set_ttbc:
-    ;@ TODO: Error checking?
-	mcr p15, 0, r0, c2, c0, 2
-
-    bx lr
-
-;@
-;@ Restricts cache size to 16K (No page coloring)
-;@ C Signature: void disable_page_coloring(void)
-;@
-.globl disable_page_coloring
-disable_page_coloring:
-  
-    ;@ Set bit 6 in the Auxiliary Control Register (3.2.8)
-    mrc p15, 0, r0, c1, c0, 1
-	orr r1, #0x40
-	mcr p15, 0, r0, c1, c0, 1
-
-    bx lr
-
-;@
-;@ Sets the domain register
-;@ C Signature: void set_domain_access(unsigned int val)
-;@              val: The value to set
-;@
-.globl set_domain_access
-set_domain_access:
-
-    ;@ Write to the Domain Access Control register
-    mcr p15, 0, r0, c3, c0, 0
-    
-    bx lr
-    
-;@
-;@ Invalidate data cache and prefetch buffer
-;@ C Signature: void invalidate_cache(void)
-;@
-.globl invalidate_cache
-invalidate_cache:
-    mov r1, #0
-	mcr p15, 0, r1, c7, c5, 4
-	mcr p15, 0, r1, c7, c6, 0
-    
-    bx lr
-
-;@
-;@ Enable mmu
-;@ C Signature: void enable_mmu(void)
-;@
-.globl enable_mmu
-enable_mmu:
-	;@ Enable MMU, L1 and instruction cache, L2 cache, write buffer
-	;@ Branch prediction and extended page table on
-	mov r1, #0
-	mrc p15, 0, r1, c1, c0, 0 ;@ Control register configuration data
-	ldr r2, =0x0480180D
-	orr r1, r2 
-	mcr p15, 0, r1, c1, c0, 0    
-
-    bx lr
-
-;@
-;@ Enable the MMU and L2
-;@ C Signature: void enable_mmu_and_cache(unsigned int* pt)
-;@              pt: A pointer to the page table to use
-;@
-.globl enable_mmu_and_cache
-enable_mmu_and_cache:
-    push {fp, lr}
-    add	fp, sp, #4
-    
-    blx set_ttb0
-
-    ;@ Save pt as we might trash some registers in all this calling jazz!
-    ;@mov r5, r0
-    
-    ;@blx disable_page_coloring
-    ;@ stff
-    ;@ldr r0, =0x55555555
-    ;@blx set_domain_register
-    
-    ;@mov r2, #0 ;@ No split, just use ttb0
-    ;@blx set_ttbc
-
-    ;@blx invalidate_datacache_prefetch
-
-    ;@blx enable_mmu
-
-    pop {fp, pc}
-
-	bx lr
-
-;@
 ;@ Gets the value of the Control register configuration data
 ;@ C Signature: unsigned int get_crcd(void)
 ;@
@@ -137,7 +70,7 @@ get_crcd:
     bx lr
     
 ;@ 
-;@ Gets the value of the Translation table base 0 register
+;@ Gets the value of the Translation table 0 base register
 ;@ C Signature: unsigned int get_ttb0(void)
 ;@
 .globl get_ttb0
@@ -145,6 +78,15 @@ get_ttb0:
     mrc p15, 0, r0, c2, c0, 0
     bx lr
     
+;@
+;@ Gets the value of the Translation Table 1 Base Register
+;@ C Signature: unsigned int get_ttb1(void)
+;@
+.globl get_ttb1
+get_ttb1:
+    mrc p15, 0, r0, c2, c0, 1
+    bx lr
+
 ;@
 ;@ Gets the value of the Translation table base control register
 ;@ C Signature: unsigned int get_ttbc(void)

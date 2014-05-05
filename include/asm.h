@@ -43,36 +43,23 @@ extern void disable_fiq(void);
 // mmu.s
 //
 
+// Installs the page tables and enables the MMU
+extern void do_mmu(unsigned int* ttb0, unsigned int* ttb1, unsigned int split);
+
 // Sets the translation table base 0 register
 // NOTE: If cacheable is set, make sure pt is stored in Inner-write through memory
 void set_ttb0(unsigned int* pt, unsigned int cacheable);
 
-// Sets the translation table base 1 register
-// NOTE: If cacheable is set, make sure pt is stored in Inner-write through memory
-void set_ttb1(unsigned int* pt, unsigned int cacheable);
-
-// Enables the MMU in the Control register configuration data
-extern void enable_mmu();
-
-// Invalidates the data and prefetch cache
-extern void invalidate_cache();
-
-// Sets the Domain Access control register (see DAC_)
-extern void set_domain_access(unsigned int dac);
-
-// Restricts cache size to 16KB (Disables page coloring)
-extern void disable_page_coloring();
-
-// Sets the Translation table base control register
-extern void set_ttbc(unsigned int val);
-
 // Gets the value of the current program control register
 extern unsigned int get_crcd(void);
 
-// Gets the value of the Translation table base 0 register
+// Gets the value of the Translation Table 0 base register
 extern unsigned int get_ttb0(void);
 
-// Gets the value of the Translation table control register
+// Gets the value of the Translation Table 1 Base register
+extern unsigned int get_ttb1(void);
+
+// Gets the value of the Translation Table Control register
 extern unsigned int get_ttbc(void);
 
 // Gets the value of the domain register 
