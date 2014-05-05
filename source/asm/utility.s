@@ -12,13 +12,22 @@ get_fp:
     mov r0, fp
     mov pc, lr
 
+;@ 
+;@ Branch to the give function (WARNING: this trashes FP and does not set up LR!)
+;@ C Signature: void branch(unsigned int* addr)
+;@              addr: The address to branch to 
 ;@
-;@ Branch to the given memory address
-;@ C Signature: void branchTo(unsigned int* addr)
+.globl branch
+branch:
+    bx r0
+    
+;@
+;@ Call the function at the given memory address
+;@ C Signature: void call(unsigned int* addr)
 ;@              addr: The address to branch to
 ;@
-.globl branchTo
-branchTo:
+.globl call
+call:
     push {fp, lr}
     add	fp, sp, #4
 

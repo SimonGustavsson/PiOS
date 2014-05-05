@@ -72,6 +72,10 @@ extern unsigned int get_domain_register(void);
 extern int* get_fp(void);
 
 // Utility function for branching to an arbitrary memory address
-extern void branchTo(unsigned int* addr);
+extern void call(unsigned int* addr);
+
+// Unconditionally branches to the given address
+// WARNING: this trashes FP and does not set up LR!
+extern void branch(unsigned int* addr);
 
 #endif
