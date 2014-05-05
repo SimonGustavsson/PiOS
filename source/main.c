@@ -77,8 +77,6 @@ int system_initialize(void)
     // Add the SD card to the file system
     fs_add_device(sd);
 
-    TaskScheduler_Initialize();
-	
 	printf("System initialization complete, result: %d\n", result);
 
     return result;
@@ -92,6 +90,8 @@ int cmain(void)
 
         while (1);
     }
+
+    TaskScheduler_Initialize();
 
 	Terminal_PrintWelcome();
 	Terminal_PrintPrompt();

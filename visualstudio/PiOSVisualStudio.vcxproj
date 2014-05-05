@@ -65,10 +65,12 @@
     <ClInclude Include="..\include\hardware\gpio.h" />
     <ClInclude Include="..\include\hardware\miniUart.h" />
     <ClInclude Include="..\include\hardware\paging.h" />
+    <ClInclude Include="..\include\init.h" />
     <ClInclude Include="..\include\interruptHandlers.h" />
     <ClInclude Include="..\include\hardware\interrupts.h" />
     <ClInclude Include="..\include\hardware\keyboard.h" />
     <ClInclude Include="..\include\hardware\mailbox.h" />
+    <ClInclude Include="..\include\main.h" />
     <ClInclude Include="..\include\memory.h" />
     <ClInclude Include="..\include\memory_map.h" />
     <ClInclude Include="..\include\stdarg.h" />
@@ -97,6 +99,7 @@
     <ClCompile Include="..\source\hardware\gpio.c" />
     <ClCompile Include="..\source\hardware\miniUart.c" />
     <ClCompile Include="..\source\hardware\paging.c" />
+    <ClCompile Include="..\source\init.c" />
     <ClCompile Include="..\source\interruptHandlers.c" />
     <ClCompile Include="..\source\hardware\interrupts.c" />
     <ClCompile Include="..\source\hardware\keyboard.c" />

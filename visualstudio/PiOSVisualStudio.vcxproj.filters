@@ -147,6 +147,12 @@
     <ClInclude Include="..\include\hardware\mmu_c.h">
       <Filter>Header Files\hardware</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\init.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\main.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\main.c">
@@ -229,6 +235,9 @@
     </ClCompile>
     <ClCompile Include="..\source\hardware\mmu_c.c">
       <Filter>Source Files\hardware</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\init.c">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
