@@ -65,8 +65,8 @@ reset:
     msr cpsr_c,r0
     ldr sp, =SVC_STACK_PA_START
 	
-	;@ Jump into main function in C (main.c)
-	bl cmain
+	;@ Kick of system initialization (init.c)
+	bl sysinit_stage1
 
 ;@ cmain should never return, just hang around (heh.. get it?)
 hang: 

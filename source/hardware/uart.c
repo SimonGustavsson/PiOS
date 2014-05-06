@@ -4,6 +4,7 @@
 * Chapter 13: UART
 */
 
+#include "memory_map.h"
 #include "hardware/uart.h"
 #include "hardware/gpio.h"
 
@@ -11,7 +12,7 @@ Uart* gUart;
 
 void Uart_Initialize() {
 
-	gUart = (Uart*)(UART_BASE);
+    gUart = (Uart*)(PERIPHERAL_VA_UART);
 
 	// Disable UART0.
 	gUart->cr = 0x00000000;

@@ -3,8 +3,6 @@
 #ifndef UART_H
 #define UART_H
 
-#define UART_BASE 0x20201000
-
 typedef volatile struct{
 	unsigned int dr;           // 0x00 Data Register
 	unsigned int rsrecr;       // 0x04 ?

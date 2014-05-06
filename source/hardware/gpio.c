@@ -1,4 +1,5 @@
 #include "hardware/gpio.h"
+#include "memory_map.h"
 
 static void delay(unsigned int count)
 {
@@ -8,7 +9,7 @@ static void delay(unsigned int count)
 
 void Gpio_EnableUart(void)
 {
-	gpio_reg* gpio = (gpio_reg*)(GPIO_BASE);
+    gpio_reg* gpio = (gpio_reg*)(PERIPHERAL_VA_GPIO);
 
 	// Disable pull up/down for all GPIO pins & delay for 150 cycles.
 	gpio->gppud.raw = 0x00000000;

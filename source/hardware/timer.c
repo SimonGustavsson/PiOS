@@ -1,6 +1,6 @@
 #include "hardware/timer.h"
 
-volatile timer* gTimer = (timer*)TIMER_BASE;
+volatile timer* gTimer = (timer*)PERIPHERAL_VA_TIMER;
 
 // The timer has 4 channels, we use the forth channel for period interrupts
 const unsigned int TIMER_PERIODIC_CHANNEL = 3;

@@ -1,8 +1,9 @@
+#include "memory_map.h"
+
 #ifndef TIMER_H
 #define TIMER_H
 
-#define SYSTIMER_COUNTER 0x20003004
-#define TIMER_BASE 0x20003000 // Bus: 0x7E003000
+#define SYSTIMER_COUNTER (PERIPHERAL_TIMER + 0x4) // 0x20003004
 #define TIMER_INTERRUPT_INTERVAL 0x00200000
 
 typedef struct {

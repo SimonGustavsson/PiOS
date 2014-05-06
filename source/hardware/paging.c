@@ -1,7 +1,6 @@
 #include "hardware/paging.h"
 #include "asm.h"
 #include "types/string.h"
-#include "hardware/mmu_c.h"
 
 void kernel_pt_set(unsigned int* pt, unsigned int pa, unsigned int va, unsigned int flags)
 {
@@ -13,12 +12,6 @@ void kernel_pt_set(unsigned int* pt, unsigned int pa, unsigned int va, unsigned 
 
 int kernel_pt_initialize(unsigned int* ttb1, unsigned int* tmp_ttb0)
 {
-    if ((unsigned int)tmp_ttb0 >= 0xFFFFF)
-    {
-        printf("Invalid tmp_ttb0 address, must be < 0xFFFFF\n");
-        return -1;
-    }
-    
     // Kernel 
     unsigned int i;
     for (i = 0; i < KRL_LEVEL1_ENTRIES; i++)
@@ -26,11 +19,11 @@ int kernel_pt_initialize(unsigned int* ttb1, unsigned int* tmp_ttb0)
 
     // First things first - Create the persistent TTB1 and fill it with 1MB sections covering the first 200MB
     for (i = 0; i < 200; i++)
-        kernel_pt_set(ttb1, (i << 20), (i << 20), PAGE_CACHEABLE | PAGE_BUFFERABLE);
+        kernel_pt_set(ttb1, (i << 20), KERNEL_VA_START + (i << 20), PAGE_CACHEABLE | PAGE_BUFFERABLE);
     
     // Addtionally, add 256 1MB sections to cover the peripherals
     for (i = 0; i < 256; i++)
-        kernel_pt_set(ttb1, 0x20000000 + (i << 20), 0x20000000 + (i << 20), 0);
+        kernel_pt_set(ttb1, 0x20000000 + (i << 20), PERIPHERAL_VA_START + (i << 20), 0);
 
     // Create temporary ttb0 with identity mapping that will be used
     // during the very early stages of boot while we're enabling paging
@@ -39,13 +32,7 @@ int kernel_pt_initialize(unsigned int* ttb1, unsigned int* tmp_ttb0)
     for (i = 0; i < 200; i++)
         kernel_pt_set(tmp_ttb0, (i << 20), (i << 20), PAGE_CACHEABLE | PAGE_BUFFERABLE);
 
-    // The comment above is a lie, but only for now... :-)
-    for (i = 0; i < 256; i++)
-        kernel_pt_set(tmp_ttb0, 0x20000000 + (i << 20), 0x20000000 + (i << 20), 0);
-
-    printf("Enabling MMU, here goes nothing...\n");
-
-    do_mmu(ttb1, tmp_ttb0, 0);
+    do_mmu(ttb1, tmp_ttb0, TTBC_SPLIT_8KB);
         
     return 0;
 }
