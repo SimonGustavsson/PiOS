@@ -5,14 +5,14 @@
 #define PT_NONCACHEABLE 0
 
 // Value to set in TTBC
-#define TTBC_SPLIT_16KB 0
-#define TTBC_SPLIT_8KB 1
-#define TTBC_SPLIT_4KB 2
-#define TTBC_SPLIT_2KB 3
-#define TTBC_SPLIT_1KB 4
-#define TTBC_SPLIT_512B 5
-#define TTBC_SPLIT_256B 6
-#define TTBC_SPLIT_128B 7
+#define TTBC_SPLIT_16KB 0 // 4 GB TTB0
+#define TTBC_SPLIT_8KB  1 // 2 GB TTB0
+#define TTBC_SPLIT_4KB  2 // 1 GB TTB0
+#define TTBC_SPLIT_2KB  3 // 512 MB TTB0
+#define TTBC_SPLIT_1KB  4 // 256 MB TTB0
+#define TTBC_SPLIT_512B 5 // 128 MB TTB0
+#define TTBC_SPLIT_256B 6 // 64 MB TTB0
+#define TTBC_SPLIT_128B 7 // 32 MB TTB0
 
 #define TTBC_PD0_DISABLED (1 << 4)
 #define TTBC_PD0_ENABLED (0 << 4)

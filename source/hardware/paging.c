@@ -1,7 +1,6 @@
 #include "hardware/paging.h"
 #include "asm.h"
 #include "types/string.h"
-#include "hardware/mmu_c.h"
 
 void kernel_pt_set(unsigned int* pt, unsigned int pa, unsigned int va, unsigned int flags)
 {
@@ -33,7 +32,7 @@ int kernel_pt_initialize(unsigned int* ttb1, unsigned int* tmp_ttb0)
     for (i = 0; i < 200; i++)
         kernel_pt_set(tmp_ttb0, (i << 20), (i << 20), PAGE_CACHEABLE | PAGE_BUFFERABLE);
 
-    do_mmu(ttb1, tmp_ttb0, 0);
+    do_mmu(ttb1, tmp_ttb0, TTBC_SPLIT_8KB);
         
     return 0;
 }
