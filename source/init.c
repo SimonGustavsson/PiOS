@@ -22,7 +22,7 @@ void sysinit_stage1(void)
 
     // Memory is all set up, time to branch into high memory
     // to move to stage 2 of initialization
-    branch(KERNEL_VA_START + (unsigned int)&sysinit_stage2);
+    call(KERNEL_VA_START + (unsigned int)&sysinit_stage2);
 }
 
 void sysinit_stage2(void)

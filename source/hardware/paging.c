@@ -1,6 +1,7 @@
 #include "hardware/paging.h"
 #include "asm.h"
 #include "types/string.h"
+#include "hardware/uart.h"
 
 void kernel_pt_set(unsigned int* pt, unsigned int pa, unsigned int va, unsigned int flags)
 {
@@ -23,7 +24,7 @@ int kernel_pt_initialize(unsigned int* ttb1, unsigned int* tmp_ttb0)
     
     // Addtionally, add 256 1MB sections to cover the peripherals
     for (i = 0; i < 256; i++)
-        kernel_pt_set(ttb1, 0x20000000 + (i << 20), PERIPHERAL_VA_START + (i << 20), 0);
+        kernel_pt_set(ttb1, PERIPHERAL_PA_START + (i << 20), PERIPHERAL_VA_START + (i << 20), 0);
 
     // Create temporary ttb0 with identity mapping that will be used
     // during the very early stages of boot while we're enabling paging
@@ -31,8 +32,8 @@ int kernel_pt_initialize(unsigned int* ttb1, unsigned int* tmp_ttb0)
     // Note that TTB0 does NOT map the peripherals, we have to jump to high-memory before accessing them
     for (i = 0; i < 200; i++)
         kernel_pt_set(tmp_ttb0, (i << 20), (i << 20), PAGE_CACHEABLE | PAGE_BUFFERABLE);
-
-    do_mmu(ttb1, tmp_ttb0, TTBC_SPLIT_8KB);
+    
+    do_mmu(tmp_ttb0, ttb1, TTBC_SPLIT_8KB);
         
     return 0;
 }

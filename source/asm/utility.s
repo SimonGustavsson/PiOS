@@ -31,8 +31,7 @@ call:
     push {fp, lr}
     add	fp, sp, #4
 
-    mov r2, r0
-    blx r2
+    blx r0
     pop {fp, lr}
     
     bx lr
