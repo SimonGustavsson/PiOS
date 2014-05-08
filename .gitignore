@@ -25,6 +25,7 @@
 *.elf
 *.img
 Debug/
+bin/
 
 # Debug output
 disassembly.txt
