@@ -1,6 +1,6 @@
 TOOL = arm-none-eabi
-CFLAGS = -Wall -nostdlib -nostartfiles -ffreestanding --no-common -Wpadded -march=armv6j -mtune=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard -fno-omit-frame-pointer -mno-thumb-interwork -mlong-calls -marm
-LINKER_FLAGS = --no-wchar-size-warning --no-undefined
+CFLAGS = -Wall -nostdlib -nostartfiles -ffreestanding --no-common -Wpadded -march=armv6j -mtune=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard -fno-omit-frame-pointer -mno-thumb-interwork -mlong-calls -marm -fpic
+LINKER_FLAGS = --no-wchar-size-warning --no-undefined -shared
 
 ASSEMBLER_FLAGS = -march=armv6j  -mfpu=vfp -mfloat-abi=hard
 
@@ -10,6 +10,8 @@ SOURCE_DIR = source
 INCLUDE_DIR = include
 OBJ_DIR := $(BUILD_DIR)/obj
 DEPENDENCY_DIR := $(BUILD_DIR)/dependencies
+LINK_SCRIPT_SRC = memorymap.c
+LINK_SCRIPT = $(BUILD_DIR)/memory.ld
 
 # Make sure gcc searches the include folder
 
@@ -49,11 +51,12 @@ PiOS: directories $(BUILD_DIR)/kernel.img
 
 # Create the final binary
 $(BUILD_DIR)/kernel.img: $(BUILD_DIR)/kernel.elf $(BUILD_DIR)/symbols.txt $(BUILD_DIR)/disassembly.txt
+	@echo Creating flat binary...
 	@$(TOOL)-objcopy $(BUILD_DIR)/kernel.elf -O binary $(BUILD_DIR)/kernel.img
 
 # Create disassembly for ease of debugging
 $(BUILD_DIR)/disassembly.txt: $(BUILD_DIR)/kernel.elf
-	@echo Creating binary image...
+	@echo Dumping disassembly...
 	@$(TOOL)-objdump -D $< > $@
 	
 # Dump symbol table for functions
@@ -62,9 +65,14 @@ $(BUILD_DIR)/symbols.txt: $(BUILD_DIR)/kernel.elf
 	@$(TOOL)-objdump -t $< | awk -F ' ' '{if(NF >= 2) print $$(1), "\t", $$(NF);}' > $@
 
 # Link all of the objects (Temporarily removed -l $(LIBRARIES))
-$(BUILD_DIR)/kernel.elf: $(AOBJECT) $(COBJECT)
+$(BUILD_DIR)/kernel.elf: $(AOBJECT) $(COBJECT) $(LINK_SCRIPT)
 	@echo Linking kernel.elf...
-	@$(TOOL)-ld $(LINKER_FLAGS) $(AOBJECT) $(COBJECT) $(GCC_INCLUDE) -Map $(BUILD_DIR)/kernel.map -T memorymap -o $(BUILD_DIR)/kernel.elf
+	@$(TOOL)-ld $(LINKER_FLAGS) $(AOBJECT) $(COBJECT) $(GCC_INCLUDE) -Map $(BUILD_DIR)/kernel.map -T $(LINK_SCRIPT) -o $(BUILD_DIR)/kernel.elf
+
+# Run the linker script through the preprocessor
+$(LINK_SCRIPT): $(LINK_SCRIPT_SRC)
+	@echo Creating linker script...
+	@$(TOOL)-gcc $< -o $@ -E -P $(GCC_INCLUDE)
 
 # If make was run previously, we will have .d dependency files
 # Describing wihich headers the objects depend on, import those targets
