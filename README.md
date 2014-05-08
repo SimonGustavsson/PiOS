@@ -2,6 +2,7 @@ PiOS
 ====
 
 My experimental bare metal OS for the raspberry pi.
+This file is used to track its current state and what I'm currently working on.
 
 #### What it does right now:
 * GPIO - Example: Flash LED
@@ -12,18 +13,19 @@ My experimental bare metal OS for the raspberry pi.
 * MMU
 * eMMC reading/writing 
 * Fat32 - Small subset (read-only)
+* Loading and executing binaries (ELFs)
+* UART and MiniUart send/receive (interrupt based receive)
 
 #### What I'm planning to do / working on:
+* Virtual memory (high memory kernel, Low memory user)
 * Multitasking
 * Fat32 - Writing
-* Loading and executing binaries
 * Audio
 * Support for addition file systems: SFS, EXT2(?)
 
-#### Building:
-It should/might/could build under *nix, but this isn't my primary platform.
-Windows is therefore listed as a requirement.
-
+#### Build requirements:
 * [GNU Tools for ARM](https://launchpad.net/gcc-arm-embedded)
-* [Cygwin](http://www.cygwin.com/) (for make)
-* Windows 7/8
+* [Cygwin](http://www.cygwin.com/) (Windows only)
+
+#### Building:
+Just clone the repository and run make in the root directory
