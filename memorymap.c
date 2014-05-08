@@ -1,7 +1,15 @@
+#include "memory_map.h"
+
+/*
+	Note the .c extension of this file, this is so that we can run it through the C preprocessor
+	Which allows us to specify all memory related constants in one place instead of having to dig
+	Through multiple files
+*/
+
 MEMORY
 {
 	/* Hardcoded 1 MB kernel size */
-    ram : ORIGIN = 0x8000, LENGTH = 1M
+    ram : ORIGIN = LD_KRNL_ORI, LENGTH = LD_KRNL_LEN
 }
 
 SECTIONS

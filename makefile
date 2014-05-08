@@ -10,6 +10,8 @@ SOURCE_DIR = source
 INCLUDE_DIR = include
 OBJ_DIR := $(BUILD_DIR)/obj
 DEPENDENCY_DIR := $(BUILD_DIR)/dependencies
+LINK_SCRIPT_SRC = memorymap.c
+LINK_SCRIPT = $(BUILD_DIR)/memory.ld
 
 # Make sure gcc searches the include folder
 
@@ -62,9 +64,14 @@ $(BUILD_DIR)/symbols.txt: $(BUILD_DIR)/kernel.elf
 	@$(TOOL)-objdump -t $< | awk -F ' ' '{if(NF >= 2) print $$(1), "\t", $$(NF);}' > $@
 
 # Link all of the objects (Temporarily removed -l $(LIBRARIES))
-$(BUILD_DIR)/kernel.elf: $(AOBJECT) $(COBJECT)
+$(BUILD_DIR)/kernel.elf: $(AOBJECT) $(COBJECT) $(LINK_SCRIPT)
 	@echo Linking kernel.elf...
-	@$(TOOL)-ld $(LINKER_FLAGS) $(AOBJECT) $(COBJECT) $(GCC_INCLUDE) -Map $(BUILD_DIR)/kernel.map -T memorymap -o $(BUILD_DIR)/kernel.elf
+	@$(TOOL)-ld $(LINKER_FLAGS) $(AOBJECT) $(COBJECT) $(GCC_INCLUDE) -Map $(BUILD_DIR)/kernel.map -T $(LINK_SCRIPT) -o $(BUILD_DIR)/kernel.elf
+
+# Run the linker script through the preprocessor
+$(LINK_SCRIPT): $(LINK_SCRIPT_SRC)
+	@echo Creating linker script...
+	$(TOOL)-gcc $< -o $@ -E -P $(GCC_INCLUDE)
 
 # If make was run previously, we will have .d dependency files
 # Describing wihich headers the objects depend on, import those targets

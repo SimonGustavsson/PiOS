@@ -32,4 +32,10 @@
 #define PERIPHERAL_VA_MINIUART      (PERIPHERAL_VA_START + 0x215000)
 #define PERIPHERAL_VA_EMMC          (PERIPHERAL_VA_START + 0x300000)
 
+//
+// Linker constants
+// 
+#define LD_KRNL_LEN 1M
+#define LD_KRNL_ORI 0x8000
+
 #endif
