@@ -35,4 +35,13 @@ SECTIONS
 	
 	.data : { *(.data) } > ram
 	.rodata : { *(.rodata) } > ram
+	
+	/* TODO: Investigate What these are */
+    .dynamic    : { *(.dynamic) } > ram
+    .got         : { *(.got) } > ram
+    .igot.plt     : { *(.igot.plt) } > ram
+    .igot         : { *(.igot) } > ram
+    .plt           : { *(.plt) } > ram
+    .rel.plt       : { *(.rel.plt) } > ram
+    .rel.dyn       : { *(.rel.dyn) } > ram
 }

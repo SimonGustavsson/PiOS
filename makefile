@@ -1,6 +1,6 @@
 TOOL = arm-none-eabi
-CFLAGS = -Wall -nostdlib -nostartfiles -ffreestanding --no-common -Wpadded -march=armv6j -mtune=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard -fno-omit-frame-pointer -mno-thumb-interwork -mlong-calls -marm
-LINKER_FLAGS = --no-wchar-size-warning --no-undefined
+CFLAGS = -Wall -nostdlib -nostartfiles -ffreestanding --no-common -Wpadded -march=armv6j -mtune=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard -fno-omit-frame-pointer -mno-thumb-interwork -mlong-calls -marm -fpic
+LINKER_FLAGS = --no-wchar-size-warning --no-undefined -shared
 
 ASSEMBLER_FLAGS = -march=armv6j  -mfpu=vfp -mfloat-abi=hard
 
