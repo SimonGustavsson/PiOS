@@ -51,11 +51,12 @@ PiOS: directories $(BUILD_DIR)/kernel.img
 
 # Create the final binary
 $(BUILD_DIR)/kernel.img: $(BUILD_DIR)/kernel.elf $(BUILD_DIR)/symbols.txt $(BUILD_DIR)/disassembly.txt
+	@echo Creating flat binary...
 	@$(TOOL)-objcopy $(BUILD_DIR)/kernel.elf -O binary $(BUILD_DIR)/kernel.img
 
 # Create disassembly for ease of debugging
 $(BUILD_DIR)/disassembly.txt: $(BUILD_DIR)/kernel.elf
-	@echo Creating binary image...
+	@echo Dumping disassembly...
 	@$(TOOL)-objdump -D $< > $@
 	
 # Dump symbol table for functions
@@ -71,7 +72,7 @@ $(BUILD_DIR)/kernel.elf: $(AOBJECT) $(COBJECT) $(LINK_SCRIPT)
 # Run the linker script through the preprocessor
 $(LINK_SCRIPT): $(LINK_SCRIPT_SRC)
 	@echo Creating linker script...
-	$(TOOL)-gcc $< -o $@ -E -P $(GCC_INCLUDE)
+	@$(TOOL)-gcc $< -o $@ -E -P $(GCC_INCLUDE)
 
 # If make was run previously, we will have .d dependency files
 # Describing wihich headers the objects depend on, import those targets
