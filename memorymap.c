@@ -14,7 +14,19 @@ MEMORY
 
 SECTIONS
 {
-	.text.boot : { *(.text.boot*) } > ram
+	/* 
+		The startup code as per Rpi requirements gets placed at the start of the binary
+		So that it can be jumped to. The init section which performs initialization of
+		Virtual memory is placed directly afterwards
+	*/
+    .text.boot : { *(.text.boot*) } > ram
+    .text.init : { *(.text.init*) } > ram
+	
+	/*
+		Then place the of the kernel in high memory
+	*/
+    . = KERNEL_VA_START;
+	
     .text : { *(.text*) } > ram
     . = ALIGN(4096); /* align to page size */
 	
