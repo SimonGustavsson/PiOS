@@ -4,11 +4,12 @@
 #include "init.h"
 #include "hardware/interrupts.h"
 #include "hardware/uart.h"
+#include "hardware/paging.h"
 #include "hardware/device/sdBlockDevice.h"
 #include "main.h"
 #include "memory.h"
 #include "memory_map.h"
-#include "hardware/paging.h"
+#include "types/string.h"
 #include "terminal.h"
 
 void sysinit_stage1(void)

@@ -1,6 +1,6 @@
 
 // Sets up the MMU and maps the kernel into high memory
-void sysinit_stage1(void);
+void sysinit_stage1(void) __attribute__((section(".text.init")));
 
 // Performs initialization of the peripherals and calls cmain
 
