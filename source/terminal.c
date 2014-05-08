@@ -11,6 +11,7 @@
 #include "hardware/framebuffer.h"
 #include "hardware/keyboard.h"
 #include "types/string.h"
+#include "memory.h"
 #include "terminalCommands.h"
 #include "hardware/uart.h"
 #include "hardware/timer.h"
@@ -20,8 +21,8 @@ void PresentBufferToScreen(void);
 
 // TODO 0: Make buffer larger than display to allow for some history to get saved
 // TODO 1: Change to int buffers and embed colors in value
-char gBuffer[BUFFER_HEIGHT][BUFFER_WIDTH];
-char gTerminal[TERMINAL_HEIGHT][TERMINAL_WIDTH];
+char** gBuffer;// [BUFFER_HEIGHT][BUFFER_WIDTH];
+char** gTerminal; // [TERMINAL_HEIGHT][TERMINAL_WIDTH];
 int gBufferCaretRow; 		// The current row of the caret - where  text will be written to
 int gBufferCaretCol;		// The current column of the caret - where text will be written to
 int gFirstVisibleBufferRow; // The row in the first buffer that is currently the first row on screen
@@ -195,6 +196,8 @@ void Terminal_Clear(void)
 int Terminal_Initialize(void)
 {
 	gShowingTerminalPrompt = 0;
+    gBuffer = (char**)pcalloc(sizeof(char), BUFFER_HEIGHT * BUFFER_WIDTH);
+    gTerminal = (char**)pcalloc(sizeof(char), TERMINAL_HEIGHT * TERMINAL_WIDTH);
 	
 	if(Fb_Initialize() != 0)
 		return -1;
