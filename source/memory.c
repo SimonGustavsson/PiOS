@@ -1,10 +1,10 @@
 #include "memory.h"
+#include "hardware/uart.h"
 #include "util/utilities.h"
-#include "types/string.h"
 #include "types/types.h"
 //                                                 
-static unsigned char* gBitmap = (unsigned char*)(0x01209000); // (@ 18 MB)
-static unsigned char* gMemory = (unsigned char*)((0x01209000) + (MAX_ALLOCATED_SLICES / 8)); // (Right after the bitmap)
+static unsigned char* gBitmap;
+static unsigned char* gMemory;
 
 unsigned int gBytesAllocated;
 
@@ -26,20 +26,23 @@ void FlushCache(void)
 void Pallocator_Initialize(void)
 {
     gBytesAllocated = 0;
+    gBitmap = (unsigned char*)(DYN_MEM_VA_START);
+    gMemory = (unsigned char*)((DYN_MEM_VA_START)+(MAX_ALLOCATED_SLICES / 8)); // (Right after the bitmap)
 
     // Zero out the bitmap to start with
-   unsigned int i;
+    unsigned int i;
     int* bmpPtr = (int*)gBitmap;
     for (i = 0; i < (MAX_ALLOCATED_SLICES / 8) / 4; i++)
         *bmpPtr++ = 0;
 
-    printf("Pallocator reporting for duty, sir!\n");
+    Uart_SendString("Pallocator initialized\n");
 }
 
 static void mark_slices(unsigned int start, unsigned int count, bool used)
 {
 #ifdef DEBUG_MEM
-    printf("Marking slices between %d and %d as %d\n\r", start, start + count, used);
+    // Should use Uart_SendString here instead, but it currently doesn't take va_arg
+    //printf("Marking slices between %d and %d as %d\n\r", start, start + count, used);
 #endif
 
     // Find bit to set it
@@ -107,15 +110,17 @@ static void mark_slices(unsigned int start, unsigned int count, bool used)
             unsigned int i;
 
 #ifdef DEBUG_MEM
-            printf("Setting %d bits between start and end.\n", num_bytes_spanned * 8);
+            // Should use Uart_SendString here instead, but it currently doesn't take va_arg
+            //printf("Setting %d bits between start and end.\n", num_bytes_spanned * 8);
 #endif
             // start byte has already been set, and last byte has been set if it doesn't fill entire byte
             unsigned int last_byte_to_set = start_byte + 1 + num_bytes_spanned;
 
 #ifdef DEBUG_MEM
-            printf("I'm asked to set %d bytes as used. first = %d, last = %d\n",
+            // Should use Uart_SendString here instead, but it currently doesn't take va_arg
+            /*printf("I'm asked to set %d bytes as used. first = %d, last = %d\n",
                 last_byte_to_set - (start_byte + 1),
-                start_byte + 1, last_byte_to_set - 1);
+                start_byte + 1, last_byte_to_set - 1);*/
 #endif
 
             for (i = start_byte + 1; i < last_byte_to_set; i++)
@@ -131,7 +136,8 @@ static int get_first_available_slice(unsigned int requestedSize)
     int clear_bits_found = 0;
 
 #ifdef DEBUG_MEM
-    printf("Searching for first block of %d available slices.\r\n", requestedSize);
+    // Should use Uart_SendString here instead, but it currently doesn't take va_arg
+    //printf("Searching for first block of %d available slices.\r\n", requestedSize);
 #endif
 
     int foundBits = 0;
@@ -188,19 +194,14 @@ static int get_first_available_slice(unsigned int requestedSize)
             break;
         }
     }
-
-    if (foundBits == 0)
-    {
-        printf("Looks like we went through the entire map and didn't find enough memory\n");
-    }
-
-    assert2(i == MAX_ALLOCATED_SLICES, "Searched entire map, not enough slices available.");
-
-    assert2(clear_bits_start < 0, "Invalid slice start");
+    
+    assert_uart(i == MAX_ALLOCATED_SLICES, "Searched entire map, not enough slices available.");
+    assert_uart(clear_bits_start < 0, "Invalid slice start");
+    assert_uart(foundBits == 0, "Went through entire bitmap and did not find enough memory.\n");
 
     if (clear_bits_found < requestedSize)
     {
-        printf("Couldn't locate enough slices, %d requested, %d found at %d\n", requestedSize, clear_bits_found, clear_bits_start);
+        Uart_SendString("Couldn't locate enough slices");
         return -1;
     }
 
@@ -218,7 +219,8 @@ void* palloc(unsigned int size)
         slice_count++;
 
 #ifdef DEBUG_MEM
-    printf("Palloc(%d) (%d/%d)\n", size, gBytesAllocated, MAX_ALLOCATED_BYTES);
+    // Should use Uart_SendString here instead, but it currently doesn't take va_arg
+    //printf("Palloc(%d) (%d/%d)\n", size, gBytesAllocated, MAX_ALLOCATED_BYTES);
 #endif
 
     // Do we need an extended size byte?
@@ -247,7 +249,8 @@ void* palloc(unsigned int size)
     gBytesAllocated += size + 1; // 1 for size bytes
 
 #ifdef DEBUG_MEM
-    printf("Allocated %d bytes at 0x%h. %d left.\n", size + 1, ptr, MAX_ALLOCATED_BYTES - gBytesAllocated);
+    // Should use Uart_SendString here instead, but it currently doesn't take va_arg
+    //printf("Allocated %d bytes at 0x%h. %d left.\n", size + 1, ptr, MAX_ALLOCATED_BYTES - gBytesAllocated);
 #endif
 
     return ptr;
@@ -281,7 +284,8 @@ void phree(void* pointer)
     int num_slices = -1;
 
 #ifdef DEBUG_MEM
-    printf("phree(ptr: %d)\n", ptr);
+    // Should use Uart_SendString here instead, but it currently doesn't take va_arg
+    //printf("phree(ptr: %d)\n", ptr);
 #endif
 
     // Get slice count (Stored in 4 bytes preceeding the pointer)
@@ -292,18 +296,19 @@ void phree(void* pointer)
 
     ptr -= 4; // Make sure we deallocate the size bytes as well
 
-    assert(num_slices < 0 || num_slices > MAX_ALLOCATED_SLICES);
+    assert_uart(num_slices < 0 || num_slices > MAX_ALLOCATED_SLICES, "Invalid ptr passed to phree()");
 
     // ptr now points to the address, figure out the offset to find the slice start number
     unsigned int start_slice = (ptr - gMemory) / BYTES_PER_SLICE;
 
-    assert(start_slice < 0 || start_slice > MAX_ALLOCATED_SLICES - 2);
+    assert_uart(start_slice < 0 || start_slice > MAX_ALLOCATED_SLICES - 2, "Invalid ptr passed to phree()");
 
     mark_slices(start_slice, num_slices, false);
 
     gBytesAllocated -= num_slices * 4;
 
 #ifdef DEBUG_MEM
-    printf("Freed %d bytes, %d allocated.\n", num_slices * 4, gBytesAllocated);
+    // Should use Uart_SendString here instead, but it currently doesn't take va_arg
+    //printf("Freed %d bytes, %d allocated.\n", num_slices * 4, gBytesAllocated);
 #endif
 }
