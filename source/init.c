@@ -23,7 +23,7 @@ void sysinit_stage1(void)
 
     // Memory is all set up, time to branch into high memory
     // to move to stage 2 of initialization
-    call(KERNEL_VA_START + (unsigned int)&sysinit_stage2);
+    sysinit_stage2();
 }
 
 void sysinit_stage2(void)
@@ -40,14 +40,16 @@ void sysinit_stage2(void)
 
     Uart_SendString("Welcome to PiOS!\n\n");
 
+    // Initialize the dynamic memory allocator
+    Pallocator_Initialize();
+
     // Initialize terminal first so we can print error messages if any (Hah, unlikely!)
     if (Terminal_Initialize() != 0)
     {
         Uart_SendString("Failed to initialize terminal.\n");
     }
 
-    // Initialize the dynamic memory allocator
-    Pallocator_Initialize();
+    Uart_SendString("Terminal initialized\n");
 
     // Verify page table by attempting to access unmapped memory
     printf("Testing translation fault by accessing unmapped memory...\n");
