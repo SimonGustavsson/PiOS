@@ -49,7 +49,7 @@
 //
 // Linker constants
 // 
-#define LD_KRNL_ORI 0x8000
+#define LD_KRNL_ORIGIN 0x8000
 #define LD_PAGE_SIZE 4096
 
 #endif

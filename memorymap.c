@@ -6,12 +6,6 @@
 	Through multiple files
 */
 
-MEMORY
-{
-	/* Hardcoded 1 MB kernel size */
-    ram : ORIGIN = LD_KRNL_ORI, LENGTH = LD_KRNL_LEN
-}
-
 SECTIONS
 {
 	/* 
@@ -19,29 +13,22 @@ SECTIONS
 		So that it can be jumped to. The init section which performs initialization of
 		Virtual memory is placed directly afterwards
 	*/
-    .text.boot : { *(.text.boot*) } > ram
-    .text.init : { *(.text.init*) } > ram
+    . = LD_KRNL_ORIGIN;
+    .text.boot : { *(.text.boot*) }
+    .text.init : { *(.text.init*) }
 	
 	/*
-		Then place the of the kernel in high memory
+		Set the VMA of the remaining part of the kernel to
+        be in high memory as this code runs after the MMU has been turned on
 	*/
     . = KERNEL_VA_START;
 	
-    .text : { *(.text*) } > ram
-    . = ALIGN(4096); /* align to page size */
+    .text KERNEL_VA_START : AT(ADDR(.text.init) + SIZEOF(.text.init)) { *(.text*) }
+    . = ALIGN(LD_PAGE_SIZE); /* align to page size */
 	
-    .bss : { *(.bss*) } > ram
-    . = ALIGN(4096); /* align to page size */
+    .bss : { *(.bss*) }
+    . = ALIGN(LD_PAGE_SIZE); /* align to page size */
 	
-	.data : { *(.data) } > ram
-	.rodata : { *(.rodata) } > ram
-	
-	/* TODO: Investigate What these are */
-    .dynamic    : { *(.dynamic) } > ram
-    .got         : { *(.got) } > ram
-    .igot.plt     : { *(.igot.plt) } > ram
-    .igot         : { *(.igot) } > ram
-    .plt           : { *(.plt) } > ram
-    .rel.plt       : { *(.rel.plt) } > ram
-    .rel.dyn       : { *(.rel.dyn) } > ram
+    .data : { *(.data) }
+    .rodata . : { *(.rodata) }
 }
