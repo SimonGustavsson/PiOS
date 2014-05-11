@@ -121,7 +121,7 @@
   <ItemGroup>
     <None Include="..\source\asm\interrupt_handlers.S" />
     <None Include="..\source\asm\irq.s" />
-    <None Include="..\source\asm\mmu.s" />
+    <None Include="..\source\asm\mmu.S" />
     <None Include="..\source\asm\start.S" />
     <None Include="..\source\asm\utility.s" />
   </ItemGroup>

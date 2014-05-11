@@ -50,10 +50,10 @@
 #define SMALLPAGE_EXECUTENEVER 1
 
 // Maps the given virtual address to the given physical address
-void kernel_pt_set(unsigned int* pt, unsigned int pa, unsigned int va, unsigned int flags);
+void kernel_pt_set(unsigned int* pt, unsigned int pa, unsigned int va, unsigned int flags) __attribute__((section(".text.init")));
 
 // Initializes the kernel page table. Note: pt and tmp_ttb0 are both expected to be allocated with KRL_PT_SIZE bytes
-int kernel_pt_initialize(unsigned int* pt, unsigned int* tmp_ttb0);
+int kernel_pt_initialize(unsigned int* pt, unsigned int* tmp_ttb0) __attribute__((section(".text.init")));
 
 // Note: we expect pt to point towards section of USR_PT_SIZE allocated bytes
 int user_pt_initialize(unsigned int* pt, unsigned int physical_start);
