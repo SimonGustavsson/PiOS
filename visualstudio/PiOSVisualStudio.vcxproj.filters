@@ -241,19 +241,19 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\source\asm\interrupt_handlers.s">
-      <Filter>Source Files\asm</Filter>
-    </None>
     <None Include="..\source\asm\utility.s">
-      <Filter>Source Files\asm</Filter>
-    </None>
-    <None Include="..\source\asm\mmu.s">
       <Filter>Source Files\asm</Filter>
     </None>
     <None Include="..\source\asm\irq.s">
       <Filter>Source Files\asm</Filter>
     </None>
     <None Include="..\source\asm\start.S">
+      <Filter>Source Files\asm</Filter>
+    </None>
+    <None Include="..\source\asm\interrupt_handlers.S">
+      <Filter>Source Files\asm</Filter>
+    </None>
+    <None Include="..\source\asm\mmu.S">
       <Filter>Source Files\asm</Filter>
     </None>
   </ItemGroup>

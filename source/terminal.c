@@ -195,10 +195,18 @@ void Terminal_Clear(void)
 
 int Terminal_Initialize(void)
 {
+    Uart_SendString("Init terminal.\n");
+
 	gShowingTerminalPrompt = 0;
     gBuffer = (char**)pcalloc(sizeof(char), BUFFER_HEIGHT * BUFFER_WIDTH);
     gTerminal = (char**)pcalloc(sizeof(char), TERMINAL_HEIGHT * TERMINAL_WIDTH);
 	
+    if (gBuffer == 0)
+    {
+        Uart_SendString("Failed to allocate terminal buffer\n");
+        return -1;
+    }
+
 	if(Fb_Initialize() != 0)
 		return -1;
 
@@ -210,7 +218,7 @@ int Terminal_Initialize(void)
 
 	// Initial setup of buffers etc
 	Terminal_Clear();
-	
+
 	// Setup default built in commands
     TerminalCommands_Initialize();
 	
