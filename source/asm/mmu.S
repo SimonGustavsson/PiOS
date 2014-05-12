@@ -8,11 +8,11 @@
 .section .text.init
 .globl do_mmu
 do_mmu:
-    ;@ r0 = ttb0 address
-    ;@ r1 = ttb1 address 
-    ;@ r2 = n
-    ;@ r3 = temp - USE THIS
-        
+
+    ;@ Save the SP so we can restore its relative position 
+    ;@ After we've enabled virtual memory
+    mov r5, sp
+
     ;@ Disable page coloring
     mrc p15, 0, r3, c1, c0, 1
 	orr r3, #0x40
@@ -73,8 +73,11 @@ do_mmu:
     add r1, #KERNEL_VA_START
     mov r0,#0xD3 ;@ SVC
     msr cpsr_c,r0
-    ldr sp, =SVC_STACK_VA_START
 
+    ;@ Restore the saved relative stack pointer
+    ldr r0, =SVC_STACK_VA_START
+    add sp, r0, r5
+    
     bx lr
     
 ;@
