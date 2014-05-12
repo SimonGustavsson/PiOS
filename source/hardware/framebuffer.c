@@ -143,7 +143,7 @@ static int SetupScreen()
 	gFbAddr = mailbuffer[count + 3];
 	unsigned int screenSize = mailbuffer[count + 4];
 	
-	if(gFbAddr == 0 || screenSize == 0)
+	if(gFbAddr == 0)// || screenSize == 0)
 		return 4;
 		
 	return 0;
