@@ -12,6 +12,8 @@ do_mmu:
     ;@ Save the SP so we can restore its relative position 
     ;@ After we've enabled virtual memory
     mov r5, sp
+    ldr r6, =SVC_STACK_PA_START
+    sub r5, r6, r5
 
     ;@ Disable page coloring
     mrc p15, 0, r3, c1, c0, 1
@@ -47,9 +49,6 @@ do_mmu:
 
     ;@ Now that the MMU is enabled, we need to modify the location of the stacks
 
-    ;@ Save the current location of the stack so we can set it up correctly
-    mov r1, sp
-    	
     mov r0,#0xD2 ;@ IRQ
     msr cpsr_c,r0
     ldr sp, =IRQ_STACK_VA_START
@@ -76,7 +75,7 @@ do_mmu:
 
     ;@ Restore the saved relative stack pointer
     ldr r0, =SVC_STACK_VA_START
-    add sp, r0, r5
+    sub sp, r0, r5
     
     bx lr
     
