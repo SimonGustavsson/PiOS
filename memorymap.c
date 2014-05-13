@@ -21,11 +21,11 @@ SECTIONS
 		Set the VMA of the remaining part of the kernel to
         be in high memory as this code runs after the MMU has been turned on
 	*/
-    . = KERNEL_VA_START;
+    . = KERNEL_VA_START + ADDR(.text.init) + SIZEOF(.text.init);
 	
-    .text KERNEL_VA_START : AT(ADDR(.text.init) + SIZEOF(.text.init)) { *(.text*) }
+    .text . : AT(ADDR(.text.init) + SIZEOF(.text.init)) { *(.text*) }
     . = ALIGN(LD_PAGE_SIZE); /* align to page size */
-	
+	 
     .bss : { *(.bss*) }
     . = ALIGN(LD_PAGE_SIZE); /* align to page size */
 	
