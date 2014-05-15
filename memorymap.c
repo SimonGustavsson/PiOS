@@ -6,6 +6,8 @@
 	Through multiple files
 */
 
+ENTRY(reset)
+ 
 SECTIONS
 {
 	/* 
@@ -13,9 +15,9 @@ SECTIONS
 		So that it can be jumped to. The init section which performs initialization of
 		Virtual memory is placed directly afterwards
 	*/
-    . = LD_KRNL_ORIGIN;
-    .text.boot : { *(.text.boot*) }
-    .text.init : { *(.text.init*) }
+	. = 0x10000;
+    .text.boot 0x10000 : { *(.text.boot*) }
+    .text.init 0x10000 + SIZEOF(.text.boot) : { *(.text.init*) }
 	
 	/*
 		Set the VMA of the remaining part of the kernel to
@@ -29,6 +31,6 @@ SECTIONS
     .bss : { *(.bss*) }
     . = ALIGN(LD_PAGE_SIZE); /* align to page size */
 	
-    .data : { *(.data) }
+    .data . : { *(.data) }
     .rodata . : { *(.rodata) }
 }
