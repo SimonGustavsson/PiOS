@@ -50,7 +50,7 @@ COBJECT := $(addprefix $(OBJ_DIR)/, $(notdir $(_COBJECT)))
 PiOS: directories $(BUILD_DIR)/kernel.img
 
 # Create the final binary
-$(BUILD_DIR)/kernel.img: $(BUILD_DIR)/kernel.elf $(BUILD_DIR)/symbols.txt $(BUILD_DIR)/disassembly.txt
+$(BUILD_DIR)/kernel.img: $(BUILD_DIR)/kernel.elf $(BUILD_DIR)/symbols.txt $(BUILD_DIR)/disassembly.txt $(BUILD_DIR)/kernel.elf.debug
 	@echo Creating flat binary...
 	@$(TOOL)-objcopy $(BUILD_DIR)/kernel.elf -O binary $(BUILD_DIR)/kernel.img
 
@@ -63,6 +63,11 @@ $(BUILD_DIR)/disassembly.txt: $(BUILD_DIR)/kernel.elf
 $(BUILD_DIR)/symbols.txt: $(BUILD_DIR)/kernel.elf
 	@echo Dumping symbol table..
 	@$(TOOL)-objdump -t $< | awk -F ' ' '{if(NF >= 2) print $$(1), "\t", $$(NF);}' > $@
+
+# Extract debugging symbols into separate file
+$(BUILD_DIR)/kernel.elf.debug: $(BUILD_DIR)/kernel.elf
+	@$(TOOL)-objcopy --only-keep-debug $(BUILD_DIR)/kernel.elf $(BUILD_DIR)/kernel.elf.debug
+	@$(TOOL)-objcopy --strip-debug $(BUILD_DIR)/kernel.elf
 
 # Link all of the objects (Temporarily removed -l $(LIBRARIES))
 $(BUILD_DIR)/kernel.elf: $(AOBJECT) $(COBJECT) $(LINK_SCRIPT)
@@ -104,8 +109,10 @@ $(OBJ_DIR)/%.o: %.s
 # Uppercase S indicates header includes, run it through GCC instead of as
 $(OBJ_DIR)/%.o: %.S
 	@echo "Building $< (gcc)"
-	@$(TOOL)-gcc -c $< -o $@ $(ASSEMBLER_FLAGS) $(GCC_INCLUDE)
-	
+	@$(TOOL)-gcc -P -E -c $< -o $@.s $(ASSEMBLER_FLAGS) $(GCC_INCLUDE)
+	@$(TOOL)-as -c $@.s -o $@ $(ASSEMBLER_FLAGS)
+	@rm $@.s
+
 directories:
 	@mkdir -p $(OBJ_DIR)
 	@mkdir -p $(DEPENDENCY_DIR)
