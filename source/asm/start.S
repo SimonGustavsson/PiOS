@@ -1,38 +1,10 @@
 #include "memory_map.h"
 
 .section .text.boot
-.globl _start
-_start:
-	;@ Setup interrupt vector	
-	ldr pc,reset_handler
-	ldr pc,undefined_handler
-	ldr pc,swi_handler
-	ldr pc,prefetch_handler
-	ldr pc,data_handler
-	ldr pc,unused_handler
-	ldr pc,irq_handler
-	ldr pc,fiq_handler
-    
-	;@ Route handlers to the appropriate function
-	reset_handler:      .word reset
-	undefined_handler:  .word undefined
-	swi_handler:        .word swi
-	prefetch_handler:   .word instruction_abort
-	data_handler:       .word data_abort
-	unused_handler:     .word hang
-	irq_handler:        .word irq
-	fiq_handler:        .word hang
-	
+.globl reset
 reset:
 	mov r0,#0x8000
     mov r1,#0x0000
-	
-	;@ The interrupt branch instructions are placed at 0x8000
-	;@ Move them to 0x0000 where the CPU expects the interrupt vector to be
-    ldmia r0!,{r2,r3,r4,r5,r6,r7,r8,r9}
-    stmia r1!,{r2,r3,r4,r5,r6,r7,r8,r9}
-    ldmia r0!,{r2,r3,r4,r5,r6,r7,r8,r9}
-    stmia r1!,{r2,r3,r4,r5,r6,r7,r8,r9}
 	
 	;@ Setup the stacks for the different interrupt modes (make sure interrupts are disabled first)
 	;@ IRQ
@@ -66,8 +38,11 @@ reset:
     ldr sp, =SVC_STACK_PA_START
 	
 	;@ Kick of system initialization (init.c)
-	bl sysinit_stage1
+	ldr r0, =sysinit_stage1
+	blx r0
 
 ;@ cmain should never return, just hang around (heh.. get it?)
+.globl hang
+.section .boot
 hang: 
 	b hang
