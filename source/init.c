@@ -12,6 +12,19 @@
 #include "types/string.h"
 #include "terminal.h"
 
+__attribute__((naked, aligned(32))) static void interrupt_vector(void)
+{
+        asm volatile("b reset\n" // Reset
+        "b undefined\n"          // Undefined
+        "b swi\n"                // SWI
+        "b instruction_abort\n" // Instruction abort
+        "b data_abort \n"        // Data abort
+        "b reset\n"             // Unused
+        "b irq\n"               // IRQ
+        "b hang\n"                // FIQ
+    );
+}
+
 void sysinit_stage1(void)
 {
     // First thing we want to do is map the kernel and peripherals into high memory
@@ -28,6 +41,9 @@ void sysinit_stage1(void)
 
 void sysinit_stage2(void)
 {
+    // Setup the interrupt vector
+    asm volatile("mcr p15, 0, %[addr], c12, c0, 0" : : [addr] "r" (&interrupt_vector));
+
     // Trash the temporary TTB0
 
     // First things first, enable the serial so we can send the deployer some feedback
@@ -48,12 +64,14 @@ void sysinit_stage2(void)
     {
         Uart_SendString("Failed to initialize terminal.\n");
     }
-
-    Uart_SendString("Terminal initialized\n");
+    else
+    {
+        Uart_SendString("Terminal initialized\n");
+    }
 
     // Verify page table by attempting to access unmapped memory
-    printf("Testing translation fault by accessing unmapped memory...\n");
-    *((unsigned int*)0x10E00000) = 2;
+    //printf("Testing translation fault by accessing unmapped memory...\n");
+    //*((unsigned int*)0x10E00000) = 2;
 
     // Initialize the SD card and filesystem
     BlockDevice* sd = (BlockDevice*)palloc(sizeof(BlockDevice));
