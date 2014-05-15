@@ -22,8 +22,8 @@
 //
 
 // Misc
-#define DYN_MEM_VA_START (KERNEL_VA_START + 0x01209000)
 #define KERNEL_VA_START 0x80000000
+#define DYN_MEM_VA_START (KERNEL_VA_START + 0x01209000)
 #define USR_VA_START 0x00000000
 
 // Stacks
@@ -49,7 +49,14 @@
 //
 // Linker constants
 // 
-#define LD_KRNL_ORIGIN 0x8000
+#define QEMU 1
+
+#ifdef QEMU
+	#define LD_KRNL_ORIGIN 0x10000
+#else
+	#define LD_KRNL_ORIGIN 0x8000
+#endif
+
 #define LD_PAGE_SIZE 4096
 
 #endif
