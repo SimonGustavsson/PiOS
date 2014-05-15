@@ -32,6 +32,16 @@
 #define DAC_MANAGER 0xFFFFFFFF
 
 //
+// interrupt vector
+//
+extern void irq(void);
+extern void fiq(void);
+extern void reset(void);
+extern void data_abort(void);
+extern void instruction_abort(void);
+extern void reset(void);
+
+//
 // irq.s
 //
 extern void enable_irq(void);
