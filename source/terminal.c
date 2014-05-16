@@ -2,6 +2,8 @@
 #define CHAR_WIDTH 6
 #define CHAR_VSPACING 4
 #define CHAR_HSPACING 4
+#define SCREEN_WIDTH 640
+#define SCREEN_HEIGHT 480
 #define TERMINAL_WIDTH (SCREEN_WIDTH / (CHAR_WIDTH + CHAR_HSPACING)) - 1 // 191 @ 1920
 #define TERMINAL_HEIGHT (SCREEN_HEIGHT / (CHAR_HEIGHT + CHAR_VSPACING)) - 1 // 76 @ 1080
 #define BUFFER_HEIGHT TERMINAL_HEIGHT
@@ -26,6 +28,7 @@ char** gTerminal; // [TERMINAL_HEIGHT][TERMINAL_WIDTH];
 int gBufferCaretRow; 		// The current row of the caret - where  text will be written to
 int gBufferCaretCol;		// The current column of the caret - where text will be written to
 int gFirstVisibleBufferRow; // The row in the first buffer that is currently the first row on screen
+int gTerminalInitialized;
 
 char gInputBuffer[INPUT_BUFFER_SIZE];
 unsigned int gInputBufferIndex;
@@ -195,7 +198,14 @@ void Terminal_Clear(void)
 
 int Terminal_Initialize(void)
 {
+	gTerminalInitialized = 1;
+
     Uart_SendString("Init terminal.\n");
+
+    if(BUFFER_HEIGHT > 100)
+    	Uart_SendString("BuUFFER_HEIGHT >  100\n");
+    if(BUFFER_WIDTH > 100)
+    	Uart_SendString("BUFFER_WIDTH > 100\n");
 
 	gShowingTerminalPrompt = 0;
     gBuffer = (char**)pcalloc(sizeof(char), BUFFER_HEIGHT * BUFFER_WIDTH);
@@ -222,8 +232,16 @@ int Terminal_Initialize(void)
 	// Setup default built in commands
     TerminalCommands_Initialize();
 	
+	gTerminalInitialized = 0;
+
 	return 0;
 }
+
+int Terminal_GetIsInitialized(void)
+{
+	return gTerminalInitialized;
+}
+
 
 void Terminal_back(void)
 {
@@ -246,6 +264,15 @@ void Terminal_back(void)
 
 void print_internal(char* string, unsigned int length, unsigned int important)
 {
+	if(gTerminalInitialized > 0)
+	{
+		unsigned int j;
+		for(j = 0; j < length; j++)
+			Uart_Send(string[j]);
+
+		return;
+	}
+
 	// TODO: This should first construct the string, THEN Send it off to a print function
 
 	// 0. If we're currently showing the prompt (and potentially user input)

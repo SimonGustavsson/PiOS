@@ -8,3 +8,5 @@ void Terminal_PrintPrompt(void);
 void Terminal_PrintWelcome(void);
 
 void Terminal_back(void);
+
+int Terminal_GetIsInitialized(void);
