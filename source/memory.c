@@ -2,9 +2,11 @@
 #include "hardware/uart.h"
 #include "util/utilities.h"
 #include "types/types.h"
+#include "types/string.h"
+
 //                                                 
-static unsigned char* gBitmap;
-static unsigned char* gMemory;
+unsigned char* gBitmap;
+unsigned char* gMemory;
 
 unsigned int gBytesAllocated;
 
@@ -195,13 +197,13 @@ static int get_first_available_slice(unsigned int requestedSize)
         }
     }
     
-    assert_uart(i == MAX_ALLOCATED_SLICES, "Searched entire map, not enough slices available.");
-    assert_uart(clear_bits_start < 0, "Invalid slice start");
+    assert_uart(i == MAX_ALLOCATED_SLICES, "Searched entire map, not enough slices available.\n");
+    assert_uart(clear_bits_start < 0, "Invalid slice start\n");
     assert_uart(foundBits == 0, "Went through entire bitmap and did not find enough memory.\n");
 
     if (clear_bits_found < requestedSize)
     {
-        Uart_SendString("Couldn't locate enough slices");
+        Uart_SendString("Couldn't locate enough slices\n");
         return -1;
     }
 
@@ -210,6 +212,12 @@ static int get_first_available_slice(unsigned int requestedSize)
 
 void* palloc(unsigned int size)
 {
+    Uart_SendString("Palloc(");
+    char  sizeStr[10];
+    itoa(size, sizeStr);
+    Uart_SendString(sizeStr);
+    Uart_SendString(")\n");
+
     int start_slice = -1;
 
     // Calculate number of slices necessary to store data
@@ -224,7 +232,7 @@ void* palloc(unsigned int size)
 #endif
 
     // Do we need an extended size byte?
-    if (slice_count < 0 || slice_count > 2147483647)// (Uint32 max value) - Invalid allocation size
+    if (slice_count > 2147483647)// (Uint32 max value) - Invalid allocation size
         return 0; // TODO: Support larger allocations?
 
     // Now find slice_count clear consecutive bits in the bitmap
@@ -270,6 +278,9 @@ void* pcalloc(unsigned int itemSize, unsigned int size)
 {
     // Allocate the memory
     void* mem = palloc(itemSize * size);
+
+    if(mem == 0)
+        return 0;
 
     // Zero it out
     my_memset(mem, 0, itemSize * size);
