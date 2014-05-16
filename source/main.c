@@ -14,6 +14,14 @@ int cmain(void)
 {
     TaskScheduler_Initialize();
 
+    Uart_SendString("Initialization complete. Go main!\n");
+
+    if(Terminal_GetIsInitialized() > 0)
+    {
+        Uart_SendString("Failed to initialize terminal, * * * HALTING * * *\n");
+        while(1);
+    }
+
 	Terminal_PrintWelcome();
 	Terminal_PrintPrompt();
 
