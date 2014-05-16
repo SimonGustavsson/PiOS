@@ -64,6 +64,9 @@ int fs_initialize(void)
 {
     gFs = (file_system*)pcalloc(sizeof(file_system), 1);
 
+    if(gFs == 0)
+        Uart_SendString("Failed to allocate filesystem structure!\n");
+
     return 0;
 }
 
