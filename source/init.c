@@ -19,7 +19,7 @@ __attribute__((naked, aligned(32))) static void interrupt_vector(void)
         "b swi\n"                // SWI
         "b instruction_abort\n" // Instruction abort
         "b data_abort \n"        // Data abort
-        "b reset\n"             // Unused
+        "b hang\n"             // Unused
         "b irq\n"               // IRQ
         "b hang\n"                // FIQ
     );
@@ -60,14 +60,7 @@ void sysinit_stage2(void)
     Pallocator_Initialize();
 
     // Initialize terminal first so we can print error messages if any (Hah, unlikely!)
-    if (Terminal_Initialize() != 0)
-    {
-        Uart_SendString("Failed to initialize terminal.\n");
-    }
-    else
-    {
-        Uart_SendString("Terminal initialized\n");
-    }
+    Terminal_Initialize();
 
     // Verify page table by attempting to access unmapped memory
     //printf("Testing translation fault by accessing unmapped memory...\n");
@@ -76,18 +69,25 @@ void sysinit_stage2(void)
     // Initialize the SD card and filesystem
     BlockDevice* sd = (BlockDevice*)palloc(sizeof(BlockDevice));
 
-    // Initialize the SD block device
-    Sd_Register(sd);
+    if(sd == 0)
+    {
+        Uart_SendString("Failed to allocate memory for SD device\n");
+    }
+    else
+    {
+        // Initialize the SD block device
+        Sd_Register(sd);
 
-    // Initialize global filesystem
-    fs_initialize();
+        // Initialize global filesystem
+        fs_initialize();
 
-    // Add support for FAT32 partitions to filesystem
-    fs_register_driver_factory(&fat32_driver_factory);
+        // Add support for FAT32 partitions to filesystem
+        fs_register_driver_factory(&fat32_driver_factory);
 
-    // Add the SD card to the file system
-    fs_add_device(sd);
-
+        // Add the SD card to the file system
+        fs_add_device(sd);
+    }
+    
     // Enter... the kernel!
     cmain();
 }
