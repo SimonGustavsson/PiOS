@@ -4,8 +4,8 @@
 #define CHAR_HSPACING 4
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
-#define TERMINAL_WIDTH (SCREEN_WIDTH / (CHAR_WIDTH + CHAR_HSPACING)) - 1 // 191 @ 1920
-#define TERMINAL_HEIGHT (SCREEN_HEIGHT / (CHAR_HEIGHT + CHAR_VSPACING)) - 1 // 76 @ 1080
+#define TERMINAL_WIDTH 191 //(SCREEN_WIDTH / (CHAR_WIDTH + CHAR_HSPACING)) - 1 // 191 @ 1920
+#define TERMINAL_HEIGHT 76 //(SCREEN_HEIGHT / (CHAR_HEIGHT + CHAR_VSPACING)) - 1 // 76 @ 1080
 #define BUFFER_HEIGHT TERMINAL_HEIGHT
 #define BUFFER_WIDTH TERMINAL_WIDTH
 #define INPUT_BUFFER_SIZE 256
@@ -207,6 +207,8 @@ int Terminal_Initialize(void)
     	Uart_SendString("BuUFFER_HEIGHT >  100\n");
     if(BUFFER_WIDTH > 100)
     	Uart_SendString("BUFFER_WIDTH > 100\n");
+
+    printf("gBuffer size: %d\n", BUFFER_HEIGHT * BUFFER_WIDTH);
 
 	gShowingTerminalPrompt = 0;
     gBuffer = (char**)pcalloc(sizeof(char), BUFFER_HEIGHT * BUFFER_WIDTH);
