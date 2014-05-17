@@ -16,7 +16,7 @@ int cmain(void)
 
     Uart_SendString("Initialization complete. Go main!\n");
 
-    if(Terminal_GetIsInitialized() > 0)
+    if(Terminal_GetIsInitialized() == 0)
     {
         Uart_SendString("Failed to initialize terminal, * * * HALTING * * *\n");
         while(1);

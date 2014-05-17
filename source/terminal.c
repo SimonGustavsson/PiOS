@@ -198,7 +198,8 @@ void Terminal_Clear(void)
 
 int Terminal_Initialize(void)
 {
-	gTerminalInitialized = 1;
+    // Just in case
+	gTerminalInitialized = 0;
 
     Uart_SendString("Init terminal.\n");
 
@@ -232,7 +233,7 @@ int Terminal_Initialize(void)
 	// Setup default built in commands
     TerminalCommands_Initialize();
 	
-	gTerminalInitialized = 0;
+	gTerminalInitialized = 1;
 
 	return 0;
 }
@@ -264,7 +265,7 @@ void Terminal_back(void)
 
 void print_internal(char* string, unsigned int length, unsigned int important)
 {
-	if(gTerminalInitialized > 0)
+	if(gTerminalInitialized == 0)
 	{
 		unsigned int j;
 		for(j = 0; j < length; j++)
