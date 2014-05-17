@@ -139,7 +139,7 @@ static int get_first_available_slice(unsigned int requestedSize)
 
 #ifdef DEBUG_MEM
     // Should use Uart_SendString here instead, but it currently doesn't take va_arg
-    //printf("Searching for first block of %d available slices.\r\n", requestedSize);
+    //printf("Searching for first block of %d available slices. Max allocated: %d\n", requestedSize, MAX_ALLOCATED_SLICES);
 #endif
 
     int foundBits = 0;
@@ -175,7 +175,7 @@ static int get_first_available_slice(unsigned int requestedSize)
 
                     clear_bits_found += 1;
 
-                    if (clear_bits_found == requestedSize)
+                    if (clear_bits_found >= requestedSize)
                     {
                         foundBits = 1;
                         break; // Found a free block
@@ -192,14 +192,15 @@ static int get_first_available_slice(unsigned int requestedSize)
         // Did we find a free block?
         if (clear_bits_start != -1 && (unsigned int)clear_bits_found >= requestedSize)
         {
+            printf("Found all the slices we need!\n");
             foundBits = 1;
             break;
         }
     }
-    
-    assert_uart(i == MAX_ALLOCATED_SLICES, "Searched entire map, not enough slices available.\n");
-    assert_uart(clear_bits_start < 0, "Invalid slice start\n");
-    assert_uart(foundBits == 0, "Went through entire bitmap and did not find enough memory.\n");
+
+    //assert_uart(i == MAX_ALLOCATED_SLICES, "Searched entire map, not enough slices available.\n");
+    assert2(clear_bits_start < 0, "Invalid slice start\n");
+    assert2(foundBits == 0, "Went through entire bitmap and did not find enough memory.\n");
 
     if (clear_bits_found < requestedSize)
     {
@@ -212,11 +213,7 @@ static int get_first_available_slice(unsigned int requestedSize)
 
 void* palloc(unsigned int size)
 {
-    Uart_SendString("Palloc(");
-    char  sizeStr[10];
-    itoa(size, sizeStr);
-    Uart_SendString(sizeStr);
-    Uart_SendString(")\n");
+    printf("Palloc(%d) Foo\n", size);
 
     int start_slice = -1;
 
@@ -259,6 +256,7 @@ void* palloc(unsigned int size)
 #ifdef DEBUG_MEM
     // Should use Uart_SendString here instead, but it currently doesn't take va_arg
     //printf("Allocated %d bytes at 0x%h. %d left.\n", size + 1, ptr, MAX_ALLOCATED_BYTES - gBytesAllocated);
+    printf("Success\n");
 #endif
 
     return ptr;
