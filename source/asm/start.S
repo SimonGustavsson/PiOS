@@ -42,7 +42,7 @@ reset:
 	blx r0
 
 ;@ cmain should never return, just hang around (heh.. get it?)
+.section .text.boot
 .globl hang
-.section .boot
 hang: 
 	b hang
