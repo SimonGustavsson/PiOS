@@ -15,9 +15,9 @@ SECTIONS
 		So that it can be jumped to. The init section which performs initialization of
 		Virtual memory is placed directly afterwards
 	*/
-	. = 0x10000;
-    .text.boot 0x10000 : { *(.text.boot*) }
-    .text.init 0x10000 + SIZEOF(.text.boot) : { *(.text.init*) }
+    . = LD_KRNL_ORIGIN;
+    .text.boot LD_KRNL_ORIGIN : { *(.text.boot*) }
+    .text.init LD_KRNL_ORIGIN + SIZEOF(.text.boot) : { *(.text.init*) }
 	
 	/*
 		Set the VMA of the remaining part of the kernel to
