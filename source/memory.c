@@ -192,7 +192,6 @@ static int get_first_available_slice(unsigned int requestedSize)
         // Did we find a free block?
         if (clear_bits_start != -1 && (unsigned int)clear_bits_found >= requestedSize)
         {
-            printf("Found all the slices we need!\n");
             foundBits = 1;
             break;
         }
@@ -200,7 +199,7 @@ static int get_first_available_slice(unsigned int requestedSize)
 
     //assert_uart(i == MAX_ALLOCATED_SLICES, "Searched entire map, not enough slices available.\n");
     assert2(clear_bits_start < 0, "Invalid slice start\n");
-    assert2(foundBits == 0, "Went through entire bitmap and did not find enough memory.\n");
+    assert2(foundBits == 1, "Went through entire bitmap and did not find enough memory.\n");
 
     if (clear_bits_found < requestedSize)
     {
@@ -213,7 +212,10 @@ static int get_first_available_slice(unsigned int requestedSize)
 
 void* palloc(unsigned int size)
 {
-    printf("Palloc(%d) Foo\n", size);
+#ifdef DEBUG_MEM
+    // Should use Uart_SendString here instead, but it currently doesn't take va_arg
+    printf("Palloc(%d) (%d/%d)\n", size, gBytesAllocated, MAX_ALLOCATED_BYTES);
+#endif
 
     int start_slice = -1;
 
@@ -223,10 +225,6 @@ void* palloc(unsigned int size)
     if (size % BYTES_PER_SLICE)
         slice_count++;
 
-#ifdef DEBUG_MEM
-    // Should use Uart_SendString here instead, but it currently doesn't take va_arg
-    //printf("Palloc(%d) (%d/%d)\n", size, gBytesAllocated, MAX_ALLOCATED_BYTES);
-#endif
 
     // Do we need an extended size byte?
     if (slice_count > 2147483647)// (Uint32 max value) - Invalid allocation size
@@ -293,8 +291,7 @@ void phree(void* pointer)
     int num_slices = -1;
 
 #ifdef DEBUG_MEM
-    // Should use Uart_SendString here instead, but it currently doesn't take va_arg
-    //printf("phree(ptr: %d)\n", ptr);
+    printf("phree(ptr: %d)\n", ptr);
 #endif
 
     // Get slice count (Stored in 4 bytes preceeding the pointer)
@@ -303,14 +300,16 @@ void phree(void* pointer)
         (*(ptr - 2) << 8) |
         *(ptr - 1);
 
-    ptr -= 4; // Make sure we deallocate the size bytes as well
+    assert3(num_slices > 0 && num_slices < MAX_ALLOCATED_SLICES, "phree(0x%h): Invalid arg, slice count: %d\n", ptr, num_slices);
 
-    assert_uart(num_slices < 0 || num_slices > MAX_ALLOCATED_SLICES, "Invalid ptr passed to phree()");
+    ptr -= 4; // Make sure we deallocate the size bytes as well
 
     // ptr now points to the address, figure out the offset to find the slice start number
     unsigned int start_slice = (ptr - gMemory) / BYTES_PER_SLICE;
 
-    assert_uart(start_slice < 0 || start_slice > MAX_ALLOCATED_SLICES - 2, "Invalid ptr passed to phree()");
+    assert3(start_slice >= 0 && start_slice < MAX_ALLOCATED_SLICES - 2, "phree(0x%h): Invalid arg, slice start: %d\n", ptr, start_slice);
+
+    //assert_uart(start_slice < 0 || start_slice > MAX_ALLOCATED_SLICES - 2, "Invalid ptr passed to phree()");
 
     mark_slices(start_slice, num_slices, false);
 
