@@ -1,3 +1,6 @@
+
+//#define TERMINAL_DEBUG
+
 void Terminal_Print(char* string, unsigned int length);
 void Terminal_PrintImportant(char* string, unsigned int length);
 

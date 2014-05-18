@@ -2,12 +2,6 @@
 #define CHAR_WIDTH 6
 #define CHAR_VSPACING 4
 #define CHAR_HSPACING 4
-#define SCREEN_WIDTH 640
-#define SCREEN_HEIGHT 480
-#define TERMINAL_WIDTH 191 //(SCREEN_WIDTH / (CHAR_WIDTH + CHAR_HSPACING)) - 1 // 191 @ 1920
-#define TERMINAL_HEIGHT 76 //(SCREEN_HEIGHT / (CHAR_HEIGHT + CHAR_VSPACING)) - 1 // 76 @ 1080
-#define BUFFER_HEIGHT TERMINAL_HEIGHT
-#define BUFFER_WIDTH TERMINAL_WIDTH
 #define INPUT_BUFFER_SIZE 256
 
 #include "hardware/framebuffer.h"
@@ -17,6 +11,9 @@
 #include "terminalCommands.h"
 #include "hardware/uart.h"
 #include "hardware/timer.h"
+
+size gBufferSize;
+size gTerminalSize;
 
 // Forward declare
 void PresentBufferToScreen(void);
@@ -163,9 +160,9 @@ void PresentBufferToScreen(void)
 {				
 	unsigned int row;
 	unsigned int col;
-	for(row = 0; row < TERMINAL_HEIGHT; row++)
+    for (row = 0; row < gTerminalSize.height; row++)
 	{
-		for(col = 0; col < TERMINAL_WIDTH; col++)
+        for (col = 0; col < gTerminalSize.width; col++)
 		{
 			if(gTerminal[row][col] != gBuffer[row][col])
 			{
@@ -183,10 +180,10 @@ void Terminal_Clear(void)
 	gBufferCaretCol = 0;
 	
 	unsigned int row;
-	for(row = 0; row < BUFFER_HEIGHT; row++)
+    for (row = 0; row < gBufferSize.height; row++)
 	{
 		unsigned int col;
-		for(col = 0; col < BUFFER_WIDTH; col++)
+        for (col = 0; col < gBufferSize.width; col++)
 		{
 			gBuffer[row][col] = ' ';
 		}
@@ -199,36 +196,44 @@ void Terminal_Clear(void)
 int Terminal_Initialize(void)
 {
     // Just in case
-	gTerminalInitialized = 0;
+    gTerminalInitialized = 0;
+    gShowingTerminalPrompt = 0;
+    gInputBufferIndex = 0;
 
+#ifdef TERMINAL_DEBUG
     Uart_SendString("Init terminal.\n");
+#endif
 
-    if(BUFFER_HEIGHT > 100)
-    	Uart_SendString("BuUFFER_HEIGHT >  100\n");
-    if(BUFFER_WIDTH > 100)
-    	Uart_SendString("BUFFER_WIDTH > 100\n");
+    if (Fb_Initialize() != 0)
+        return -1;
 
-    printf("gBuffer size: %d\n", BUFFER_HEIGHT * BUFFER_WIDTH);
+    size screenSize = Fb_GetScreenSize();
 
-	gShowingTerminalPrompt = 0;
-    gBuffer = (char**)pcalloc(sizeof(char), BUFFER_HEIGHT * BUFFER_WIDTH);
-    gTerminal = (char**)pcalloc(sizeof(char), TERMINAL_HEIGHT * TERMINAL_WIDTH);
+    // TODO NOW:  Calculate gTerminalSize + gBufferSize
+    gTerminalSize.width = (screenSize.width / (CHAR_WIDTH + CHAR_HSPACING)) - 1;
+    gTerminalSize.height = (screenSize.height / CHAR_HEIGHT + CHAR_VSPACING) - 1;
+
+    // For now we don't really bufer...
+    gBufferSize.width = gTerminalSize.width;
+    gBufferSize.height = gTerminalSize.height;
+
+#ifdef TERMINAL_DEBUG
+    printf("Terminal size: %dx%d based on resolution %dx%d\n", gTerminalSize.width, gTerminalSize.height, screenSize.width, screenSize.height);
+#endif
+
+    gBuffer = (char**)pcalloc(sizeof(char), gBufferSize.height * gBufferSize.width);
+    gTerminal = (char**)pcalloc(sizeof(char), gTerminalSize.height * gTerminalSize.width);
 	
     if (gBuffer == 0)
     {
         Uart_SendString("Failed to allocate terminal buffer\n");
         return -1;
     }
-
-	if(Fb_Initialize() != 0)
-		return -1;
-
+    
 	unsigned int i;
 	for(i = 0; i < 256; i++)
-		gInputBuffer[i] = 0; // TODO: we don't have to do this, bss is initialized to 0
+		gInputBuffer[i] = 0; // TODO: we don't have to do this, bss is initialized to 0?
 		
-	gInputBufferIndex = 0;
-
 	// Initial setup of buffers etc
 	Terminal_Clear();
 
@@ -245,13 +250,12 @@ int Terminal_GetIsInitialized(void)
 	return gTerminalInitialized;
 }
 
-
 void Terminal_back(void)
 {
 	if(gBufferCaretCol == 0)
 	{
 		gBufferCaretRow--;
-		gBufferCaretCol = BUFFER_WIDTH - 1;
+		gBufferCaretCol = gBufferSize.width - 1;
 		
 		// We have to go back up a row
 		gBuffer[gBufferCaretRow][gBufferCaretCol] = ' ';
@@ -325,7 +329,7 @@ void print_internal(char* string, unsigned int length, unsigned int important)
 				gBuffer[gBufferCaretRow][gBufferCaretCol++] = ' ';
 				
 				// Make sure we move to the next row if we reach the end of the current row
-				if(gBufferCaretCol >= BUFFER_WIDTH - 1)
+				if(gBufferCaretCol >= gBufferSize.width - 1)
 				{
 					gBufferCaretCol = 0;
 					gBufferCaretRow++;
@@ -343,7 +347,7 @@ void print_internal(char* string, unsigned int length, unsigned int important)
             Uart_Send(string[i]);
 		}
 		
-		if(gBufferCaretCol < BUFFER_WIDTH - 1)
+        if (gBufferCaretCol < gBufferSize.width - 1)
 		{
 			gBufferCaretCol++;
 		}
@@ -354,7 +358,7 @@ void print_internal(char* string, unsigned int length, unsigned int important)
 			gBufferCaretCol = 0;
 		}
 		
-		if(gBufferCaretRow >= BUFFER_HEIGHT)
+        if (gBufferCaretRow >= gBufferSize.height)
 		{
 			Terminal_Clear();
 			gBufferCaretRow = 0;
