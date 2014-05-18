@@ -89,6 +89,7 @@
     <ClInclude Include="..\include\util\utilities.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\memorymap.c" />
     <ClCompile Include="..\source\debugging.c" />
     <ClCompile Include="..\source\elf.c" />
     <ClCompile Include="..\source\fs\fat32driver.c" />
@@ -119,6 +120,9 @@
     <ClCompile Include="..\source\util\utilities.c" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\.gitignore" />
+    <None Include="..\makefile" />
+    <None Include="..\README.md" />
     <None Include="..\source\asm\interrupt_handlers.S" />
     <None Include="..\source\asm\irq.s" />
     <None Include="..\source\asm\mmu.S" />

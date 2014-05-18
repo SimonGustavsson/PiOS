@@ -46,6 +46,9 @@
     <Filter Include="Source Files\asm">
       <UniqueIdentifier>{db50f4a1-3691-45f0-adf2-8999b8dab25f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Project">
+      <UniqueIdentifier>{6646d6cb-c3c8-4464-a46d-73bcd37be7f2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="readme.txt" />
@@ -239,6 +242,9 @@
     <ClCompile Include="..\source\init.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\memorymap.c">
+      <Filter>Project</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\source\asm\utility.s">
@@ -255,6 +261,15 @@
     </None>
     <None Include="..\source\asm\mmu.S">
       <Filter>Source Files\asm</Filter>
+    </None>
+    <None Include="..\.gitignore">
+      <Filter>Project</Filter>
+    </None>
+    <None Include="..\makefile">
+      <Filter>Project</Filter>
+    </None>
+    <None Include="..\README.md">
+      <Filter>Project</Filter>
     </None>
   </ItemGroup>
 </Project>
