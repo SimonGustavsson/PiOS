@@ -1,11 +1,6 @@
 #ifndef PIOS_KEYBOARD_C
 #define PIOS_KEYBOARD_C
-//#include "types.h"
-
-typedef enum {
-    true,
-    false
-} bool;
+#include "types/types.h"
 
 typedef enum 
 {
