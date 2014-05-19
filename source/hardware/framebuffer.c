@@ -1,5 +1,8 @@
 #define CHAR_HEIGHT 10
 #define CHAR_WIDTH 6
+#define FB_BPP 16
+#define PREFERRED_WIDTH 1366
+#define PREFERRED_HEIGHT 768
 
 #include "hardware/framebuffer.h"
 #include "hardware/mailbox.h"
@@ -10,6 +13,16 @@
 unsigned int gPitch;
 unsigned int gFbAddr;
 static size gScreenSize;
+
+unsigned int Fb_GetSize(void)
+{
+    return gScreenSize.width * gScreenSize.height * FB_BPP;
+}
+
+unsigned int Fb_GetAddress(void)
+{
+    return gFbAddr;
+}
 
 size Fb_GetScreenSize(void)
 {
@@ -49,7 +62,7 @@ void Fb_DrawColoredCharacterAt(unsigned int ch, unsigned int x, unsigned int y, 
 			}
 			else
 			{
-                Fb_DrawPixel(x + i, y + row, 0x0000);
+                Fb_DrawPixel(x + i, y + row, 0x1212); // Same as background
 			}
 			i++;
 		}
@@ -104,29 +117,29 @@ static int SetupScreen()
 	mailbuffer[c++] = 0x00048003;	 // Tag id (set physical size)
 	mailbuffer[c++] = 8;			 // Value buffer size (bytes)
 	mailbuffer[c++] = 8;			 // Req. + value length (bytes)
-	mailbuffer[c++] = 480;           // Horizontal resolution
-	mailbuffer[c++] = 648;           // Vertical resolution
+	mailbuffer[c++] = PREFERRED_WIDTH;           // Horizontal resolution
+	mailbuffer[c++] = PREFERRED_HEIGHT;           // Vertical resolution
 
-	mailbuffer[c++] = 0x00048004;	 // Tag id (set virtual size)
-	mailbuffer[c++] = 8;			 // Value buffer size (bytes)
-	mailbuffer[c++] = 8;			 // Req. + value length (bytes)
-    mailbuffer[c++] = 480;	         // Horizontal resolution
-    mailbuffer[c++] = 648;           // Vertical resolution
+	mailbuffer[c++] = 0x00048004;	   // Tag id (set virtual size)
+	mailbuffer[c++] = 8;			   // Value buffer size (bytes)
+	mailbuffer[c++] = 8;			   // Req. + value length (bytes)
+    mailbuffer[c++] = PREFERRED_WIDTH; // Horizontal resolution
+    mailbuffer[c++] = PREFERRED_HEIGHT;// Vertical resolution
 
-	mailbuffer[c++] = 0x00048005;	 // Tag id (set depth)
-	mailbuffer[c++] = 4;		     // Value buffer size (bytes)
-	mailbuffer[c++] = 4;			 // Req. + value length (bytes)
-	mailbuffer[c++] = 16;			 // 16 bpp
+	mailbuffer[c++] = 0x00048005;	   // Tag id (set depth)
+	mailbuffer[c++] = 4;		       // Value buffer size (bytes)
+	mailbuffer[c++] = 4;			   // Req. + value length (bytes)
+    mailbuffer[c++] = FB_BPP;	       // 16 bpp
 
-	mailbuffer[c++] = 0x00040001;	 // Tag id (allocate framebuffer)
-	mailbuffer[c++] = 8;			 // Value buffer size (bytes)
-	mailbuffer[c++] = 4;			 // Req. + value length (bytes)
-	mailbuffer[c++] = 16;			 // Alignment = 16
-	mailbuffer[c++] = 0;			 // Space for response
+	mailbuffer[c++] = 0x00040001;	   // Tag id (allocate framebuffer)
+	mailbuffer[c++] = 8;			   // Value buffer size (bytes)
+	mailbuffer[c++] = 4;			   // Req. + value length (bytes)
+    mailbuffer[c++] = FB_BPP;          // Alignment = 16
+	mailbuffer[c++] = 0;			   // Space for response
 
-	mailbuffer[c++] = 0;			 // Terminating tag
+	mailbuffer[c++] = 0;			   // Terminating tag
 
-	mailbuffer[0] = c*4;			 // Buffer size
+	mailbuffer[0] = c*4;			   // Buffer size
 
 	Mailbox_Write(8, mailbufferAddr);
 	
@@ -227,6 +240,14 @@ int Fb_Initialize()
 #endif
 		return result;
 	}
+
+    // Draw background color to make it visually obvious how large the drawing area is
+    unsigned int i, j;
+    for (i = 0; i < gScreenSize.width; i++)
+    {
+        for (j = 0; j < gScreenSize.height; j++)
+            Fb_DrawPixel(i, j, 0x1212);
+    }
 	
 	return result;
 }
