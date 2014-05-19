@@ -10,7 +10,7 @@
 #define SM_STACK_PA_START    0x0A827000
 #define UD_STACK_PA_START    0x01008000
 #define ABORT_STACK_PA_START 0x01208000
-
+// NOTE Frmebuffer is at:    0x0C006000
 #define KERNEL_PA_START 0x00000000
 #define KERNEL_PA_PT 0x000A8000 // was F
 #define KERNEL_PA_TMP_TTB0 (0x4000)
@@ -49,7 +49,7 @@
 //
 // Linker constants
 // 
-#define QEMU 1
+//#define QEMU 1
 
 #ifdef QEMU
 	#define LD_KRNL_ORIGIN 0x10000

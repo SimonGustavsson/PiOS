@@ -2,6 +2,7 @@
 #include "fs/fat32driver.h"
 #include "fs/fs.h"
 #include "init.h"
+#include "hardware/framebuffer.h"
 #include "hardware/interrupts.h"
 #include "hardware/uart.h"
 #include "hardware/paging.h"
@@ -61,7 +62,22 @@ void sysinit_stage2(void)
 
     // Initialize terminal first so we can print error messages if any (Hah, unlikely!)
     Terminal_Initialize();
+    
+    // Murrrrrrr, Pi Framebuffer
+    size fbSize = Fb_GetScreenSize();
+    
+    unsigned int fbSizeInMB = (((fbSize.width * fbSize.height * 16) / 1024) / 1024) + 1;
+    unsigned int i, addr;
+    for (i = 0; i < fbSizeInMB; i++)
+    {
+        addr = 0xC006000 + (i << 20);
+        kernel_pt_set((unsigned int*)KERNEL_PA_TMP_TTB0, addr, addr, 0);
+        FlushTLB(addr);
+    }
 
+    Fb_Clear();
+    Terminal_Clear();
+    
     // Verify page table by attempting to access unmapped memory
     //printf("Testing translation fault by accessing unmapped memory...\n");
     //*((unsigned int*)0x10E00000) = 2;

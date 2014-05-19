@@ -13,3 +13,5 @@ size Fb_GetScreenSize(void);
 
 // Gets the size of the framebuffer in memory (in bytes)
 unsigned int Fb_GetSize(void);
+
+void Fb_Clear(void);

@@ -213,6 +213,17 @@ static int GetPitch()
 	return 0;
 }
 
+void Fb_Clear(void)
+{
+    // Draw background color to make it visually obvious how large the drawing area is
+    unsigned int i, j;
+    for (i = 0; i < gScreenSize.width; i++)
+    {
+        for (j = 0; j < gScreenSize.height; j++)
+            Fb_DrawPixel(i, j, 0x1212);
+    }
+}
+
 int Fb_Initialize()
 {	
 	unsigned int result = 0;
@@ -241,13 +252,5 @@ int Fb_Initialize()
 		return result;
 	}
 
-    // Draw background color to make it visually obvious how large the drawing area is
-    unsigned int i, j;
-    for (i = 0; i < gScreenSize.width; i++)
-    {
-        for (j = 0; j < gScreenSize.height; j++)
-            Fb_DrawPixel(i, j, 0x1212);
-    }
-	
 	return result;
 }

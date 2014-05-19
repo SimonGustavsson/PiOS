@@ -16,14 +16,14 @@ int cmain(void)
 
     Uart_SendString("Initialization complete. Go main!\n");
 
-    if(Terminal_GetIsInitialized() == 0)
+    if (Terminal_GetIsInitialized() == 0)
     {
         Uart_SendString("Failed to initialize terminal, * * * HALTING * * *\n");
-        while(1);
+        while (1);
     }
 
-	Terminal_PrintWelcome();
-	Terminal_PrintPrompt();
+    Terminal_PrintWelcome();
+    Terminal_PrintPrompt();
 
     // Create two dummy tasks and add them to the scheduler
     task_entry_func dummy1_entry = Task_LoadElf("/dev/sd0/dummy1.elf", USR_PA_START);
@@ -43,7 +43,7 @@ int cmain(void)
         dummy2 = Task_Create(dummy2_entry, "Dummy2");
         TaskScheduler_EnqueueTask(dummy2);
     }
-
+    
     printf("Starting task scheduler...\n");
 
     //TaskScheduler_Start();

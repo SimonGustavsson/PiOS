@@ -30,13 +30,14 @@ int kernel_pt_initialize(unsigned int* ttb1, unsigned int* tmp_ttb0)
     // during the very early stages of boot while we're enabling paging
     // and before we have a chance to jump into the high-memory mapping of the kernel
     // Note that TTB0 does NOT map the peripherals, we have to jump to high-memory before accessing them
-    for (i = 0; i < 200; i++)
+    for (i = 0; i < 20; i++)
         kernel_pt_set(tmp_ttb0, (i << 20), (i << 20), PAGE_CACHEABLE | PAGE_BUFFERABLE);
     
     // Qemu Frame buffer, starts at 0x30200000, not sure how big it is?
-    for(i = 0; i < 100; i++)
-        kernel_pt_set(tmp_ttb0, 0x30200000 + (i << 20), 0x30200000 + (i << 20), 0);
+    //for(i = 0; i < 100; i++)
+    //    kernel_pt_set(tmp_ttb0, 0x30200000 + (i << 20), 0x30200000 + (i << 20), 0);
     
+
     do_mmu(tmp_ttb0, ttb1, TTBC_SPLIT_8KB);
         
     return 0;
@@ -49,7 +50,7 @@ int user_pt_initialize(unsigned int* pt, unsigned int physical_start)
     // The level 2 table is stored right after the level 1 entry
     unsigned int first_lvl2_addr = (unsigned int)(pt + 1);
     unsigned int first_lvl2_addr_base = (first_lvl2_addr >> 10);
-
+    
     // Add one level 1 entry, user processes are currently limited to 1 MB :-)
     *pt = (first_lvl2_addr_base << 10) | PAGE_AP_RW | PAGE_PRESENT | PAGE_CACHEABLE | PAGE_BUFFERABLE | PT_TYPE_COARSE;
 
