@@ -27,7 +27,11 @@ void FlushCache(void)
 
 void FlushTLB(unsigned int mva)
 {
-    asm volatile ("MCR P15, 0, r0, c8, c7, 1" : : [mva] "r" (mva));
+    // c5 = Instruction TLB
+    // c6 = Data TLB
+    // c7 = Unified TLB
+    // TODO: Make generic and take in arg which to clear
+    asm volatile ("MCR P15, 0, r0, c8, c6, 1" : : [mva] "r" (mva));
 }
 
 void Pallocator_Initialize(void)

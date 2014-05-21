@@ -25,6 +25,7 @@
 #define KERNEL_VA_START 0x80000000
 #define DYN_MEM_VA_START (KERNEL_VA_START + 0x01209000)
 #define USR_VA_START 0x00000000
+#define KERNEL_PT_VA_START (KERNEL_VA_START + KERNEL_PA_PT)
 
 // Stacks
 #define FIQ_STACK_VA_START   (KERNEL_VA_START + FIQ_STACK_PA_START) 
@@ -45,6 +46,10 @@
 #define PERIPHERAL_VA_UART          (PERIPHERAL_VA_START + 0x201000)
 #define PERIPHERAL_VA_MINIUART      (PERIPHERAL_VA_START + 0x215000)
 #define PERIPHERAL_VA_EMMC          (PERIPHERAL_VA_START + 0x300000)
+
+// Note: The offset is the physical address of the FB, well, at least
+//       The address it has been allocated to in my tests
+#define FRAMEBUFFER_VA_START (KERNEL_VA_START + 0x0C006000)
 
 //
 // Linker constants

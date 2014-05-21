@@ -45,7 +45,8 @@ void sysinit_stage2(void)
     // Setup the interrupt vector
     asm volatile("mcr p15, 0, %[addr], c12, c0, 0" : : [addr] "r" (&interrupt_vector));
 
-    // Trash the temporary TTB0
+    // TODO: Trash the temporary TTB0, we shouldn't need it past this point
+    //       Currently I think the emmc driver uses a hardcoded buffer in low memory
 
     // First things first, enable the serial so we can send the deployer some feedback
     Uart_Initialize();
@@ -57,22 +58,24 @@ void sysinit_stage2(void)
 
     Uart_SendString("Welcome to PiOS!\n\n");
 
-    // Initialize the dynamic memory allocator
     Pallocator_Initialize();
 
     // Initialize terminal first so we can print error messages if any (Hah, unlikely!)
     Terminal_Initialize();
     
-    // Murrrrrrr, Pi Framebuffer
-    size fbSize = Fb_GetScreenSize();
-    
-    unsigned int fbSizeInMB = (((fbSize.width * fbSize.height * 16) / 1024) / 1024) + 1;
+    // Now that the terminal is initialized, add a VA mapping for it
+    size fbSize = Fb_GetScreenSize();    
+    unsigned int fb_phy_addr = Fb_GetPhyAddr();
+    unsigned int fbSizeInMB = (((fbSize.width * fbSize.height * FB_BPP) / 1024) / 1024) + 1;
+
     unsigned int i, addr;
     for (i = 0; i < fbSizeInMB; i++)
     {
-        addr = 0xC006000 + (i << 20);
-        kernel_pt_set((unsigned int*)KERNEL_PA_TMP_TTB0, addr, addr, 0);
-        FlushTLB(addr);
+        // Note: At this point we still have a 1:1 mapping of the kernel, so we can use
+        // The physical address of the page table
+        addr = fb_phy_addr + (i << 20);
+        kernel_pt_set((unsigned int*)KERNEL_PT_VA_START, addr, FRAMEBUFFER_VA_START + (i << 20), 0);
+        FlushTLB(addr);        
     }
 
     Fb_Clear();

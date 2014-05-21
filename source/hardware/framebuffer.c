@@ -1,11 +1,6 @@
-#define CHAR_HEIGHT 10
-#define CHAR_WIDTH 6
-#define FB_BPP 16
-#define PREFERRED_WIDTH 1366
-#define PREFERRED_HEIGHT 768
-
 #include "hardware/framebuffer.h"
 #include "hardware/mailbox.h"
+#include "memory_map.h"
 #include "myfont.h"
 #include "types/string.h"
 #include "types/types.h"
@@ -19,7 +14,7 @@ unsigned int Fb_GetSize(void)
     return gScreenSize.width * gScreenSize.height * FB_BPP;
 }
 
-unsigned int Fb_GetAddress(void)
+unsigned int Fb_GetPhyAddr(void)
 {
     return gFbAddr;
 }
@@ -35,7 +30,7 @@ void Fb_DrawPixel(unsigned int x, unsigned int y, unsigned short int color)
 	unsigned int offset;
 	
 	offset = (y * gPitch) + (x * 2);
-	ptr = (unsigned short int*)(gFbAddr + offset);
+    ptr = (unsigned short int*)(FRAMEBUFFER_VA_START + offset);
 	*ptr = color;
 }
 
