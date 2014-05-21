@@ -47,6 +47,10 @@ void sysinit_stage2(void)
 
     // TODO: Trash the temporary TTB0, we shouldn't need it past this point
     //       Currently I think the emmc driver uses a hardcoded buffer in low memory
+    unsigned int cur = 0;
+    for (cur = 0; cur < 8192; cur++)
+        *(char*)KERNEL_PA_TMP_TTB0 = 0;
+
 
     // First things first, enable the serial so we can send the deployer some feedback
     Uart_Initialize();
