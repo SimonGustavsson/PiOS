@@ -4,6 +4,8 @@
 #define INT_MIN (-2147483647 - 1)
 #define INT_MAX 2147483647
 
+static int my_vsscanf_core(char* s, int sLength, const char* format, va_list ap, int useLength);
+
 int my_strlen(char* str)
 {
 	int length = 0;
@@ -105,187 +107,73 @@ void itoa(int number, char* buf)
 		*--buf = '-';
 }
 
-void dec_to_hex(char* buf, unsigned int dec)
+void dec_to_hex(char* buf, unsigned int dec, unsigned int lowerCase)
 {
-	unsigned int reminder[50];
-	unsigned int length = 0;
-	char* buf_ptr = buf;
+    unsigned int reminder[50];
+    unsigned int length = 0;
+    char* buf_ptr = buf;
 
     if (dec == 0)
     {
         *buf_ptr++ = '0';
     }
 
-	while(dec > 0)
-	{
-		reminder[length] = dec % 16;
-		dec = dec / 16;	
-		length++;
-	}
-    
-	int i;
-	for(i = length - 1; i >= 0; i--)
-	{
-		switch(reminder[i])
-		{
-            case 0:
-                *buf_ptr++ = '0';
-                break;
-			case 10:
-				*buf_ptr++ = 'A';
-				break;
-			case 11:
-				*buf_ptr++ = 'B';
-				break;
-			case 12:
-				*buf_ptr++ = 'C';
-				break;
-			case 13:
-				*buf_ptr++ = 'D';
-				break;
-			case 14:
-				*buf_ptr++ = 'E';
-				break;
-            case 15:
-                *buf_ptr++ = 'F';
-                break;
-            case 16:
-                *buf_ptr++ = '1';
-                *buf_ptr++ = '0';
-                break;
-			default:
-				{
-					// Display as digits
-					char itoa_buf[10];
-					itoa(reminder[i], itoa_buf);
-
-					my_strcpy(itoa_buf, buf_ptr);
-
-					buf_ptr += my_strlen(itoa_buf);
-				break;
-				}
-		}
-	}
-
-	*buf_ptr = '\0';
-}
-
-// Counts number of digits in an integer
-static int int_digit_count(int n) {
-    if (n < 0) n = (n == INT_MIN) ? INT_MAX : -n;
-    if (n < 10) return 1;
-    if (n < 100) return 2;
-    if (n < 1000) return 3;
-    if (n < 10000) return 4;
-    if (n < 100000) return 5;
-    if (n < 1000000) return 6;
-    if (n < 10000000) return 7;
-    if (n < 100000000) return 8;
-    if (n < 1000000000) return 9;
-    return 10;
-}
-
-int my_scanf(char* buf, unsigned int buf_len, char* str, ...)
-{
-    va_list ap;
-    va_start(ap, str);
-
-    char* res = buf;
-
-    // Flags:
-    /*
-    - : Left justify (wut?)
-    + : Preceed number with + or -
-    # : Used with x and X to print 0x, for a,e,f,g print comma
-    0-9 : Specifies number of chars to write. padds if less
-    * : Width specified with next argument
-
-
-    */
-    unsigned int chars_written = 0;
-    unsigned int max_len = 0;
-    int reading_len = 0;
-    int arg_chars_read = 0;
-    char* curArg = 0;
-    do
+    while (dec > 0)
     {
-        chars_written++;
+        reminder[length] = dec % 16;
+        dec = dec / 16;
+        length++;
+    }
 
-        char cur = *str;
-        char next = *(str + 1);
-        if (cur != '%' && reading_len != 1)
+    if (lowerCase)
+        lowerCase = 32;
+
+    int i;
+    for (i = length - 1; i >= 0; i--)
+    {
+        switch (reminder[i])
         {
-            *res++ = cur;
-            continue;
-        }
-
-        switch (next)
-        {
-        case 'c':
-            // Character
+        case 0:
+            *buf_ptr++ = '0';
             break;
-        case 'd':
-        {
-                    // Signed decimal int
-                    int arg = va_arg(ap, int);
-
-                    itoa(arg, res);
-                    str += int_digit_count(arg);
-        }
+        case 10:
+            *buf_ptr++ = 'A' + lowerCase;
             break;
-        case 's':
-            // String
-            curArg = (char*)va_arg(ap, int);
-            do
-            {
-                *res++ = *curArg++;
-                arg_chars_read++;
-                chars_written++;
-            } while (*curArg != 0 && (max_len == 0 || arg_chars_read < max_len));
-
-            str++;
+        case 11:
+            *buf_ptr++ = 'B' + lowerCase;
             break;
-        case 'x':
-            // unsigned hexadecimal int
+        case 12:
+            *buf_ptr++ = 'C' + lowerCase;
             break;
-        case 'X':
-            // unsigned hexadecimal int (uppercase)
+        case 13:
+            *buf_ptr++ = 'D' + lowerCase;
             break;
-        case 'f':
-            // Decimal float
+        case 14:
+            *buf_ptr++ = 'E' + lowerCase;
             break;
-        case 'a':
-            // Hexadecimal float
+        case 15:
+            *buf_ptr++ = 'F' + lowerCase;
             break;
-        case 'A':
-            // Hexadecimal float (uppercase)
-            break;
-        case 'p':
-            // Pointer address
-            break;
-        case '%':
-            // Escaped %
-            *res++ = cur;
-            str += 2;
+        case 16:
+            *buf_ptr++ = '1';
+            *buf_ptr++ = '0';
             break;
         default:
-            if (next >= '0' && next <= '9')
             {
-                max_len = (max_len * 10) + (next - '0');
-                // Length specifier
-                reading_len = 1;
+                // Display as digits
+                char itoa_buf[10];
+                //itoa(reminder[i], itoa_buf);
+                itoa(reminder[i], itoa_buf);
 
-                if (max_len > buf_len)
-                    return -1; // Invalid
+                my_strcpy(itoa_buf, buf_ptr);
 
-                continue;
+                buf_ptr += my_strlen(itoa_buf);
+                break;
             }
-            break;
         }
-        reading_len = 0;
-    } while (*str++ != 0);
+    }
 
-    return 0;
+    *buf_ptr = '\0';
 }
 
 void printf_i(char* text, ...)
@@ -327,7 +215,7 @@ void printf_i(char* text, ...)
 				char hex_buf[50];
 				char* hex_buf_ptr = &hex_buf[0];
 
-				dec_to_hex(hex_buf_ptr, va_arg(ap, int));
+				dec_to_hex(hex_buf_ptr, va_arg(ap, int), 0);
 				
 				my_strcpy(hex_buf, result);
 				
@@ -402,7 +290,7 @@ void vprintf_s(char* text, unsigned int length, va_list ap)
 				char hex_buf[50];
 				char* hex_buf_ptr = &hex_buf[0];
 
-				dec_to_hex(hex_buf_ptr, va_arg(ap, int));
+				dec_to_hex(hex_buf_ptr, va_arg(ap, int), 0);
 				
 				my_strcpy(hex_buf, result);
 				
@@ -422,4 +310,265 @@ void vprintf_s(char* text, unsigned int length, va_list ap)
 	}while(*text++ != '\0');
 	
     Terminal_Print(res, my_strlen(res));
+}
+
+int my_sscanf(char* s, const char* format, ...)
+{
+    va_list args;
+    va_start(args, format);
+
+    int retVal = my_vsscanf_core(s, -1, format, args, 0);
+
+    va_end(args);
+
+    return retVal;
+}
+
+int my_vsscanf(char* s, const char* format, va_list ap)
+{
+    return my_vsscanf_core(s, -1, format, ap, 0);
+}
+
+int my_sccanf_s(char* s, int sLength, const char* format, ...)
+{
+    va_list args;
+    va_start(args, format);
+
+    int retVal = my_vsscanf_core(s, sLength, format, args, 1);
+
+    va_end(args);
+
+    return retVal;
+}
+
+int my_vsscanf_s(char* s, int sLength, const char* format, va_list ap)
+{
+    return my_vsscanf_core(s, sLength, format, ap, 1);
+}
+
+static int my_vsscanf_core(char* s, int sLength, const char* format, va_list ap, int useLength)
+{
+    /* TODO: Flags
+    - : Left justify (wut?)
+    + : Preceed number with + or -
+    # : Used with x and X to print 0x, for a,e,f,g print comma
+    */
+
+    char* res = s;
+    unsigned int width = 0;
+    int readWidth = 0;
+    char* curArg = 0;
+    int argsRead = 0;
+    int resLen = 0; // for _s
+
+    do
+    {
+        char cur = *format;
+        char next = *(format + 1);
+        if (cur != '%' && readWidth != 1)
+        {
+            *res++ = cur;
+            resLen++; // for _s
+        }
+        else
+        {
+            // If  we were reading length and reached the end of the length
+            if (readWidth)
+            {
+                next = cur;
+            }
+
+            switch (next)
+            {
+            case 'c': // Unsigned Character
+            {
+                char charArg = (unsigned char)va_arg(ap, int);
+                argsRead++;
+
+                *res++ = charArg;
+                resLen++; // for _s
+
+                format++; // As this was a format specifier, make sure we skip 2
+
+                break;
+            }
+            case 'd': // Signed decimal int
+            {
+                int arg = va_arg(ap, int);
+                argsRead++;
+                char ds[12];
+
+                // TODO: itoa needs to return the number of digits instead of using int_digit_count
+                itoa(arg, &ds[0]);
+                int argDigitCount = int_digit_count(arg);
+
+                // Copy it over to result
+                int maxLen = width > 0 ? width : argDigitCount;
+
+                int i;
+                for (i = 0; i < maxLen; i++)
+                    *res++ = ds[i];
+
+                resLen += maxLen; // for _s
+
+                if (width == 0)
+                    format++; // As this was a format specifier, make sure we skip 2
+
+                // Done with this width specifier
+                width = 0;
+
+                break;
+            }
+            case 's': // String
+            {
+                curArg = (char*)va_arg(ap, int);
+
+                // Invalid string, cancel out before we attempt to read a null pointer
+                if (curArg == 0)
+                    return argsRead;
+
+                argsRead++;
+
+                int arg_chars_read = 0;
+                do
+                {
+                    *res++ = *curArg++;
+                    arg_chars_read++;
+                    resLen++; // for _s
+                } while (*curArg != 0 && (width == 0 || arg_chars_read < width));
+
+                if (width == 0)
+                    format++;
+
+                // Done with this width specifier
+                width = 0;
+
+                break;
+            }
+            case 'x': // unsigned hexadecimal int
+            case 'X': // unsigned hexadecimal int (uppercase)
+            case 'p': // Pointer - Write hex address
+            case 'P': // Pointer - Write hex address (uppercase)
+            {
+                unsigned int lowerCase = next == 'x' || next == 'p';
+
+                int hexArg = va_arg(ap, int);
+                argsRead++;
+
+                char hexStr[9];
+                dec_to_hex(hexStr, hexArg, lowerCase);
+
+                if (width > 0)
+                {
+                    int zeroesToPad = width - my_strlen(hexStr);
+
+                    // Hex string limit of 8 characters (32-bit)
+                    if (zeroesToPad > 8 - my_strlen(hexStr))
+                        zeroesToPad = 8 - my_strlen(hexStr);
+
+                    if (zeroesToPad > 0)
+                    {
+                        // Shift the entire string over
+                        unsigned int i, j;
+                        j = 0;
+                        for (i = 8 - zeroesToPad; i > 0; i--)
+                        {
+                            // Fix this nasty shit
+                            hexStr[zeroesToPad + i - 1] = hexStr[8 - zeroesToPad - j - 1];
+                            j++;
+                        }
+
+                        // Insert zeroes
+                        for (i = 0; i < zeroesToPad; i++)
+                            hexStr[i] = '0';
+
+                        hexStr[8] = 0; // Nulterminate
+                    }
+                }
+                
+                // Pointer - Prefix with 0x
+                if (next == 'p' || next == 'P')
+                {
+                    *res++ = '0';
+                    *res++ = 'x';
+                }
+
+                my_strcpy(&hexStr[0], res);
+                resLen += my_strlen(hexStr); // for _s
+                res += my_strlen(hexStr);
+
+                // Format specifier, skip 2
+                if (width == 0)
+                    format++;
+
+                // Done with this width specifier
+                width = 0;
+
+                break;
+            }
+            case 'f': // TODO: Decimal float
+                break;
+            case 'a': // TODO: Hexadecimal float
+                break;
+            case 'A': // TODO: Hexadecimal float (uppercase)
+                break;
+            case '%': // Escaped %
+                *res++ = cur;
+                format += 2;
+                break;
+            case '*': // Width specified in arg
+            {
+                int widthArg = va_arg(ap, int);
+                argsRead++;
+
+                width = widthArg;
+
+                // for _s version
+                if (useLength && width > sLength)
+                {
+                    printf("Invalid width arg passed to scanf, arg %d max %d\n", width, sLength);
+                    return -1;
+                }
+
+                format++;
+                readWidth = 1;
+
+                continue;
+            }
+            default:
+                // Length specifier?
+                if (next >= '0' && next <= '9')
+                {
+                    format++; // Skip past the % and read the length
+                    do
+                    {
+                        width = (width * 10) + (next - '0');
+
+                        // for _s versions
+                        if (useLength && width > sLength)
+                            return -1; // Invalid
+                        format++;
+                        next = *format;
+                    } while (next >= '0' && next <= '9');
+
+                    readWidth = 1;
+
+                    // Rewind so we can read the format type
+                    format--;
+
+                    continue;
+                }
+
+                break;
+            }
+        }
+
+        // We've handled one arg after reading the length specifier, reset flag
+        readWidth = 0;
+    } while (*++format != 0 && (useLength ? resLen < sLength : 1));
+
+    // Null-terminate% the string
+    *res = 0;
+
+    return argsRead;
 }
