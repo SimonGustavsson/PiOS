@@ -27,18 +27,18 @@ irq:
 data_abort:	
 	push {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,lr}
     
-	;@ Address where it happened
+	;@ Pass the address where it happened as the 1st argument
 	subs r0, lr, #8
 
-	;@ Get the error type
+	;@ Pass the error type as the 2nd argument
 	mrc p15, 0, r1, c5, c0, 0
 	and r1, r1, #0xF
 	
-	;@ Get address that was accessed
+	;@ Pass the address that was accessed as the 3rd argumnet
 	mrc p15, 0, r2, c6, c0, 0
 
-    ;@ Throw in the stack pointer aswell for stack trace
-    mov r3, sp
+    ;@ Pass the Fault Status Register as the 4th argument
+    mrc p15, 0, r3, c5, c0, 0
 
 	bl c_abort_data_handler
 	

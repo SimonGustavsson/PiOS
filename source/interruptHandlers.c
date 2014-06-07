@@ -23,13 +23,15 @@ void c_undefined_handler(void* lr)
     wait(INTERRUPT_HANDLER_DELAY);
 }
 
-void c_abort_data_handler(unsigned int address, unsigned int errorType, unsigned int accessedAddr, unsigned int* sp)
+void c_abort_data_handler(unsigned int address, unsigned int errorType, unsigned int accessedAddr, unsigned int fault_reg)
 {
-    printf("Instruction at 0x%h caused a data abort accessing memory at 0x%h, \n", address, accessedAddr);
-
+    // NOTE: fault_reg isn't used (yet), we should just use that and extract the Fault status from
+    // it here as opposed to doing it in asm and pass it in as a separate argument
+    printf("Instruction at 0x%h caused a data abort accessing memory at 0x%h (", address, accessedAddr);
     print_abort_error(errorType);
-
-    Debug_PrintCallstack();
+    printf(")\n");
+    
+    //Debug_PrintCallstack();
  
     wait(INTERRUPT_HANDLER_DELAY);
 }
@@ -108,25 +110,61 @@ void c_irq_handler(volatile unsigned int* r0)
 
 void print_abort_error(unsigned int errorType)
 {
+    // Documentation for the Fault register (Which is where the errorType code is obtained from):
+    // http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0290g/Babbcbhc.html
     switch (errorType)
     {
+    case 0x0:
+        // This is the reset value
+        printf("No error");
+        break;
+    case 0x1:
+        printf("Alignment fault");
+        break;
+    case 0x2:
+        printf("Instruction debug event");
+        break;
+    case 0x3:
+        printf("Access bit fault on section");
+        break;
+    case 0x4:
+        printf("No function");
+        break;
     case 0x5:
-        printf("Translation fault.\n");
+        printf("Translation section fault");
+        break;
+    case 0x6:
+        printf("Access bit fault on page");
+        break;
+    case 0x7:
+        printf("Translation page fault");
         break;
     case 0x8:
-        printf("External abort on noncachable.\n");
+        printf("Precise external abort");
         break;
     case 0x9:
-        printf("Failed to access memory, domain error.\n");
+        printf("Domain section fault");
+        break;
+    case 0xA:
+        printf("No function");
+        break;
+    case 0xB:
+        printf("Domain page fault");
+        break;
+    case 0xC:
+        printf("External abort on translation, first level table");
         break;
     case 0xD:
-        printf("Permission denied accessing memory\n");
+        printf("Permission section fault");
+        break;
+    case 0xE:
+        printf("External abort on translation, second level table");
+        break;
+    case 0xF:
+        printf("Permission page fault");
         break;
     default:
-        if ((errorType >> 0x2) == 0)
-            printf("Abort misaligned memory access.\n");
-        else
-            printf("Unknown abort exception error code: %d.\n", errorType);
+        printf("print_abort_error() called with invalid errorType '%d'", errorType);
         break;
     }
 }
