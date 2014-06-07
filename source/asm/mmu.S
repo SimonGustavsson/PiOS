@@ -35,9 +35,10 @@ do_mmu:
     orr r1, #1
     mcr p15, 0, r1, c2, c0, 1
     
-    ;@ Invalidate cache
+    ;@ Flush prefetch buffer
     mov r1, #0
 	mcr p15, 0, r1, c7, c5, 4
+    ;@ Invalidate Entire Data Cache
 	mcr p15, 0, r1, c7, c6, 0
 
     ;@ Enable MMU
@@ -92,6 +93,12 @@ set_ttb0:
 
     ;@ Set TTB0: (using defaults: No outer cacheable PT walks, not shared)
     mcr p15, 0, r0, c2, c0, 0
+
+    ;@ Flush prefetch buffer
+    mov r1, #0
+	mcr p15, 0, r1, c7, c5, 4
+    ;@ Invalidate Entire Data Cache
+	mcr p15, 0, r1, c7, c6, 0
 
     bx lr
     
