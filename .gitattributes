@@ -1,0 +1,6 @@
+# Enable line ending normalization
+* text=auto
+
+# Don't bother normalizing VS projects
+*.vcxproj eol=crlf
+*.filters eol=crlf
