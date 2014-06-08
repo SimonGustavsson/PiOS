@@ -7,11 +7,13 @@
 #include "types/queue.h"
 #include "hardware/interrupts.h"
 #include "stddef.h"
+#include "memory_map.h"
 
 // This is really the heart of PiOS - this is where PiOS sits constantly
 
 static taskScheduler* gScheduler;
 static unsigned int gNextTID;
+static taskmem_mapping* gTtb0Mappings;
 
 void TaskScheduler_Initialize(void)
 {
@@ -21,6 +23,19 @@ void TaskScheduler_Initialize(void)
 	gScheduler->tasks.back = 0;
 	gScheduler->tasks.front = 0;
 	gScheduler->tasks.numNodes = 0;
+
+    // Allow for 20 tasks running at the same time
+    gTtb0Mappings = (taskmem_mapping*)pcalloc(sizeof(taskmem_mapping), MAX_USER_TASKS);
+    unsigned int i;
+    for (i = 0; i < MAX_USER_TASKS; i++)
+    {
+        taskmem_mapping* cur = (gTtb0Mappings + i);
+
+        // Mappings for all tasks are right after eachother in kernel memory
+        cur->ttb0 = (unsigned int*)USER_TTB0S_START + (i * USER_PT_SIZE_IN_BYTES);
+        cur->memStart = USER_TASKS_START + (i * 0x100000);
+        cur->taskId = -1;
+    }
 
     gNextTID = 0;
 }
@@ -34,15 +49,44 @@ void TaskScheduler_Start(void)
     // Switch in first task?
 }
 
+taskmem_mapping* TaskScheduler_GetNextFreeMemory(void)
+{
+    taskmem_mapping* cur = gTtb0Mappings;
+    unsigned int i;
+    for (i = 0; i < MAX_USER_TASKS; i++)
+    {
+        // -1 is not a valid task id, this means it's free
+        if (cur->taskId == -1)
+            return cur;
+
+        cur++;
+    }
+
+    return NULL;
+}
+
 unsigned int TaskScheduler_GetNextTID(void)
 {
     // For now: Just an incremental integer, need to do someting better in the future
     return gNextTID++;
 }
 
-int TaskScheduler_Enqueue(char* taskName, char* filename, unsigned int phyAddr)
+int TaskScheduler_Enqueue(char* taskName, char* filename)
 {
-    task_entry_func func = Task_LoadElf(filename, phyAddr);
+    taskmem_mapping* mapping = TaskScheduler_GetNextFreeMemory();
+
+    if (mapping == NULL)
+    {
+        if (gScheduler->tasksRunning == MAX_USER_TASKS)
+            printf("Failed to retrieve TTB0 address for task, close a task and try again.\n");
+        else
+            printf("Failed to retrieve TTB0 address for task, not sure why...\n");
+
+        return -1;
+    }
+
+
+    task_entry_func func = Task_LoadElf(filename, (unsigned int)mapping->memStart);
     
     if (func == NULL)
     {
@@ -50,7 +94,10 @@ int TaskScheduler_Enqueue(char* taskName, char* filename, unsigned int phyAddr)
         return -1;
     }
 
-    Task* task = Task_Create(func, taskName);
+    Task* task = Task_Create(func, taskName, mapping->ttb0);
+
+    // Mark mapping as in use
+    mapping->taskId = task->id;
 
     TaskScheduler_EnqueueTask(task);
 
@@ -60,14 +107,12 @@ int TaskScheduler_Enqueue(char* taskName, char* filename, unsigned int phyAddr)
 // This is probably not going to be "task" but rather "StartInfo" or similar
 void TaskScheduler_EnqueueTask(Task* task)
 {
-	// Initialize task
+    printf("Enqueueing task '%s', Id: %d, ttb0: 0x%h, Priority: %d\n", task->name, task->id, task->ttb0, task->priority);
 
 	// Add it to the queue for processing
 	Queue_Enqueue(&gScheduler->tasks, task);
 
     gScheduler->tasksRunning++;
-
-    printf("Enqueud task (%d) %s\n", task->id, task->name);
 }
 
 void TaskScheduler_NextTask(void)

@@ -22,13 +22,13 @@ int cmain(void)
     Terminal_PrintPrompt();
 
     // Create two dummy tasks and add them to the scheduler
-    TaskScheduler_Enqueue("Dummy1", "/dev/sd0/dummy1.elf", USR_PA_START);
-    TaskScheduler_Enqueue("Dummy1", "/dev/sd0/dummy1.elf", USR_PA_START + 0x100000);
+    TaskScheduler_Enqueue("Dummy1", "/dev/sd0/dummy1.elf");
+    TaskScheduler_Enqueue("Dummy2", "/dev/sd0/dummy2.elf");
         
     // (Temporary) Test tb0 switching
     unsigned int curAddr;
-    int* test_ttb0 = (int*)USR_PA_START + 0x4000;
-    int* test2_ttb0 = (int*)USR_PA_START + 0x8000;
+    int* test_ttb0 = (int*)KERNEL_VA_START + USR_PA_START + 0x4000;
+    int* test2_ttb0 = (int*)KERNEL_VA_START + USR_PA_START + 0x8000;
     user_pt_initialize(test_ttb0, 0x100000);
     user_pt_initialize(test2_ttb0, 0x200000);
 

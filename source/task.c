@@ -73,7 +73,7 @@ task_entry_func Task_LoadElf(char* filename, unsigned int addr)
     return (task_entry_func)addr;
 }
 
-Task* Task_Create(task_entry_func entry, char* name)
+Task* Task_Create(task_entry_func entry, char* name, unsigned int* ttb0)
 {
     Task* t = (Task*)palloc(sizeof(Task));
 
@@ -85,6 +85,7 @@ Task* Task_Create(task_entry_func entry, char* name)
     t->started = 0;
     t->id = TaskScheduler_GetNextTID();
     t->name = name;
-
+    t->ttb0 = ttb0;
+    
 	return t;
 }

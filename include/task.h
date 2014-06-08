@@ -57,11 +57,12 @@ typedef struct {
     task_entry_func entry;       // Entry point of task in memory
     unsigned int    started;     // Whether the task has started
     int             result;      // The return value of the entry function
-    char*           name;        // Print friendly name 
+    char*           name;        // Print friendly name
+    unsigned int*   ttb0;        // Address to page table for this task
 } Task;
 
 task_entry_func Task_LoadElf(char* filename, unsigned int addr);
 void Task_StartupFunction(Task* task);
-Task* Task_Create(task_entry_func, char* name);
+Task* Task_Create(task_entry_func, char* name, unsigned int* ttb0);
 
 #endif
