@@ -6,6 +6,7 @@
 #include "hardware/timer.h"
 #include "types/queue.h"
 #include "hardware/interrupts.h"
+#include "stddef.h"
 
 // This is really the heart of PiOS - this is where PiOS sits constantly
 
@@ -37,6 +38,23 @@ unsigned int TaskScheduler_GetNextTID(void)
 {
     // For now: Just an incremental integer, need to do someting better in the future
     return gNextTID++;
+}
+
+int TaskScheduler_Enqueue(char* taskName, char* filename, unsigned int phyAddr)
+{
+    task_entry_func func = Task_LoadElf(filename, phyAddr);
+    
+    if (func == NULL)
+    {
+        printf("Scheduler_Enqueue: Failed to load elf '%s'\n", filename);
+        return -1;
+    }
+
+    Task* task = Task_Create(func, taskName);
+
+    TaskScheduler_EnqueueTask(task);
+
+    return 0;
 }
 
 // This is probably not going to be "task" but rather "StartInfo" or similar

@@ -74,7 +74,11 @@ void sysinit_stage2(void)
     Pallocator_Initialize();
 
     // Initialize terminal first so we can print error messages if any (Hah, unlikely!)
-    Terminal_Initialize();
+    if(Terminal_Initialize() != 0)
+    {
+        Uart_SendString("Failed to initialize terminal, * * * HALTING * * *\n");
+        while (1);
+    }
 
     // Now that the terminal is initialized, add a VA mapping for it
     size fbSize = Fb_GetScreenSize();    
