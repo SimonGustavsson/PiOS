@@ -140,6 +140,16 @@ get_ttbc:
     bx lr
 
 ;@
+;@ Sets the value of the Domain Access Control Register
+;@ C Signature: void set_domain_register(unsigned int)
+;@
+.globl set_domain_register
+set_domain_register:
+    MCR p15, 0, r0, c3, c0, 0
+
+    bx lr
+
+;@
 ;@ Gets the value of the domain register
 ;@ C Signature: unsigned int get_domain_register(void)
 ;@

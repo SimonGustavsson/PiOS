@@ -49,17 +49,29 @@ int kernel_pt_initialize(unsigned int* ttb1, unsigned int* tmp_ttb0)
     
 
     do_mmu(tmp_ttb0, ttb1, TTBC_SPLIT_8KB);
-        
+
     return 0;
 }
 
 // Note: we expect pt to point towards section of USR_PT_SIZE allocated bytes
-//       This does NOT set TTB0 - call ttb0_set() to activate it (probably have to flush the TLB when doing this)
+//       This does NOT set TTB0 - call ttb0_set() to activate it
 int user_pt_initialize(unsigned int* pt, unsigned int physical_start)
 {
-    // The level 2 table is stored right after the level 1 entry
-    unsigned int first_lvl2_addr = (unsigned int)(pt + 1);
-    unsigned int first_lvl2_addr_base = (first_lvl2_addr >> 10);
+    // Initialize the page table to page fault
+    unsigned int i;
+    for (i = 0; i < 2048; i++)
+        *pt = 0;
+
+    // I can't seem to figure out why I'm getting a translation fault using the Coarse page table
+    // Code below, and for now it doesn't really matter which type of table I use, so for now I decided
+    // to just use sections for the time being and return to use Coarse page tables when there's a need for it
+    *pt = (((physical_start >> 20) & 0xFFF) << 20) | PAGE_PRESENT | PAGE_AP_SVCRW | PAGE_BUFFERABLE | PAGE_CACHEABLE | PT_TYPE_SECTION;
+
+    return 0;
+    
+    // The level 2 table is stored right after the level 1 table (which is 2048 entries large - Covering 2 GB)
+    unsigned int first_lvl2_addr = (unsigned int)(pt + 2047);
+    unsigned int first_lvl2_addr_base = (first_lvl2_addr >> 10) & 0x3FFFFF;
     
     // Add one level 1 entry, user processes are currently limited to 1 MB :-)
     *pt = (first_lvl2_addr_base << 10) | PAGE_AP_RW | PAGE_PRESENT | PAGE_CACHEABLE | PAGE_BUFFERABLE | PT_TYPE_COARSE;
@@ -68,7 +80,6 @@ int user_pt_initialize(unsigned int* pt, unsigned int physical_start)
     unsigned int pa_start_base = physical_start >> 12;
 
     // Create 256 small pages in the table whose address we set up in the level 1 entry
-    unsigned int i;
     for (i = 0; i < USR_PT_LVL2_ENTRIES_PER_LVL1; i++)
         *(unsigned int*)(first_lvl2_addr + i) = (pa_start_base << 12) | PAGE_BUFFERABLE | PAGE_CACHEABLE | SMALLPAGE_AP_RW | PT_TYPE_SMALLPAGE;
 

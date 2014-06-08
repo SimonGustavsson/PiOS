@@ -45,13 +45,15 @@ void sysinit_stage2(void)
     // Setup the interrupt vector
     asm volatile("mcr p15, 0, %[addr], c12, c0, 0" : : [addr] "r" (&interrupt_vector));
 
+    volatile unsigned int usrStartValBefore = *(unsigned int*)0x100000;
+    volatile unsigned int usr2StartValBefore = *(unsigned int*)0x200000;
+
     // TODO: Trash the temporary TTB0, we shouldn't need it past this point
     //       Currently I think the emmc driver uses a hardcoded buffer in low memory
     unsigned int cur = 0;
     for (cur = 0; cur < 8192; cur++)
         *(char*)KERNEL_PA_TMP_TTB0 = 0;
-
-
+    
     // First things first, enable the serial so we can send the deployer some feedback
     Uart_Initialize();
     Uart_EnableInterrupts();
@@ -84,7 +86,9 @@ void sysinit_stage2(void)
 
     Fb_Clear();
     Terminal_Clear();
-    
+
+    printf("Value at 0x100000 (which is user 0x0): %u\n", usrStartValBefore);
+    printf("Value at 0x200000 (which is user2 0x0): %u\n", usr2StartValBefore);
     // Verify page table by attempting to access unmapped memory
     //printf("Testing translation fault by accessing unmapped memory...\n");
     //*((unsigned int*)0x10E00000) = 2;

@@ -75,6 +75,8 @@ extern unsigned int get_ttbc(void);
 // Gets the value of the domain register 
 extern unsigned int get_domain_register(void);
 
+extern unsigned int set_domain_register(unsigned int value);
+
 //
 // utility.s
 //

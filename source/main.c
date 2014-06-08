@@ -4,6 +4,8 @@
 #include "terminal.h"
 #include "types/string.h"
 #include "util/utilities.h"
+#include "hardware/paging.h"
+#include "asm.h"
 
 // This variable makes sure we have something in the .data section,
 // Because we place .bss before data, this will make sure that the compiler
@@ -44,11 +46,39 @@ int cmain(void)
         TaskScheduler_EnqueueTask(dummy2);
     }
     
-    printf("Starting task scheduler...\n");
+    printf("Verifying initialization:\n");
 
+    // (Temporary) Test tb0 switching
+    unsigned int curAddr;
+    int* test_ttb0 = (int*)USR_PA_START + 0x4000;
+    int* test2_ttb0 = (int*)USR_PA_START + 0x8000;
+    user_pt_initialize(test_ttb0, 0x100000);
+    user_pt_initialize(test2_ttb0, 0x200000);
+
+    set_ttb0(test_ttb0, 1);
+    set_domain_register(0x55555555);
+
+    // Values printed here needs to be verified to values printed prior to trashing
+    // the kernels temporary ttb0
+    printf("= Attempting to access 0x0  = \n");
+    volatile unsigned int foo = *(unsigned int*)0x0;
+    printf("Value read: %u!?\n", foo);
+
+    // Now switch to the second test table and read the values
+    printf("Switching to second test table...\n");
+
+    set_ttb0(test2_ttb0, 1);
+    set_domain_register(0x55555555);
+
+    printf("= Attempting to access 0x0  = \n");
+    volatile unsigned int foo2 = *(unsigned int*)0x0;
+    printf("Value read: %u!?\n", foo2);
+
+    printf("Done testing ttb0, any faults?\n");
+     
+    //printf("Starting task scheduler...\n");
     //TaskScheduler_Start();
-
-    printf("\nNot sure what to do now...\n");
+    printf("\nNot sure what to do now...\n"); 
     unsigned int i;
     while (1)
     {
