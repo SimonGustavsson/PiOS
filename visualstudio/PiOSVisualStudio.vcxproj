@@ -50,9 +50,6 @@
   <ItemDefinitionGroup>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <Text Include="readme.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="..\include\asm.h" />
     <ClInclude Include="..\include\debugging.h" />
     <ClInclude Include="..\include\elf.h" />
