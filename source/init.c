@@ -35,6 +35,13 @@ void sysinit_stage1(void)
     // (This also sets up a temporary mapping for ttb0 that we trash once we're in high memory)
     kernel_pt_initialize(basePageTable, tmp_ttb0);
 
+    // Enable MMU - Note this MUST be called from the sysinit() function chain
+    // As this function never returns. If called from a returning function
+    // That messes with the Frame Pointer (basically any C function)
+    // The return from that function will reset SP to the physical address of the
+    // FP and not the Virtual address set up by do_mmu
+    do_mmu(tmp_ttb0, basePageTable, TTBC_SPLIT_8KB);
+
     // Memory is all set up, time to branch into high memory
     // to move to stage 2 of initialization
     sysinit_stage2();
@@ -68,7 +75,7 @@ void sysinit_stage2(void)
 
     // Initialize terminal first so we can print error messages if any (Hah, unlikely!)
     Terminal_Initialize();
-    
+
     // Now that the terminal is initialized, add a VA mapping for it
     size fbSize = Fb_GetScreenSize();    
     unsigned int fb_phy_addr = Fb_GetPhyAddr();
@@ -87,8 +94,8 @@ void sysinit_stage2(void)
     Fb_Clear();
     Terminal_Clear();
 
-    printf("Value at 0x100000 (which is user 0x0): %u\n", usrStartValBefore);
-    printf("Value at 0x200000 (which is user2 0x0): %u\n", usr2StartValBefore);
+    printf("Value at 0x100000 (which is user 0x0): %d\n", usrStartValBefore);
+    printf("Value at 0x200000 (which is user2 0x0): %d\n", usr2StartValBefore);
     // Verify page table by attempting to access unmapped memory
     //printf("Testing translation fault by accessing unmapped memory...\n");
     //*((unsigned int*)0x10E00000) = 2;

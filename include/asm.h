@@ -83,6 +83,9 @@ extern unsigned int set_domain_register(unsigned int value);
 // Gets the current frame pointer
 extern int* get_fp(void);
 
+// Gets the current address of the stack pointer
+extern unsigned int get_sp(void);
+
 // Utility function for branching to an arbitrary memory address
 extern void call(unsigned int addr);
 

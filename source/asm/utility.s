@@ -11,6 +11,16 @@
 get_fp:
     mov r0, fp
     mov pc, lr
+    
+;@
+;@ Gets the current address of the Stack Pointer
+;@ C Signature: unsigned int get_sp(void)
+;@
+.globl get_sp
+get_sp:
+    mov r0, sp
+
+    bx lr
 
 ;@ 
 ;@ Branch to the give function (WARNING: this trashes FP and does not set up LR!)

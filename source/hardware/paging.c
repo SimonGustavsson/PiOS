@@ -48,8 +48,6 @@ int kernel_pt_initialize(unsigned int* ttb1, unsigned int* tmp_ttb0)
     //    kernel_pt_set(tmp_ttb0, 0x30200000 + (i << 20), 0x30200000 + (i << 20), 0);
     
 
-    do_mmu(tmp_ttb0, ttb1, TTBC_SPLIT_8KB);
-
     return 0;
 }
 

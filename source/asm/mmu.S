@@ -75,8 +75,10 @@ do_mmu:
     msr cpsr_c,r0
 
     ;@ Restore the saved relative stack pointer
-    ldr r0, =SVC_STACK_VA_START
-    sub sp, r0, r5
+    ldr r0, =SVC_STACK_VA_START 
+    sub r0, r5
+
+    mov sp, r0
     
     bx lr
     
@@ -88,6 +90,16 @@ do_mmu:
 .section .text
 .globl set_ttb0
 set_ttb0:
+
+    ;@ First things first, clear out all of the buffers and caches
+
+    ;@ Write clean and invalidate entire data cache
+    mov r2, #0
+    mcr p15, 0, r2, c7, c14, 0
+
+    ;@ Invalidate all unlocked TLB entries
+    mcr p15, 0, r2,c8, c5, 0
+
     ;@ Add Inner cacheable flag to address
     orr r0, r1
 
@@ -97,8 +109,12 @@ set_ttb0:
     ;@ Flush prefetch buffer
     mov r1, #0
 	mcr p15, 0, r1, c7, c5, 4
+
     ;@ Invalidate Entire Data Cache
 	mcr p15, 0, r1, c7, c6, 0
+
+    ;@ Invalidate Entire Instruction Cache
+    MCR p15, 0, r1, c7, c5, 0
 
     bx lr
     

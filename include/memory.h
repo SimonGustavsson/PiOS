@@ -12,6 +12,7 @@ void DataMemoryBarrier(void);
 void DataSyncBarrier(void);
 void FlushCache(void);
 void FlushTLB(unsigned int mva);
+void InvalidateAllUnlockedTLB(void);
 
 void Pallocator_Initialize(void);
 void* palloc(unsigned int size);

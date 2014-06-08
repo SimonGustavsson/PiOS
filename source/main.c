@@ -48,6 +48,9 @@ int cmain(void)
     
     printf("Verifying initialization:\n");
 
+    printf("Current stack pointer: 0x%h\n", get_sp());
+
+
     // (Temporary) Test tb0 switching
     unsigned int curAddr;
     int* test_ttb0 = (int*)USR_PA_START + 0x4000;
@@ -56,23 +59,21 @@ int cmain(void)
     user_pt_initialize(test2_ttb0, 0x200000);
 
     set_ttb0(test_ttb0, 1);
-    set_domain_register(0x55555555);
 
     // Values printed here needs to be verified to values printed prior to trashing
     // the kernels temporary ttb0
     printf("= Attempting to access 0x0  = \n");
     volatile unsigned int foo = *(unsigned int*)0x0;
-    printf("Value read: %u!?\n", foo);
+    printf("Value read: %d\n", foo);
 
     // Now switch to the second test table and read the values
     printf("Switching to second test table...\n");
 
     set_ttb0(test2_ttb0, 1);
-    set_domain_register(0x55555555);
-
+    
     printf("= Attempting to access 0x0  = \n");
     volatile unsigned int foo2 = *(unsigned int*)0x0;
-    printf("Value read: %u!?\n", foo2);
+    printf("Value read: %d\n", foo2);
 
     printf("Done testing ttb0, any faults?\n");
      
