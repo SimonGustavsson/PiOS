@@ -153,6 +153,9 @@
     <ClInclude Include="..\include\main.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\mem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\main.c">
@@ -241,6 +244,9 @@
     </ClCompile>
     <ClCompile Include="..\memorymap.c">
       <Filter>Project</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\mem.c">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

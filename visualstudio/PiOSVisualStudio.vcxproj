@@ -68,6 +68,7 @@
     <ClInclude Include="..\include\hardware\keyboard.h" />
     <ClInclude Include="..\include\hardware\mailbox.h" />
     <ClInclude Include="..\include\main.h" />
+    <ClInclude Include="..\include\mem.h" />
     <ClInclude Include="..\include\memory.h" />
     <ClInclude Include="..\include\memory_map.h" />
     <ClInclude Include="..\include\stdarg.h" />
@@ -103,6 +104,7 @@
     <ClCompile Include="..\source\hardware\keyboard.c" />
     <ClCompile Include="..\source\hardware\mailbox.c" />
     <ClCompile Include="..\source\main.c" />
+    <ClCompile Include="..\source\mem.c" />
     <ClCompile Include="..\source\memory.c" />
     <ClCompile Include="..\source\hardware\mmu_c.c" />
     <ClCompile Include="..\source\platform.c" />

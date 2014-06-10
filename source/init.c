@@ -8,6 +8,7 @@
 #include "hardware/paging.h"
 #include "hardware/device/sdBlockDevice.h"
 #include "main.h"
+#include "mem.h"
 #include "memory.h"
 #include "memory_map.h"
 #include "types/string.h"
@@ -125,6 +126,25 @@ void sysinit_stage2(void)
         // Add the SD card to the file system
         fs_add_device(sd);
     }
+
+    mem_init();
+
+    // Reserve kernel regions of the memory in the page allocator
+    mem_reserve(FIQ_STACK_PA_START - SMALL_STACK_SIZE, SMALL_STACK_SIZE);
+    mem_reserve(IRQ_STACK_PA_START - SMALL_STACK_SIZE, SMALL_STACK_SIZE);
+    mem_reserve(SVC_STACK_PA_START - SMALL_STACK_SIZE, SMALL_STACK_SIZE);
+    mem_reserve(UD_STACK_PA_START - SMALL_STACK_SIZE, SMALL_STACK_SIZE);
+    mem_reserve(ABORT_STACK_PA_START - SMALL_STACK_SIZE, SMALL_STACK_SIZE);
+    mem_reserve(SM_STACK_PA_START - SMALL_STACK_SIZE, SMALL_STACK_SIZE);
+
+    // Pallocator (TODO: Pallocator should dynamically request pages as and when needed
+    //                    instead of reserving a mahossive chunk straight up)
+    mem_reserve(DYN_MEM_PA_START, MAX_ALLOCATED_BYTES);
+
+    // TODO: Need to allocate all static things, see memory_map.h
+
+    // Show some usage of reserved memory at boot now that we're done reserving
+    mem_printUsage();
     
     // Enter... the kernel!
     cmain();
