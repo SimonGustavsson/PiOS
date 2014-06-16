@@ -76,6 +76,7 @@
     <ClInclude Include="..\include\types\queue.h" />
     <ClInclude Include="..\include\types\string.h" />
     <ClInclude Include="..\include\types\types.h" />
+    <ClInclude Include="..\include\util\memutil.h" />
     <ClInclude Include="..\include\util\mmio.h" />
     <ClInclude Include="..\include\hardware\mmu_c.h" />
     <ClInclude Include="..\include\myfont.h" />
@@ -116,6 +117,7 @@
     <ClCompile Include="..\source\hardware\uart.c" />
     <ClCompile Include="..\source\types\queue.c" />
     <ClCompile Include="..\source\types\string.c" />
+    <ClCompile Include="..\source\util\memutil.c" />
     <ClCompile Include="..\source\util\utilities.c" />
   </ItemGroup>
   <ItemGroup>

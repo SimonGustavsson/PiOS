@@ -8,19 +8,14 @@
 
 //#define DEBUG_MEM
 
-void DataMemoryBarrier(void);
-void DataSyncBarrier(void);
-void FlushCache(void);
-void FlushTLB(unsigned int mva);
-void InvalidateAllUnlockedTLB(void);
-
+// Initializes the allocator
 void Pallocator_Initialize(void);
+
+// Allocates 'size' bytes and returns a pointer to the newly allocated memory
 void* palloc(unsigned int size);
 
 // Allocates memory for an array of 'size' with elements of 'itemSize'
 // Example: pcalloc(sizeof(int), 4); // Allocates an array of 4 ints
 void* pcalloc(unsigned int itemSize, unsigned int size);
-
-void* my_memset(void* dest, unsigned char c, unsigned int size);
 
 void phree(void* pointer);

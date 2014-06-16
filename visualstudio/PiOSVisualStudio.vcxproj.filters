@@ -156,6 +156,9 @@
     <ClInclude Include="..\include\mem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\util\memutil.h">
+      <Filter>Header Files\util</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\main.c">
@@ -247,6 +250,9 @@
     </ClCompile>
     <ClCompile Include="..\source\mem.c">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\util\memutil.c">
+      <Filter>Source Files\util</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
