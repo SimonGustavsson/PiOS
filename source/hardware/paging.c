@@ -63,16 +63,16 @@ int user_pt_initialize(unsigned int* pt, unsigned int physical_start)
     // I can't seem to figure out why I'm getting a translation fault using the Coarse page table
     // Code below, and for now it doesn't really matter which type of table I use, so for now I decided
     // to just use sections for the time being and return to use Coarse page tables when there's a need for it
-    *pt = (((physical_start >> 20) & 0xFFF) << 20) | PAGE_PRESENT | PAGE_AP_SVCRW | PAGE_BUFFERABLE | PAGE_CACHEABLE | PT_TYPE_SECTION;
+    //*pt = (((physical_start >> 20) & 0xFFF) << 20) | PAGE_PRESENT | PAGE_AP_SVCRW | PAGE_BUFFERABLE | PAGE_CACHEABLE | PT_TYPE_SECTION;
 
-    return 0;
+    //return 0;
     
     // The level 2 table is stored right after the level 1 table (which is 2048 entries large - Covering 2 GB)
-    unsigned int first_lvl2_addr = (unsigned int)(pt + 2047);
-    unsigned int first_lvl2_addr_base = (first_lvl2_addr >> 10) & 0x3FFFFF;
-    
+    unsigned int first_lvl2_addr = (unsigned int)(pt + 2048);
+    unsigned int first_lvl2_addr_base = first_lvl2_addr & 0xFFFFFC00; // Mask off bottom 10 bits (as it's used by flags)
+
     // Add one level 1 entry, user processes are currently limited to 1 MB :-)
-    *pt = (first_lvl2_addr_base << 10) | PAGE_AP_RW | PAGE_PRESENT | PAGE_CACHEABLE | PAGE_BUFFERABLE | PT_TYPE_COARSE;
+    *pt = first_lvl2_addr_base | PAGE_PRESENT | PT_TYPE_COARSE;
 
     // Now start setting up the level 2 entries for this page
     unsigned int pa_start_base = physical_start >> 12;
