@@ -51,6 +51,7 @@ static inline unsigned int byte_swap(unsigned int in)
 }
 
 void* my_memcpy(const void* dest, const void* src, unsigned int bytesToCopy);
+void HexDump(void* mem, unsigned int size);
 void reboot(void);
 
 static inline unsigned int byte_to_int(unsigned char* buf)
