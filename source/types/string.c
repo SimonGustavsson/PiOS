@@ -73,6 +73,34 @@ unsigned int my_strcmp(char* str1, char* str2)
     return 1;
 }
 
+void utoa(unsigned int number, char* buf)
+{
+    // Populating backwards
+    buf++;
+    unsigned int shifter = number;
+    do
+    {
+        buf++;
+        shifter /= 10;
+    } while (shifter > 0);
+
+    // Make sure the string is terminated nicely
+    *--buf = '\0';
+
+    // Start converting the digits into characters
+    if (number == 0)
+        *--buf = '0';
+    else
+    {
+
+        do
+        {
+            *--buf = '0' + (number % 10); // Muahaha!
+            number /= 10;
+        } while (number > 0);
+    }
+}
+
 void itoa(int number, char* buf)
 {
 	// We populate the string backwards, increment to make room for \0
@@ -271,7 +299,7 @@ void vprintf_s(char* text, unsigned int length, va_list ap)
 			else if(*(text + 1) == 'd') // integer (signed)
 			{
 				char itoBuf[10];
-				itoa(va_arg(ap, int), &itoBuf[0]);
+				utoa(va_arg(ap, unsigned int), &itoBuf[0]);
 				
 				char* intstr = my_strcpy(itoBuf, result);
 				

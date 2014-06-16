@@ -13,6 +13,7 @@ unsigned int my_strcmp(char* str1, char* str2);
 int my_strcmp_s(char* str1, unsigned int size, char* str2);
 unsigned int my_strcasecmp(char* str1, char* str2);
 void itoa(int number, char* buf);
+void utoa(unsigned int number, char* buf);
 void dec_to_hex(char* buf, unsigned int dec, unsigned int lowerCase);
 void printf(char* text, ...);
 void printf_i(char* text, ...);
