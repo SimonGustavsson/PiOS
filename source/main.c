@@ -20,7 +20,7 @@ int cmain(void)
     
     Terminal_PrintWelcome();
     Terminal_PrintPrompt();
-
+        
     // Create two dummy tasks and add them to the scheduler
     TaskScheduler_Enqueue("Dummy1", "/dev/sd0/dummy1.elf");
     TaskScheduler_Enqueue("Dummy2", "/dev/sd0/dummy2.elf");
@@ -31,7 +31,7 @@ int cmain(void)
     int* test2_ttb0 = (int*)KERNEL_VA_START + USR_PA_START + 0x8000;
     user_pt_initialize(test_ttb0, 0x100000);
     user_pt_initialize(test2_ttb0, 0x200000);
-
+    
     // Values printed here needs to be verified to values printed prior to trashing
     // the kernels temporary ttb0
     set_ttb0(test_ttb0, 1);
@@ -41,13 +41,13 @@ int cmain(void)
     // Now switch to the second test table and read the values
     printf("Switching to second test table...\n");
 
-    set_ttb0(test2_ttb0, 1);    
+    set_ttb0(test2_ttb0, 1);
     volatile unsigned int foo2 = *(unsigned int*)0x0;
-    printf("Value at 0x0: %d\n", foo);
-     
+    printf("Value at 0x0: %d\n", foo2);
+
     //printf("Starting task scheduler...\n");
     //TaskScheduler_Start();
-    printf("\nNot sure what to do now...\n"); 
+    printf("\nNot sure what to do now...\n");
     unsigned int i;
     while (1)
     {

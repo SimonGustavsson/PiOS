@@ -102,10 +102,7 @@ set_ttb0:
 
     ;@ Add Inner cacheable flag to address
     orr r0, r1
-
-    ;@ Set TTB0: (using defaults: No outer cacheable PT walks, not shared)
-    mcr p15, 0, r0, c2, c0, 0
-
+    
     ;@ Flush prefetch buffer
     mov r1, #0
 	mcr p15, 0, r1, c7, c5, 4
@@ -115,6 +112,9 @@ set_ttb0:
 
     ;@ Invalidate Entire Instruction Cache
     MCR p15, 0, r1, c7, c5, 0
+    
+    ;@ Set TTB0: (using defaults: No outer cacheable PT walks, not shared)
+    mcr p15, 0, r0, c2, c0, 0
 
     bx lr
     
