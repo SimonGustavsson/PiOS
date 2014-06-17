@@ -33,4 +33,9 @@ SECTIONS
 	
     .data . : { *(.data) }
     .rodata . : { *(.rodata) }
+
+    /*
+        Size of kernel so that we can allocate pages for it
+    */
+    LNK_KERNEL_SIZE = ADDR(.rodata) + SIZEOF(.rodata) - KERNEL_VA_START - LD_KRNL_ORIGIN;
 }

@@ -1,4 +1,4 @@
-#include "asm.h"
+    #include "asm.h"
 #include "fs/fat32driver.h"
 #include "fs/fs.h"
 #include "init.h"
@@ -13,6 +13,8 @@
 #include "memory_map.h"
 #include "types/string.h"
 #include "terminal.h"
+
+extern unsigned int LNK_KERNEL_SIZE;
 
 __attribute__((naked, aligned(32))) static void interrupt_vector(void)
 {
@@ -55,6 +57,7 @@ void sysinit_stage2(void)
 
     volatile unsigned int usrStartValBefore = *(unsigned int*)0x100000;
     volatile unsigned int usr2StartValBefore = *(unsigned int*)0x200000;
+    volatile unsigned int kernel_size = LNK_KERNEL_SIZE;
 
     // TODO: Trash the temporary TTB0, we shouldn't need it past this point
     //       Currently I think the emmc driver uses a hardcoded buffer in low memory
@@ -99,6 +102,8 @@ void sysinit_stage2(void)
     Fb_Clear();
     Terminal_Clear();
 
+    printf("Kernel size: %d\n", kernel_size);
+
     printf("Value at 0x100000 (which is user 0x0): %d\n", usrStartValBefore);
     printf("Value at 0x200000 (which is user2 0x0): %d\n", usr2StartValBefore);
     // Verify page table by attempting to access unmapped memory
@@ -130,6 +135,7 @@ void sysinit_stage2(void)
     mem_init();
 
     // Reserve kernel regions of the memory in the page allocator
+    mem_reserve(LD_KRNL_ORIGIN, kernel_size);
     mem_reserve(FIQ_STACK_PA_START - SMALL_STACK_SIZE, SMALL_STACK_SIZE);
     mem_reserve(IRQ_STACK_PA_START - SMALL_STACK_SIZE, SMALL_STACK_SIZE);
     mem_reserve(SVC_STACK_PA_START - SMALL_STACK_SIZE, SMALL_STACK_SIZE);
