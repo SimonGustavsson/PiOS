@@ -69,8 +69,11 @@ extern unsigned int get_ttb0(void);
 // Gets the value of the Translation Table 1 Base register
 extern unsigned int get_ttb1(void);
 
-// Gets the value of the Translation Table Control register
+// Gets the value of the Translation Table Base Control register
 extern unsigned int get_ttbc(void);
+
+// Sets the value of the Translation Table Base Control register
+extern void set_ttbc(unsigned int val);
 
 // Gets the value of the domain register 
 extern unsigned int get_domain_register(void);

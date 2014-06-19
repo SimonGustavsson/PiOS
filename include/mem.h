@@ -8,7 +8,10 @@
 int mem_init(void);
 
 // Returns the next available page
-unsigned int mem_nextFree(void);
+int mem_nextFree(void);
+
+// Returns the address of the first page in the first series of available num_pages
+int mem_nextFreeContiguous(unsigned int num_pages);
 
 // Frees the page that covers the given physical address
 void mem_free(unsigned int addr);
@@ -20,4 +23,3 @@ int mem_reserveRange(unsigned int startAddr, unsigned int endAddr);
 
 unsigned int mem_getAvailable(void);
 unsigned int mem_getAllocated(void);
-void mem_printUsage(void);

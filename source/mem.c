@@ -35,7 +35,7 @@ int mem_init(void)
 }
 
 // Returns the next available page
-unsigned int mem_nextFree(void)
+int mem_nextFree(void)
 {
     unsigned int i;
     for (i = 0; i < MAX_ALLOCATED_PAGES; i++)
@@ -50,6 +50,38 @@ unsigned int mem_nextFree(void)
 #endif
 
             return pfa_GetFirstAddrOfPage(i);
+        }
+    }
+
+    return -1;
+}
+
+int mem_nextFreeContiguous(unsigned int num_pages)
+{
+    int start_page = -1;
+
+    unsigned int i;
+    unsigned int contiguous_found = 0;
+    for (i = 0; i < MAX_ALLOCATED_PAGES; i++)
+    {
+        if (gPages[i] == 0)
+        {
+            if (start_page == -1)
+                start_page = i;
+
+            contiguous_found++;
+        }
+        else
+        {
+            contiguous_found = 0;
+        }
+
+        if (start_page != -1 && contiguous_found == num_pages)
+        {
+            for (i = 0; i < num_pages; i++)
+                gPages[start_page + i] = 1;
+
+            return pfa_GetFirstAddrOfPage(start_page);
         }
     }
 

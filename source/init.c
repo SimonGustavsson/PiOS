@@ -14,7 +14,7 @@
 #include "types/string.h"
 #include "terminal.h"
 
-extern unsigned int LNK_KERNEL_SIZE;
+extern unsigned int LNK_KERNEL_END;
 
 __attribute__((naked, aligned(32))) static void interrupt_vector(void)
 {
@@ -36,7 +36,7 @@ void sysinit_stage1(void)
     unsigned int* tmp_ttb0 = (unsigned int*)KERNEL_PA_TMP_TTB0;
 
     // (This also sets up a temporary mapping for ttb0 that we trash once we're in high memory)
-    kernel_pt_initialize(basePageTable, tmp_ttb0);
+    INIT_kernel_tt_setup(basePageTable, tmp_ttb0);
 
     // Enable MMU - Note this MUST be called from the sysinit() function chain
     // As this function never returns. If called from a returning function
@@ -57,7 +57,6 @@ void sysinit_stage2(void)
 
     volatile unsigned int usrStartValBefore = *(unsigned int*)0x100000;
     volatile unsigned int usr2StartValBefore = *(unsigned int*)0x200000;
-    volatile unsigned int kernel_size = LNK_KERNEL_SIZE;
 
     // TODO: Trash the temporary TTB0, we shouldn't need it past this point
     //       Currently I think the emmc driver uses a hardcoded buffer in low memory
@@ -77,6 +76,31 @@ void sysinit_stage2(void)
 
     Pallocator_Initialize();
 
+    // Initialize page allocator
+    mem_init();
+
+    // Calculate kernel size
+    unsigned int kernel_physical_end = &LNK_KERNEL_END;
+    kernel_physical_end -= KERNEL_VA_START;
+    unsigned int kernel_size = kernel_physical_end - LD_KRNL_ORIGIN;
+
+    // Reserve kernel regions of the memory in the page allocator
+    mem_reserve(0x0, 0x2000); // Reserve the first 3 pages, contains boot parameters and such
+    mem_reserve(FIQ_STACK_PA_START - SMALL_STACK_SIZE, SMALL_STACK_SIZE);
+    mem_reserve(0x5000, 0x100);
+    mem_reserve(IRQ_STACK_PA_START - SMALL_STACK_SIZE, SMALL_STACK_SIZE);
+    mem_reserve(LD_KRNL_ORIGIN, kernel_size);
+    mem_reserve(KERNEL_PA_PT, TTB_SIZE_4GB_SIZE + (TTB_SIZE_4GB_SIZE * 256));
+    mem_reserve(SVC_STACK_PA_START - SMALL_STACK_SIZE, SMALL_STACK_SIZE);
+    mem_reserve(UD_STACK_PA_START - SMALL_STACK_SIZE, SMALL_STACK_SIZE);
+    mem_reserve(ABORT_STACK_PA_START - SMALL_STACK_SIZE, SMALL_STACK_SIZE);
+    // Pallocator (TODO: Pallocator should dynamically request pages as and when needed
+    //                    instead of reserving a mahossive chunk straight up)
+    mem_reserve(DYN_MEM_PA_START, MAX_ALLOCATED_BYTES);
+
+    mem_reserve(SM_STACK_PA_START - SMALL_STACK_SIZE, SMALL_STACK_SIZE);
+    // TODO: Need to allocate all static things, see memory_map.h
+
     // Initialize terminal first so we can print error messages if any (Hah, unlikely!)
     if(Terminal_Initialize() != 0)
     {
@@ -95,13 +119,13 @@ void sysinit_stage2(void)
         // Note: At this point we still have a 1:1 mapping of the kernel, so we can use
         // The physical address of the page table
         addr = fb_phy_addr + (i << 20);
-        kernel_pt_set((unsigned int*)KERNEL_PT_VA_START, addr, FRAMEBUFFER_VA_START + (i << 20), 0);
-        FlushTLB(addr);        
+        map_section((unsigned int*)KERNEL_PT_VA_START, addr, FRAMEBUFFER_VA_START + (i << 20), SECTION_AP_K_RW);
+        FlushTLB(addr);
     }
 
     Fb_Clear();
     Terminal_Clear();
-
+    
     printf("Kernel size: %d\n", kernel_size);
 
     printf("Value at 0x100000 (which is user 0x0): %d\n", usrStartValBefore);
@@ -130,24 +154,7 @@ void sysinit_stage2(void)
 
         // Add the SD card to the file system
         fs_add_device(sd);
-    }
-
-    mem_init();
-
-    // Reserve kernel regions of the memory in the page allocator
-    mem_reserve(LD_KRNL_ORIGIN, kernel_size);
-    mem_reserve(FIQ_STACK_PA_START - SMALL_STACK_SIZE, SMALL_STACK_SIZE);
-    mem_reserve(IRQ_STACK_PA_START - SMALL_STACK_SIZE, SMALL_STACK_SIZE);
-    mem_reserve(SVC_STACK_PA_START - SMALL_STACK_SIZE, SMALL_STACK_SIZE);
-    mem_reserve(UD_STACK_PA_START - SMALL_STACK_SIZE, SMALL_STACK_SIZE);
-    mem_reserve(ABORT_STACK_PA_START - SMALL_STACK_SIZE, SMALL_STACK_SIZE);
-    mem_reserve(SM_STACK_PA_START - SMALL_STACK_SIZE, SMALL_STACK_SIZE);
-
-    // Pallocator (TODO: Pallocator should dynamically request pages as and when needed
-    //                    instead of reserving a mahossive chunk straight up)
-    mem_reserve(DYN_MEM_PA_START, MAX_ALLOCATED_BYTES);
-
-    // TODO: Need to allocate all static things, see memory_map.h
+    }        
 
     // Show some usage of reserved memory at boot now that we're done reserving
     mem_printUsage();

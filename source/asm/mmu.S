@@ -115,7 +115,7 @@ set_ttb0:
     
     ;@ Set TTB0: (using defaults: No outer cacheable PT walks, not shared)
     mcr p15, 0, r0, c2, c0, 0
-
+    
     bx lr
     
 ;@
@@ -152,7 +152,15 @@ get_ttb1:
 .globl get_ttbc
 get_ttbc:
 	mrc p15, 0, r0, c2, c0, 2    
-
+    bx lr
+    
+;@
+;@ Sets the value of the Translation Table Base Control register
+;@ C Signature: void set_ttbc(unsigned int val);
+;@
+.globl set_ttbc
+set_ttbc:
+    mcr p15, 0, r0, c2, c0, 2
     bx lr
 
 ;@

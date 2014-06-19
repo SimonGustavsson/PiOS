@@ -24,7 +24,7 @@ SECTIONS
         be in high memory as this code runs after the MMU has been turned on
 	*/
     . = KERNEL_VA_START + ADDR(.text.init) + SIZEOF(.text.init);
-	
+
     .text . : AT(ADDR(.text.init) + SIZEOF(.text.init)) { *(.text*) }
     . = ALIGN(LD_PAGE_SIZE); /* align to page size */
 	 
@@ -35,7 +35,8 @@ SECTIONS
     .rodata . : { *(.rodata) }
 
     /*
-        Size of kernel so that we can allocate pages for it
+        Store the end of the kernel so we can use it to calculate
+        The full size of the binary image in memory
     */
-    LNK_KERNEL_SIZE = ADDR(.rodata) + SIZEOF(.rodata) - KERNEL_VA_START - LD_KRNL_ORIGIN;
+    LNK_KERNEL_END = .;
 }
