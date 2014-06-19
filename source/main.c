@@ -22,18 +22,14 @@ int cmain(void)
     Terminal_PrintPrompt();
 
     // Create two dummy tasks and add them to the scheduler
-    Task* dummy1 = TaskScheduler_Enqueue("Dummy1", "/dev/sd0/dummy1.elf");
-    
+    Task* dummy1 = Task_Create("/dev/sd0/dummy1.elf", "Dummy1");
     if (dummy1 != NULL)
+    {
+        TaskScheduler_Enqueue(dummy1);
+
+        // Just fire it off straight away or debugging as the scheduler isn't started now
         TaskScheduler_StartTask(dummy1);
-
-    //printf("\nWell that went well? Lets try another task!\n\n");
-
-    Task* dummy2 = TaskScheduler_Enqueue("Dummy2", "/dev/sd0/dummy2.elf");
-    if (dummy2 != NULL)
-        TaskScheduler_StartTask(dummy2);
-
-    //TaskScheduler_Enqueue("Dummy2", "/dev/sd0/dummy2.elf");
+    }
 
     //printf("Starting task scheduler...\n");
     //TaskScheduler_Start();

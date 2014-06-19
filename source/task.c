@@ -10,7 +10,7 @@
 #include "hardware/paging.h"
 #include "util/memutil.h"
 
-int Task_GetElfData(char* filename, char** buffer)
+static int Task_GetElfData(char* filename, char** buffer)
 {
     int handle = fs_open(filename, file_read);
     if (handle == INVALID_HANDLE)
@@ -41,7 +41,7 @@ int Task_GetElfData(char* filename, char** buffer)
     return fileSize;
 }
 
-task_entry_func Task_LoadElf(char* filename, unsigned int addr)
+static task_entry_func Task_LoadElf(char* filename, unsigned int addr)
 {
     char* file_data = NULL;
     unsigned int file_size = Task_GetElfData(filename, &file_data);
@@ -66,16 +66,7 @@ task_entry_func Task_LoadElf(char* filename, unsigned int addr)
     return (task_entry_func)addr;
 }
 
-Task* Task_Create(task_entry_func entry, char* name, unsigned int* kernel_ttb1)
-{
-    Task* t = Task_CreateEmpty(name, kernel_ttb1);
-
-    t->entry = entry;
-
-    return t;
-}
-
-Task* Task_CreateEmpty(char* name, unsigned int* kernel_ttb1)
+Task* Task_Create(char* filename, char* name)
 {
     Task* t = (Task*)palloc(sizeof(Task));
 
@@ -93,7 +84,22 @@ Task* Task_CreateEmpty(char* name, unsigned int* kernel_ttb1)
         return NULL;
     }
 
-    printf("Address of first physical page for task: 0x%h\n", t->mem_pages[0]);
+    // NOTE: This assumes the kernel ttb1 identity maps physical memory to KERNEL_VA_START
+    unsigned int task_memory_start = (KERNEL_VA_START + t->mem_pages[0]);
+    
+    task_entry_func func = Task_LoadElf(filename, task_memory_start);
+    if (func == NULL)
+    {
+        printf("Scheduler_Enqueue: Failed to load elf '%s'\n", filename);
+
+        Task_Delete(t);
+
+        phree(t);
+
+        return NULL;
+    }
+
+    t->entry = func;
 
     return t;
 }

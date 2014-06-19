@@ -43,43 +43,8 @@ unsigned int TaskScheduler_GetNextTID(void)
     return gNextTID++;
 }
 
-Task* TaskScheduler_Enqueue(char* taskName, char* filename)
-{
-    Task* task = Task_CreateEmpty(taskName, (unsigned int*)KERNEL_PT_VA_START);
-    if (task == NULL)
-    {
-        printf("TaskScheduler failed to create a task for '%s'\n", taskName);
-
-        return NULL;
-    }    
-   
-    // NOTE: This assumes the kernel ttb1 identity maps physical memory to KERNEL_VA_START
-    unsigned int task_memory_start = (KERNEL_VA_START + task->mem_pages[0]);
-
-    task_entry_func func = Task_LoadElf(filename, task_memory_start);
-    if (func == NULL)
-    {
-        printf("Scheduler_Enqueue: Failed to load elf '%s'\n", filename);
-
-        Task_Delete(task);
-
-        phree(task);
-
-        return NULL;
-    }
-
-    printf("TaskScheduler_Enqueue: Elf loaded successfully!\n");
-
-    // Add the task to the queue
-    TaskScheduler_EnqueueTask(task);
-
-    task->entry = func;
-
-    return task;
-}
-
 // This is probably not going to be "task" but rather "StartInfo" or similar
-void TaskScheduler_EnqueueTask(Task* task)
+void TaskScheduler_Enqueue(Task* task)
 {
     printf("Enqueueing task '%s', Id: %d, ttb0: 0x%h, Priority: %d\n", task->name, task->id, task->ttb0, task->priority);
 
@@ -148,7 +113,7 @@ void TaskScheduler_StartTask(Task* task)
     set_ttbc(ttbc);
 
     // Jump to the startup procedure of the task
-    //task->result = task->entry();
+    task->result = task->entry();
 
     // TODO: Remove task from scheduler
 }

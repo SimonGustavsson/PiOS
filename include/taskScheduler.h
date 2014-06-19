@@ -19,8 +19,8 @@ void TaskScheduler_TimerTick(registers* registers);
 Task* TaskScheduler_CreateTask(void(*mainFunction)(void));
 
 // Loads the given elf and enqueues it
-Task* TaskScheduler_Enqueue(char* taskName, char* filename);
-void TaskScheduler_EnqueueTask(Task* task);
+void TaskScheduler_Enqueue(Task* task);
+
 unsigned int TaskScheduler_GetNextTID(void);
 // Switches to the next task in the list
 void TaskScheduler_NextTask(void);

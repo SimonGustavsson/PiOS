@@ -68,10 +68,7 @@ typedef struct {
     ttbc_ttbr0_size ttb0_size;     // The size of the ttb0 to set TTBC split to
 } Task;
 
-task_entry_func Task_LoadElf(char* filename, unsigned int addr);
-void Task_StartupFunction(Task* task);
-Task* Task_Create(task_entry_func, char* name, unsigned int* ttb0);
-Task* Task_CreateEmpty(char* name, unsigned int* kernel_ttb1);
+Task* Task_Create(char* filename, char* name);
 
 // Frees all memory associated with the given task
 void Task_Delete(Task* task);
