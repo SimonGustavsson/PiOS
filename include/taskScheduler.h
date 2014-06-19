@@ -11,12 +11,6 @@ typedef struct {
 	unsigned int tasksRunning;
 } taskScheduler;
 
-typedef struct {
-    unsigned int* ttb0;
-    unsigned int* memStart;
-    unsigned int taskId;
-} taskmem_mapping;
-
 void TaskScheduler_Initialize(void);
 void TaskScheduler_Start(void);
 
@@ -25,12 +19,11 @@ void TaskScheduler_TimerTick(registers* registers);
 Task* TaskScheduler_CreateTask(void(*mainFunction)(void));
 
 // Loads the given elf and enqueues it
-int TaskScheduler_Enqueue(char* taskName, char* filename);
+Task* TaskScheduler_Enqueue(char* taskName, char* filename);
 void TaskScheduler_EnqueueTask(Task* task);
 unsigned int TaskScheduler_GetNextTID(void);
 // Switches to the next task in the list
 void TaskScheduler_NextTask(void);
-
-taskmem_mapping* TaskScheduler_GetNextFreeMemory(void);
+void TaskScheduler_StartTask(Task* task);
 
 #endif

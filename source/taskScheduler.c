@@ -8,12 +8,13 @@
 #include "hardware/interrupts.h"
 #include "stddef.h"
 #include "memory_map.h"
+#include "asm.h"
+#include "mem.h"
 
 // This is really the heart of PiOS - this is where PiOS sits constantly
 
 static taskScheduler* gScheduler;
 static unsigned int gNextTID;
-static taskmem_mapping* gTtb0Mappings;
 
 void TaskScheduler_Initialize(void)
 {
@@ -24,20 +25,7 @@ void TaskScheduler_Initialize(void)
 	gScheduler->tasks.front = 0;
 	gScheduler->tasks.numNodes = 0;
 
-    // Allow for 20 tasks running at the same time
-    gTtb0Mappings = (taskmem_mapping*)pcalloc(sizeof(taskmem_mapping), MAX_USER_TASKS);
-    unsigned int i;
-    for (i = 0; i < MAX_USER_TASKS; i++)
-    {
-        taskmem_mapping* cur = (gTtb0Mappings + i);
-
-        // Mappings for all tasks are right after eachother in kernel memory
-        cur->ttb0 = (unsigned int*)USER_TTB0S_START + (i * USER_PT_SIZE_IN_BYTES);
-        cur->memStart = USER_TASKS_START + (i * 0x100000);
-        cur->taskId = -1;
-    }
-
-    gNextTID = 0;
+    gNextTID = 1;
 }
 
 void TaskScheduler_Start(void)
@@ -49,59 +37,45 @@ void TaskScheduler_Start(void)
     // Switch in first task?
 }
 
-taskmem_mapping* TaskScheduler_GetNextFreeMemory(void)
-{
-    taskmem_mapping* cur = gTtb0Mappings;
-    unsigned int i;
-    for (i = 0; i < MAX_USER_TASKS; i++)
-    {
-        // -1 is not a valid task id, this means it's free
-        if (cur->taskId == -1)
-            return cur;
-
-        cur++;
-    }
-
-    return NULL;
-}
-
 unsigned int TaskScheduler_GetNextTID(void)
 {
     // For now: Just an incremental integer, need to do someting better in the future
     return gNextTID++;
 }
 
-int TaskScheduler_Enqueue(char* taskName, char* filename)
+Task* TaskScheduler_Enqueue(char* taskName, char* filename)
 {
-    taskmem_mapping* mapping = TaskScheduler_GetNextFreeMemory();
-
-    if (mapping == NULL)
+    Task* task = Task_CreateEmpty(taskName, (unsigned int*)KERNEL_PT_VA_START);
+    if (task == NULL)
     {
-        if (gScheduler->tasksRunning == MAX_USER_TASKS)
-            printf("Failed to retrieve TTB0 address for task, close a task and try again.\n");
-        else
-            printf("Failed to retrieve TTB0 address for task, not sure why...\n");
+        printf("TaskScheduler failed to create a task for '%s'\n", taskName);
 
-        return -1;
-    }
+        return NULL;
+    }    
+   
+    // NOTE: This assumes the kernel ttb1 identity maps physical memory to KERNEL_VA_START
+    unsigned int task_memory_start = (KERNEL_VA_START + task->mem_pages[0]);
 
-
-    task_entry_func func = Task_LoadElf(filename, (unsigned int)mapping->memStart);
-    
+    task_entry_func func = Task_LoadElf(filename, task_memory_start);
     if (func == NULL)
     {
         printf("Scheduler_Enqueue: Failed to load elf '%s'\n", filename);
-        return -1;
+
+        Task_Delete(task);
+
+        phree(task);
+
+        return NULL;
     }
 
-    Task* task = Task_Create(func, taskName, mapping->ttb0);
+    printf("TaskScheduler_Enqueue: Elf loaded successfully!\n");
 
-    // Mark mapping as in use
-    mapping->taskId = task->id;
-
+    // Add the task to the queue
     TaskScheduler_EnqueueTask(task);
 
-    return 0;
+    task->entry = func;
+
+    return task;
 }
 
 // This is probably not going to be "task" but rather "StartInfo" or similar
@@ -161,6 +135,22 @@ void TaskScheduler_NextTask(void)
     //}
 
     // if the new task's "started" value == 0, call Task_StartupFunction()
+}
+
+void TaskScheduler_StartTask(Task* task)
+{
+    // Activate the translation table for the task
+    set_ttb0(task->ttb0, 1);
+
+    // Update the Translation Table Control register with the task's TT's size
+    unsigned int ttbc = get_ttbc();
+    ttbc &= task->ttb0_size;
+    set_ttbc(ttbc);
+
+    // Jump to the startup procedure of the task
+    //task->result = task->entry();
+
+    // TODO: Remove task from scheduler
 }
 
 void TaskScheduler_TimerTick(registers* regs)
