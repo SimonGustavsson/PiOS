@@ -76,8 +76,7 @@ Task* Task_Create(char* filename, char* name)
     t->timeElapsed = 0;
     t->started = 0;
     t->id = TaskScheduler_GetNextTID();
-    t->name = name;
-
+    t->path = NULL;
     if (Task_InitializeMemory(t) != 0)
     {
         phree(t);
@@ -98,6 +97,10 @@ Task* Task_Create(char* filename, char* name)
 
         return NULL;
     }
+
+    t->name = name;
+    t->path = (char*)palloc(my_strlen(filename));
+    my_strcpy(filename, t->path);
 
     t->entry = func;
 
@@ -203,6 +206,9 @@ void Task_Delete(Task* task)
 
     for (i = 0; i < task->num_ttb0_pages; i++)
         mem_free(task->ttb0_physical[i]);
+
+    if (task->path != NULL)
+        phree(task->path);
 
     phree(task->mem_pages);
 }

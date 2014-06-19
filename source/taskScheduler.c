@@ -46,8 +46,6 @@ unsigned int TaskScheduler_GetNextTID(void)
 // This is probably not going to be "task" but rather "StartInfo" or similar
 void TaskScheduler_Enqueue(Task* task)
 {
-    printf("Enqueueing task '%s', Id: %d, ttb0: 0x%h, Priority: %d\n", task->name, task->id, task->ttb0, task->priority);
-
 	// Add it to the queue for processing
 	Queue_Enqueue(&gScheduler->tasks, task);
 
@@ -104,6 +102,9 @@ void TaskScheduler_NextTask(void)
 
 void TaskScheduler_StartTask(Task* task)
 {
+    printf("Starting task '%s', Id: %d, ttb0: 0x%h, Priority: %d. Path: %s\n",
+        task->name, task->id, task->ttb0, task->priority, task->path);
+
     // Activate the translation table for the task
     set_ttb0(task->ttb0, 1);
 

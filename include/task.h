@@ -60,6 +60,7 @@ typedef struct {
     unsigned int    started;      // Whether the task has started
     int             result;       // The return value of the entry function
     char*           name;         // Print friendly name
+    char*           path;         // Path to the executable (if any)
     unsigned int*   ttb0;         // Address to page table for this task
     unsigned int*   mem_pages;    // Array of all allocated pages for the user memory
     unsigned int*   num_mem_pages;// Numer of elements in mem_pages
