@@ -20,8 +20,8 @@ void PresentBufferToScreen(void);
 
 // TODO 0: Make buffer larger than display to allow for some history to get saved
 // TODO 1: Change to int buffers and embed colors in value
-char gBuffer[135][79];// [BUFFER_HEIGHT][BUFFER_WIDTH];
-char gTerminal[135][79]; // [TERMINAL_HEIGHT][TERMINAL_WIDTH];
+char** gBuffer;
+char** gTerminal;
 int gBufferCaretRow; 		// The current row of the caret - where  text will be written to
 int gBufferCaretCol;		// The current column of the caret - where text will be written to
 int gFirstVisibleBufferRow; // The row in the first buffer that is currently the first row on screen
@@ -210,23 +210,45 @@ int Terminal_Initialize(void)
     size screenSize = Fb_GetScreenSize();
 
     // TODO NOW:  Calculate gTerminalSize + gBufferSize
-    gTerminalSize.width = 135;// (screenSize.width / (CHAR_WIDTH + CHAR_HSPACING)) - 1;
-    gTerminalSize.height = 79;// (screenSize.height / CHAR_HEIGHT + CHAR_VSPACING) - 1;
+    gTerminalSize.width = (screenSize.width / (CHAR_WIDTH + CHAR_HSPACING)) - 1;
+    gTerminalSize.height = (screenSize.height / CHAR_HEIGHT + CHAR_VSPACING) - 1;
 
     // For now we don't really bufer...
     gBufferSize.width = gTerminalSize.width;
     gBufferSize.height = gTerminalSize.height;
 
-    //gBuffer = (char**)pcalloc(sizeof(char), gBufferSize.height * gBufferSize.width);
-    //gTerminal = (char**)pcalloc(sizeof(char), gTerminalSize.height * gTerminalSize.width);
-    	
+    // Allocate Terminal
+    // Allocate first dimension
+	unsigned int i;
+    gTerminal = (char**)palloc(gTerminalSize.width * sizeof(char*));
+    if (gTerminal == 0)
+    {
+        Uart_SendString("Failed to allocated terminal array\n");
+        return -1;
+    }
+    // Allocate second dimension
+    for (i = 0; i < gTerminalSize.width; i++)
+        gTerminal[i] = (char*)palloc(gTerminalSize.height * sizeof(char));
+    
+    // Allocate Buffer
+    // Allocate first dimension
+    gBuffer = (char**)palloc(gTerminalSize.width * sizeof(char*));
+    if (gBuffer == 0)
+    {
+        Uart_SendString("Failed to allocated terminal buffer array\n");
+        return -1;
+    }
+
+    // Allocate second dimension
+    for (i = 0; i < gBufferSize.width; i++)
+        gBuffer[i] = (char*)palloc(gBufferSize.height * sizeof(char));
+
     if (gBuffer == 0)
     {
         Uart_SendString("Failed to allocate terminal buffer\n");
         return -1;
     }
     
-	unsigned int i;
 	for(i = 0; i < 256; i++)
 		gInputBuffer[i] = 0; // TODO: we don't have to do this, bss is initialized to 0?
 
@@ -234,7 +256,7 @@ int Terminal_Initialize(void)
     TerminalCommands_Initialize();
 
     printf("Terminal size: %dx%d\n", gBufferSize.width, gBufferSize.height);
-	
+
 	gTerminalInitialized = 1;
 
 	return 0;
