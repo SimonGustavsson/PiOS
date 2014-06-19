@@ -164,7 +164,7 @@ void PresentBufferToScreen(void)
 	{
         for (col = 0; col < gTerminalSize.width; col++)
 		{
-			//if(gTerminal[row][col] != gBuffer[row][col])
+			if(gTerminal[row][col] != gBuffer[row][col])
             {
 				gTerminal[row][col] = gBuffer[row][col];
 				Fb_DrawCharacterAt(gTerminal[row][col], col * (CHAR_WIDTH + CHAR_HSPACING), row * (CHAR_HEIGHT + CHAR_VSPACING));
