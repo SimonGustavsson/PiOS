@@ -27,7 +27,7 @@ int gBufferCaretCol;		// The current column of the caret - where text will be wr
 int gFirstVisibleBufferRow; // The row in the first buffer that is currently the first row on screen
 int gTerminalInitialized;
 
-char gInputBuffer[INPUT_BUFFER_SIZE];
+char* gInputBuffer;
 unsigned int gInputBufferIndex;
 
 char gPrompt[TERMINAL_PROMPT_MAX_LENGTH] = "PiOS->";
@@ -249,6 +249,7 @@ int Terminal_Initialize(void)
         return -1;
     }
     
+    gInputBuffer = (char*)palloc(INPUT_BUFFER_SIZE);
 	for(i = 0; i < 256; i++)
 		gInputBuffer[i] = 0; // TODO: we don't have to do this, bss is initialized to 0?
 
