@@ -6,6 +6,7 @@
 #include "hardware/interrupts.h"
 #include "hardware/uart.h"
 #include "hardware/paging.h"
+#include "hardware/timer.h"
 #include "hardware/device/sdBlockDevice.h"
 #include "main.h"
 #include "mem.h"
@@ -134,6 +135,9 @@ void sysinit_stage2(void)
     //printf("Testing translation fault by accessing unmapped memory...\n");
     //*((unsigned int*)0x10E00000) = 2;
 
+    // Example usage of timer to measure performance
+    long long start = Timer_GetTicks();
+
     // Initialize the SD card and filesystem
     BlockDevice* sd = (BlockDevice*)palloc(sizeof(BlockDevice));
 
@@ -154,7 +158,13 @@ void sysinit_stage2(void)
 
         // Add the SD card to the file system
         fs_add_device(sd);
-    }        
+    }
+
+    long long end = Timer_GetTicks();
+
+    // (This should be long long, but printf doesn't support that yet, also no long long div func)
+    unsigned int time_taken = ((unsigned int)(end - start)) / 1000;
+    printf("It took %dms to initialize the SD card and file system.\n", time_taken);
 
     // Show some usage of reserved memory at boot now that we're done reserving
     mem_printUsage();

@@ -43,4 +43,7 @@ void Timer_SetInterval(unsigned int milliSeconds);
 void Timer_Clear(void);
 void wait(unsigned int milliSeconds);
 
+// Gets the value of the free running timer
+long long Timer_GetTicks(void);
+
 #endif

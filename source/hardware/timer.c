@@ -33,6 +33,12 @@ void Timer_Clear(void)
 	gTimer->cs.bits.m3 = 1;
 }
 
+// Gets the value of the free running timer
+long long Timer_GetTicks(void)
+{
+    return (gTimer->chi << 32) | gTimer->clo;
+}
+
 void wait(unsigned int milliSeconds)
 {
 	unsigned int ttw = 1048 * milliSeconds;
