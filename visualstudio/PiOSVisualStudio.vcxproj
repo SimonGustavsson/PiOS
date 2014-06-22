@@ -73,6 +73,7 @@
     <ClInclude Include="..\include\memory_map.h" />
     <ClInclude Include="..\include\stdarg.h" />
     <ClInclude Include="..\include\terminalCommands.h" />
+    <ClInclude Include="..\include\thread.h" />
     <ClInclude Include="..\include\types\queue.h" />
     <ClInclude Include="..\include\types\string.h" />
     <ClInclude Include="..\include\types\types.h" />
@@ -115,6 +116,7 @@
     <ClCompile Include="..\source\terminal.c" />
     <ClCompile Include="..\source\hardware\timer.c" />
     <ClCompile Include="..\source\hardware\uart.c" />
+    <ClCompile Include="..\source\thread.c" />
     <ClCompile Include="..\source\types\queue.c" />
     <ClCompile Include="..\source\types\string.c" />
     <ClCompile Include="..\source\util\memutil.c" />
