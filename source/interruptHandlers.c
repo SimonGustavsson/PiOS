@@ -5,7 +5,7 @@
 #include "types/string.h"
 #include "util/utilities.h"
 #include "debugging.h"
-#include "taskScheduler.h"
+#include "scheduler.h"
 
 // Because I sometimes mess up and end up getting spammed with
 // Abort interrupts of various types, this adds a delay to the abort handlers
@@ -83,7 +83,7 @@ void c_irq_handler(volatile unsigned int* r0)
         {
             // Note IRQ has no acccess to peripherals? :(
             
-            TaskScheduler_TimerTick((registers*)r0);
+            Scheduler_TimerTick((registers*)r0);
 
             //gTaskSchedulerTick = 1;
             break;

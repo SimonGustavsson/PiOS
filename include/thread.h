@@ -1,0 +1,5 @@
+
+
+typedef struct {
+
+} thread;

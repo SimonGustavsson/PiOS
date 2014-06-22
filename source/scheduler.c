@@ -1,4 +1,4 @@
-#include "taskScheduler.h"
+#include "scheduler.h"
 #include "memory.h"
 #include "types/string.h"
 #include "util/utilities.h"
@@ -16,7 +16,7 @@
 static taskScheduler* gScheduler;
 static unsigned int gNextTID;
 
-void TaskScheduler_Initialize(void)
+void Scheduler_Initialize(void)
 {
 	gScheduler = (taskScheduler*)palloc(sizeof(taskScheduler));
 	gScheduler->currentTask = 0;
@@ -28,7 +28,7 @@ void TaskScheduler_Initialize(void)
     gNextTID = 1;
 }
 
-void TaskScheduler_Start(void)
+void Scheduler_Start(void)
 {
     Timer_Clear();
     Timer_SetInterval(TASK_SCHEDULER_TICK_MS);
@@ -37,14 +37,14 @@ void TaskScheduler_Start(void)
     // Switch in first task?
 }
 
-unsigned int TaskScheduler_GetNextTID(void)
+unsigned int Scheduler_GetNextTID(void)
 {
     // For now: Just an incremental integer, need to do someting better in the future
     return gNextTID++;
 }
 
 // This is probably not going to be "task" but rather "StartInfo" or similar
-void TaskScheduler_Enqueue(Task* task)
+void Scheduler_Enqueue(Process* task)
 {
 	// Add it to the queue for processing
 	Queue_Enqueue(&gScheduler->tasks, task);
@@ -52,9 +52,9 @@ void TaskScheduler_Enqueue(Task* task)
     gScheduler->tasksRunning++;
 }
 
-void TaskScheduler_NextTask(void)
+void Scheduler_NextTask(void)
 {
-    Task* old = gScheduler->currentTask;
+    Process* old = gScheduler->currentTask;
     if (old != 0)
     {
         // Switch out the old task
@@ -100,26 +100,31 @@ void TaskScheduler_NextTask(void)
     // if the new task's "started" value == 0, call Task_StartupFunction()
 }
 
-void TaskScheduler_StartTask(Task* task)
+void Scheduler_StartTask(Process* p)
 {
     printf("Starting task '%s', Id: %d, ttb0: 0x%h, Priority: %d. Path: %s\n",
-        task->name, task->id, task->ttb0, task->priority, task->path);
+        p->name, p->id, p->ttb0, p->priority, p->path);
 
     // Activate the translation table for the task
-    set_ttb0(task->ttb0, 1);
+    set_ttb0(p->ttb0, 1);
 
     // Update the Translation Table Control register with the task's TT's size
     unsigned int ttbc = get_ttbc();
-    ttbc &= task->ttb0_size;
+    ttbc &= p->ttb0_size;
     set_ttbc(ttbc);
 
     // Jump to the startup procedure of the task
-    task->result = task->entry();
+    // TODO: We can't do this, when the user's main function returns
+    // The process is still in user mode and this will fault.
+    //  Will need to wrap the users main function in a function
+    // We insert into user space that calls the users main function
+    // and perforce an exit() syscall when it returns
+    p->result = p->entry();
 
     // TODO: Remove task from scheduler
 }
 
-void TaskScheduler_TimerTick(registers* regs)
+void Scheduler_TimerTick(registers* regs)
 {
     printf("Task scheduler tick!\n");
 
@@ -127,24 +132,24 @@ void TaskScheduler_TimerTick(registers* regs)
     Timer_Clear();
     Timer_SetInterval(TASK_SCHEDULER_TICK_MS);
 
-    //TaskScheduler_NextTask();
+    //Scheduler_NextTask();
 }
 
-Task* TaskScheduler_CreateTask(void(*mainFunction)(void))
+Process* Scheduler_CreateTask(void(*mainFunction)(void))
 {
-	Task* task = (Task*)palloc(sizeof(Task));
+	Process* p = (Process*)palloc(sizeof(Process));
 
-	task->priority = TaskPriorityMedium;
+	p->priority = processPriorityMedium;
 
     // Set PC to the task's function so that as soon as we switch modes, that
     // function is invoked
-	task->registers->r15 = (unsigned long)&mainFunction;
-	task->state = Ready;
+	p->registers->r15 = (unsigned long)&mainFunction;
+	p->state = Ready;
 
 	// Allocate frames (start size = 5 MB / task)
     // Ask the mmu for some user pages and store the physical address we get in the tasks 
     // memory mappings so that we can update the page table to point to those physical locations
     // When we swap the task in. (We do this because all tasks share the same virtual memory address space)
 
-	return task;
+	return p;
 }

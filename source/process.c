@@ -1,16 +1,16 @@
-#include "stddef.h"
-#include "task.h"
-#include "hardware/mmu_c.h"
 #include "elf.h"
-#include "fs/fs.h"
-#include "memory.h"
-#include "types/string.h"
-#include "taskScheduler.h"
 #include "mem.h"
+#include "memory.h"
+#include "process.h"
+#include "scheduler.h"
+#include "stddef.h"
+#include "fs/fs.h"
+#include "hardware/mmu_c.h"
 #include "hardware/paging.h"
+#include "types/string.h"
 #include "util/memutil.h"
 
-static int Task_GetElfData(char* filename, char** buffer)
+static int Process_GetElfData(char* filename, char** buffer)
 {
     int handle = fs_open(filename, file_read);
     if (handle == INVALID_HANDLE)
@@ -41,10 +41,10 @@ static int Task_GetElfData(char* filename, char** buffer)
     return fileSize;
 }
 
-static task_entry_func Task_LoadElf(char* filename, unsigned int addr)
+static process_entry_func Process_LoadElf(char* filename, unsigned int addr)
 {
     char* file_data = NULL;
-    unsigned int file_size = Task_GetElfData(filename, &file_data);
+    unsigned int file_size = Process_GetElfData(filename, &file_data);
 
     if (file_size == -1)
     {
@@ -63,64 +63,64 @@ static task_entry_func Task_LoadElf(char* filename, unsigned int addr)
         return NULL;
     }
     
-    return (task_entry_func)addr;
+    return (process_entry_func)addr;
 }
 
-Task* Task_Create(char* filename, char* name)
+Process* Process_Create(char* filename, char* name)
 {
-    Task* t = (Task*)palloc(sizeof(Task));
+    Process* p = (Process*)palloc(sizeof(Process));
 
-    t->active = 0;
-    t->priority = TaskPriorityMedium;
-    t->state = Ready;
-    t->timeElapsed = 0;
-    t->started = 0;
-    t->id = TaskScheduler_GetNextTID();
-    t->path = NULL;
-    if (Task_InitializeMemory(t) != 0)
+    p->active = 0;
+    p->priority = processPriorityMedium;
+    p->state = Ready;
+    p->timeElapsed = 0;
+    p->started = 0;
+    p->id = Scheduler_GetNextTID();
+    p->path = NULL;
+    if (Process_InitializeMemory(p) != 0)
     {
-        phree(t);
+        phree(p);
         return NULL;
     }
 
     // NOTE: This assumes the kernel ttb1 identity maps physical memory to KERNEL_VA_START
-    unsigned int task_memory_start = (KERNEL_VA_START + t->mem_pages[0]);
+    unsigned int memory_start = (KERNEL_VA_START + p->mem_pages[0]);
     
-    task_entry_func func = Task_LoadElf(filename, task_memory_start);
+    process_entry_func func = Process_LoadElf(filename, memory_start);
     if (func == NULL)
     {
         printf("Scheduler_Enqueue: Failed to load elf '%s'\n", filename);
 
-        Task_Delete(t);
+        Process_Delete(p);
 
-        phree(t);
+        phree(p);
 
         return NULL;
     }
 
-    t->name = name;
-    t->path = (char*)palloc(my_strlen(filename));
-    my_strcpy(filename, t->path);
+    p->name = name;
+    p->path = (char*)palloc(my_strlen(filename));
+    my_strcpy(filename, p->path);
 
-    t->entry = func;
+    p->entry = func;
 
-    return t;
+    return p;
 }
 
-int Task_InitializeMemory(Task* t)
+int Process_InitializeMemory(Process* t)
 {
     unsigned int* pages = (unsigned int*)palloc(8 * sizeof(unsigned int*));
     unsigned int pages_allocated = 0;
 
     // Create TTB0 - 128byte TT - Covering 32MB of Virtual Memory - this fits neatly into 8 pages
-    int physical_tt = mem_nextFreeContiguous(TASK_INITIAL_PAGE_COUNT);
+    int physical_tt = mem_nextFreeContiguous(PROCESS_START_PAGE_COUNT);
 
     if (physical_tt == -1)
         goto cleanup;
 
     // Zero out all the pages - (Translation Fault for everything)
     unsigned int i;
-    for (i = 0; i < TASK_INITIAL_PAGE_COUNT; i++)
+    for (i = 0; i < PROCESS_START_PAGE_COUNT; i++)
     {
         unsigned int* tt_page = (unsigned int*)(KERNEL_VA_START + physical_tt + (PAGE_SIZE * i));
 
@@ -129,7 +129,7 @@ int Task_InitializeMemory(Task* t)
             tt_page[j] = 0;
     }
 
-    t->num_ttb0_pages = TASK_INITIAL_PAGE_COUNT;
+    t->num_ttb0_pages = PROCESS_START_PAGE_COUNT;
 
     // Temporarily map it into kernel space so we can mess with it
     //map_page(kernel_ttb1, TTB_SIZE_4GB_SIZE, physical_tt, KERNEL_VA_START + physical_tt, PAGE_BUFFERABLEERABLE | PAGE_CACHEABLEABLE | PT_TYPE_SMALLPAGE | SMALLPAGE_AP_RW);
@@ -140,7 +140,7 @@ int Task_InitializeMemory(Task* t)
     FlushTLB((unsigned int)temp_va_tt);
 
     // We can now write to the table
-    for (i = 0; i < TASK_INITIAL_PAGE_COUNT; i++)
+    for (i = 0; i < PROCESS_START_PAGE_COUNT; i++)
     {
         unsigned int page = mem_nextFree();
         
@@ -169,7 +169,7 @@ int Task_InitializeMemory(Task* t)
     t->ttb0 = temp_va_tt;
     t->ttb0_physical = (unsigned int)physical_tt;
     t->mem_pages = pages;
-    t->num_mem_pages = TASK_INITIAL_PAGE_COUNT;
+    t->num_mem_pages = PROCESS_START_PAGE_COUNT;
 
     *(unsigned int*)(t->mem_pages[0] + KERNEL_VA_START) = t->id;
 
@@ -188,7 +188,7 @@ cleanup:
     }
 
     // Free the TTB0 pages
-    for (i = 0; i < TASK_INITIAL_PAGE_COUNT; i++)
+    for (i = 0; i < PROCESS_START_PAGE_COUNT; i++)
         mem_free(physical_tt + (i * 0x1000));
 
     phree(pages);
@@ -197,18 +197,18 @@ cleanup:
     return -1;
 }
 
-void Task_Delete(Task* task)
+void Process_Delete(Process* p)
 {
     // Return the user memory  pages used
     unsigned int i;
-    for (i = 0; i < task->num_mem_pages; i++)
-        mem_free(task->mem_pages[i]);
+    for (i = 0; i < p->num_mem_pages; i++)
+        mem_free(p->mem_pages[i]);
 
-    for (i = 0; i < task->num_ttb0_pages; i++)
-        mem_free(task->ttb0_physical[i]);
+    for (i = 0; i < p->num_ttb0_pages; i++)
+        mem_free(p->ttb0_physical[i]);
 
-    if (task->path != NULL)
-        phree(task->path);
+    if (p->path != NULL)
+        phree(p->path);
 
-    phree(task->mem_pages);
+    phree(p->mem_pages);
 }

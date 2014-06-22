@@ -1,26 +1,26 @@
-#ifndef TASK_H
-#define TASK_H
+#ifndef PROCESS_H
+#define PROCESS_H
 
 #include "hardware/mmu_c.h"
 #include "hardware/paging.h"
 
-#define MAX_TASK_MEMORY_MB 10
-#define TASK_INITIAL_PAGE_COUNT 8
+#define PROCESS_START_PAGE_COUNT 8
 
-typedef int(*task_entry_func)(void);
+// int main() of processes
+typedef int(*process_entry_func)(void);
 
 typedef enum {
 	Running, // Currently executing
 	Waiting, // Waiting for resource/IO etc
 	Ready    // Ready to be executed
-} taskState;
+} processState;
 
 typedef enum {
-	TaskPriorityLow,
-	TaskPriorityMedium,
-	TaskPriorityHigh,
-	TaskPriorityVeryHigh
-} taskPriority;
+	processPriorityLow,
+	processPriorityMedium,
+	processPriorityHigh,
+	processPriorityVeryHigh
+} processPriority;
 
 // Stores process state when another process is being scheduled
 typedef struct {
@@ -48,30 +48,27 @@ typedef struct {
 	// Register state needs to be restored
 	registers* registers;
 
-	// The memory mapping, a process can at most 
-	//MemoryMapping memoryMappings[MAX_TASK_MEMORY_MB];
-
 	unsigned int    id;           // 
-	taskPriority    priority;     // The priority of the task
+	processPriority priority;     // The priority of the task
 	unsigned int    timeElapsed;  // How long this task has been running since it was switched in
 	unsigned int    active;       // Whether this task is currently executing
-	taskState       state;        // Current state of task
-    task_entry_func entry;        // Entry point of task in memory
+	processState    state;        // Current state of task
+    process_entry_func entry;     // Entry point of task in memory
     unsigned int    started;      // Whether the task has started
     int             result;       // The return value of the entry function
     char*           name;         // Print friendly name
     char*           path;         // Path to the executable (if any)
     unsigned int*   ttb0;         // Address to page table for this task
     unsigned int*   mem_pages;    // Array of all allocated pages for the user memory
-    unsigned int*   num_mem_pages;// Numer of elements in mem_pages
+    unsigned int    num_mem_pages;// Numer of elements in mem_pages
     unsigned int*   ttb0_physical;// Physical address to the ttb0 
     unsigned int    num_ttb0_pages;// Number of pages the ttb0 spans
     ttbc_ttbr0_size ttb0_size;     // The size of the ttb0 to set TTBC split to
-} Task;
+} Process;
 
-Task* Task_Create(char* filename, char* name);
+Process* Process_Create(char* filename, char* name);
 
 // Frees all memory associated with the given task
-void Task_Delete(Task* task);
+void Process_Delete(Process* p);
 
 #endif

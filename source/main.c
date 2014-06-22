@@ -1,6 +1,6 @@
 #include "memory.h"
 #include "stddef.h"
-#include "taskScheduler.h"
+#include "scheduler.h"
 #include "terminal.h"
 #include "types/string.h"
 #include "util/utilities.h"
@@ -16,23 +16,23 @@ int cmain(void)
 {
     Uart_SendString("Initialization complete. Go main!\n");
 
-    TaskScheduler_Initialize();
+    Scheduler_Initialize();
     
     Terminal_PrintWelcome();
     Terminal_PrintPrompt();
 
     // Create two dummy tasks and add them to the scheduler
-    Task* dummy1 = Task_Create("/dev/sd0/dummy1.elf", "Dummy1");
+    Process* dummy1 = Process_Create("/dev/sd0/dummy1.elf", "Dummy1");
     if (dummy1 != NULL)
     {
-        TaskScheduler_Enqueue(dummy1);
+        Scheduler_Enqueue(dummy1);
 
         // Just fire it off straight away or debugging as the scheduler isn't started now
-        TaskScheduler_StartTask(dummy1);
+        //Scheduler_StartTask(dummy1);
     }
 
-    //printf("Starting task scheduler...\n");
-    //TaskScheduler_Start();
+    //printf("Starting scheduler...\n");
+    //Scheduler_Start();
     printf("\nNot sure what to do now...\n");
     unsigned int i;
     while (1)

@@ -80,8 +80,8 @@
     <ClInclude Include="..\include\util\mmio.h" />
     <ClInclude Include="..\include\hardware\mmu_c.h" />
     <ClInclude Include="..\include\myfont.h" />
-    <ClInclude Include="..\include\task.h" />
-    <ClInclude Include="..\include\taskScheduler.h" />
+    <ClInclude Include="..\include\process.h" />
+    <ClInclude Include="..\include\scheduler.h" />
     <ClInclude Include="..\include\terminal.h" />
     <ClInclude Include="..\include\hardware\timer.h" />
     <ClInclude Include="..\include\hardware\uart.h" />
@@ -109,8 +109,8 @@
     <ClCompile Include="..\source\memory.c" />
     <ClCompile Include="..\source\hardware\mmu_c.c" />
     <ClCompile Include="..\source\platform.c" />
-    <ClCompile Include="..\source\task.c" />
-    <ClCompile Include="..\source\taskScheduler.c" />
+    <ClCompile Include="..\source\process.c" />
+    <ClCompile Include="..\source\scheduler.c" />
     <ClCompile Include="..\source\terminalCommands.c" />
     <ClCompile Include="..\source\terminal.c" />
     <ClCompile Include="..\source\hardware\timer.c" />
