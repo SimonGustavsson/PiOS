@@ -9,6 +9,7 @@ BUILD_DIR = bin
 SOURCE_DIR = source
 INCLUDE_DIR = include
 OBJ_DIR := $(BUILD_DIR)/obj
+FUNC_NAME_DIR := $(BUILD_DIR)/func_names
 DEPENDENCY_DIR := $(BUILD_DIR)/dependencies
 LINK_SCRIPT_SRC = memorymap.c
 LINK_SCRIPT = $(BUILD_DIR)/memory.ld
@@ -71,8 +72,14 @@ $(BUILD_DIR)/kernel.elf.debug: $(BUILD_DIR)/kernel.elf
 
 # Link all of the objects (Temporarily removed -l $(LIBRARIES))
 $(BUILD_DIR)/kernel.elf: $(AOBJECT) $(COBJECT) $(LINK_SCRIPT)
+# Create the function name list
+	@$(foreach f, $(FUNC_NAME_DIR)/*.txt, cat $f >> $(OBJ_DIR)/piosfunc.txt)
+
+# Make it an object file
+	@$(TOOL)-objcopy -I binary --output-target elf32-littlearm --binary-architecture arm $(OBJ_DIR)/piosfunc.txt $(OBJ_DIR)/piosfunc.o
+	
 	@echo Linking kernel.elf...
-	@$(TOOL)-ld $(LINKER_FLAGS) $(AOBJECT) $(COBJECT) $(GCC_INCLUDE) -Map $(BUILD_DIR)/kernel.map -T $(LINK_SCRIPT) -o $(BUILD_DIR)/kernel.elf
+	@$(TOOL)-ld $(LINKER_FLAGS) $(AOBJECT) $(COBJECT) $(OBJ_DIR)/piosfunc.o $(GCC_INCLUDE) -Map $(BUILD_DIR)/kernel.map -T $(LINK_SCRIPT) -o $(BUILD_DIR)/kernel.elf
 
 # Run the linker script through the preprocessor
 $(LINK_SCRIPT): $(LINK_SCRIPT_SRC)
@@ -89,7 +96,10 @@ $(LINK_SCRIPT): $(LINK_SCRIPT_SRC)
 $(OBJ_DIR)/$(notdir %).o: %.c
 	@echo Building $<
 	@$(TOOL)-gcc -c $< -o $@ $(CFLAGS) $(GCC_INCLUDE) -MD -MF $(DEPENDENCY_DIR)/$*.d 
-	
+
+# Extract out function names
+	@nm -P $@ | awk '$$2 == "T" && $$1 !~ /^_/ && $$1 != "main" {print $$3 length($$1)"\t"$$1"\0"}' > $(FUNC_NAME_DIR)/$*.txt
+
 # Create a temp file
 	@mv -f $(DEPENDENCY_DIR)/$*.d $(DEPENDENCY_DIR)/$*.d.tmp
 	
@@ -116,7 +126,8 @@ $(OBJ_DIR)/%.o: %.S
 directories:
 	@mkdir -p $(OBJ_DIR)
 	@mkdir -p $(DEPENDENCY_DIR)
-	
+	@mkdir -p $(FUNC_NAME_DIR)
+
 .PHONY: clean
     clean:
 	@rm -rf $(BUILD_DIR)/*

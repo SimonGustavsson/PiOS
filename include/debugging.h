@@ -10,6 +10,13 @@ typedef struct {
     int* fp;
 } call_frame;
 
+typedef struct {
+    unsigned int address;
+    unsigned int name_len;
+    char* name;
+} function_name;
+
+void Debug_ReadFunctionNames(void);
 void Debug_PrintCallstack();
 
 #endif

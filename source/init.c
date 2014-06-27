@@ -1,4 +1,5 @@
-    #include "asm.h"
+#include "asm.h"
+#include "debugging.h"
 #include "fs/fat32driver.h"
 #include "fs/fs.h"
 #include "init.h"
@@ -108,6 +109,8 @@ void sysinit_stage2(void)
         Uart_SendString("Failed to initialize terminal, * * * HALTING * * *\n");
         while (1);
     }
+
+    Debug_ReadFunctionNames();
 
     // Now that the terminal is initialized, add a VA mapping for it
     size fbSize = Fb_GetScreenSize();    
