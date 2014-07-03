@@ -55,12 +55,12 @@ $(BUILD_DIR)/kernel.img: $(BUILD_DIR)/kernel.elf $(BUILD_DIR)/kernel.elf.debug
 	@$(TOOL)-objcopy $(BUILD_DIR)/kernel.elf -O binary $(BUILD_DIR)/kernel.img
 
 # Create disassembly for ease of debugging
-debug: $(BUILD_DIR)/kernel.elf
+debug:
 	@echo Dumping disassembly...
-	@$(TOOL)-objdump -D $< > $@
+	@$(TOOL)-objdump -D $(BUILD_DIR)/kernel.elf > $(BUILD_DIR)/disassembly
 
 	@echo Dumping symbol table...
-	@$(TOOL)-objdump -t $< | awk -F ' ' '{if(NF >= 2) print $$(1), "\t", $$(NF);}' > $@
+	@$(TOOL)-objdump -t $(BUILD_DIR)/kernel.elf | awk -F ' ' '{if(NF >= 2) print $$(1), "\t", $$(NF);}' > $(BUILD_DIR)/symbols.txt
 
 # Extract debugging symbols into separate file
 $(BUILD_DIR)/kernel.elf.debug: $(BUILD_DIR)/kernel.elf
@@ -115,6 +115,7 @@ directories:
 	@mkdir -p $(OBJ_DIR)
 	@mkdir -p $(DEPENDENCY_DIR)
 
-.PHONY: clean
+.PHONY: clean debug
     clean:
 	@rm -rf $(BUILD_DIR)/*
+	@rmdir $(BUILD_DIR)
