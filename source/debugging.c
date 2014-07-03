@@ -87,7 +87,6 @@ void Debug_PrintCallstack(void)
     int depth = 0;
     int* fp = get_fp();
 
-    printf("Frame 0: %s(0x%h)\n", Debug_GetClosestPreviousFunction((unsigned int)fp), fp);
     do
     {
         if ((int)fp == 0 || (int)fp > 0x0A827000)
