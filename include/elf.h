@@ -1,6 +1,8 @@
 #define EI_NIDENT 16
 #define EXE_MAX_SEGMENTS 200
 
+#include "debugging.h"
+
 /*
 Object File format
 
@@ -415,14 +417,9 @@ typedef enum {
 
 int elf_verify_header_ident(elf32_header* header);
 
-/*
-Parses the given table data into an array of strings.
-table_data: The data of the string table.
-size: The size of the table data (in bytes).
-result: The address of an array of strings to assign the result to.
-Returns: The number of strings read (note that this is dynamically allocated and needs to be freed).
-*/
-int elf_get_strtab(unsigned char* table_data, unsigned int size, char*** result);
+// Reads all function names and their address from an in-memory ELF file
+// and returns the number of functions found
+int elf_get_func_info(char* elf, int elf_size, func_info** info);
 
 /*
 Loads the given relocatable ELF file into memory.

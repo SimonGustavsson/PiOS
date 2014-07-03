@@ -11,10 +11,9 @@ typedef struct {
 } call_frame;
 
 typedef struct {
-    unsigned int address;
-    unsigned int name_len;
     char* name;
-} function_name;
+    unsigned int address;
+} func_info;
 
 void Debug_ReadFunctionNames(void);
 void Debug_PrintCallstack();

@@ -4,7 +4,46 @@
 #define INT_MIN (-2147483647 - 1)
 #define INT_MAX 2147483647
 
+//Counts number of digits in an integer
+static int int_digit_count(int n) {
+    if (n < 0) n = (n == INT_MIN) ? INT_MAX : -n;
+    if (n < 10) return 1;
+    if (n < 100) return 2;
+    if (n < 1000) return 3;
+    if (n < 10000) return 4;
+    if (n < 100000) return 5;
+    if (n < 1000000) return 6;
+    if (n < 10000000) return 7;
+    if (n < 100000000) return 8;
+    if (n < 1000000000) return 9;
+    return 10;
+}
+
 static int my_vsscanf_core(char* s, int sLength, const char* format, va_list ap, int useLength);
+
+int strchrmatch(char* str, unsigned int str_len, char c)
+{
+    int count = -1;
+    unsigned int i;
+    for (i = 0; i <= str_len; i++)
+    {
+        if (str[i] == c)
+            count++;
+    }
+
+    return count;
+}
+
+unsigned int atoi(char* str)
+{
+    unsigned int result = 0;
+    while (*str) {
+        result = (result << 3) + (result << 1) + (*str) - '0';
+        str++;
+    }
+
+    return result;
+}
 
 int my_strlen(char* str)
 {
@@ -13,6 +52,16 @@ int my_strlen(char* str)
 		length++;
 
 	return length;
+}
+
+char* my_strcpy_s(const char* src, unsigned int dest_len, char* dst)
+{
+    char* ptr;
+    ptr = dst;
+    unsigned int num_written = 0;
+    while ((*dst++ = *src++) && (num_written++ < dest_len));
+
+    return ptr;
 }
 
 char* my_strcpy(const char* src, char* dst)

@@ -1,18 +1,47 @@
 #include "debugging.h"
 #include "types/string.h" // printf(...)
 #include "asm.h" // get_fp()
+#include "memory.h"
+#include "util/utilities.h"
 
-extern char _binary_bin_obj_piosfunc_txt_start;
-extern char _binary_bin_obj_piosfunc_txt_end;
+extern unsigned int LNK_KERNEL_END;
+
+func_info* gFunctions;
 
 void Debug_ReadFunctionNames(void)
 {
-    char* first = (char*)&_binary_bin_obj_piosfunc_txt_start;
-    unsigned int blob_end = &_binary_bin_obj_piosfunc_txt_end;
+    unsigned int kernel_va_end = &LNK_KERNEL_END;
 
-    printf("Binary blog of function names start at 0x%h\n", first);
-    printf("Binary blog of function names ends at 0x%h\n", blob_end);
-    printf("Value: %s\n", first);
+    char* blob = (char*)(kernel_va_end);
+
+    printf("Reading debugging symbols from 0x%h\n", blob);
+
+    unsigned int num_funcs = (blob[0] << 24) | (blob[1] << 16) | (blob[2] << 8) | blob[3];
+    blob += 5;
+
+    gFunctions = (func_info*)palloc(sizeof(func_info) * num_funcs);
+
+    unsigned int i;
+    for (i = 0; i < num_funcs; i++)
+    {
+        func_info* cur = &gFunctions[i];
+
+        int nameLen = my_strlen(blob);
+        
+        cur->name = (char*)palloc(nameLen + 1);
+        my_memcpy(cur->name, blob, nameLen);
+        cur->name[nameLen] = 0;
+        
+        blob += nameLen + 1;
+
+        cur->address = (blob[0] << 24) | (blob[1] << 16) | (blob[2] << 8) | (blob[3]);
+
+        //printf("Found '%s' at 0x%h\n", cur->name, cur->address);
+
+        blob += 4;
+    }
+
+    printf("Loaded %d function names\n", num_funcs);
 }
 
 void Debug_PrintCallstack(void)

@@ -24,7 +24,12 @@ irq:
     subs pc,lr,#4
 
 .globl data_abort
-data_abort:	
+data_abort:
+    ;@ Proloque
+    push {fp, lr}
+    add fp, sp, #4
+    sub sp, sp, #8
+
 	push {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,lr}
     
 	;@ Pass the address where it happened as the 1st argument
@@ -44,6 +49,9 @@ data_abort:
 	
 	pop  {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,lr}
 	
+    sub sp, fp, #4
+    pop {fp, lr}
+
 	subs PC, lr, #4
 
 .globl instruction_abort

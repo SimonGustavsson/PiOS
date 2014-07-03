@@ -52,6 +52,17 @@ static process_entry_func Process_LoadElf(char* filename, unsigned int addr)
         return NULL;
     }
 
+    func_info* functions;
+    int numFuncs = elf_get_func_info(file_data, file_size, &functions);
+
+    printf("%s has %d functions!\n", filename, numFuncs);
+    unsigned int i;
+    for (i = 0; i < numFuncs; i++)
+    {
+        phree(functions[i].name);
+    }
+    phree(functions);
+
     elf32_header* hdr = (elf32_header*)file_data;
     if (elf_verify_header_ident(hdr) != 0)
     {

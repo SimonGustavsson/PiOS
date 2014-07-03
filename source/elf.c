@@ -2,6 +2,8 @@
 #include "memory.h"
 #include "types/string.h"
 #include "util/utilities.h"
+#include "debugging.h"
+#include "stddef.h"
 
 int elf_verify_header_ident(elf32_header* header)
 {
@@ -43,34 +45,6 @@ int elf_verify_header_ident(elf32_header* header)
     return 0;
 }
 
-int elf_get_strtab(unsigned char* table_data, unsigned int size, char*** result)
-{
-    int strings_to_find = 0;
-    unsigned int i;
-    for (i = 0; i < size; i++)
-    {
-        if (*(table_data + i) == 0)
-            strings_to_find++;
-    }
-
-    unsigned char** res = (unsigned char**)palloc(sizeof(char*)* strings_to_find);
-    unsigned int strings_found = 0;
-    unsigned char* str_start = table_data;
-    for (i = 0; i < size; i++)
-    {
-        if (*(table_data + i) == 0)
-        {
-            res[strings_found] = str_start;
-            str_start = table_data + i + 1;
-            strings_found++;
-        }
-    }
-
-    *result = (char**)res;
-
-    return strings_found;
-}
-
 char* elf_get_sh_type(elf_shtype type)
 {
     switch (type)
@@ -102,6 +76,68 @@ char* elf_get_sh_type(elf_shtype type)
     default:
         return "reserved/unknown";
     }
+}
+
+int elf_get_func_info(char* elf, int elf_size, func_info** info)
+{
+    elf32_header* header = (elf32_header*)elf;
+
+    if (elf_verify_header_ident(header) != 0)
+        return NULL;
+
+    elf_shdr* shdrs = (elf_shdr*)&elf[header->shoff];
+
+    // Find the string table so we can resolve function names
+    char* strtab = NULL;
+    int numSymbols = 0;
+    elf_sym* symtab = NULL;
+    unsigned int i;
+    for (i = 0; i < header->shnum; i++)
+    {
+        // TODO: This doesn't deal well with multiple STRTAB/SYMTAB
+        if (shdrs[i].type == SHT_STRTAB && i != header->shstrndx)
+        {
+            strtab = elf + shdrs[i].offset;
+        }
+
+        if (shdrs[i].type == SHT_SYMTAB)
+        {
+            symtab = (elf_sym*)(elf + shdrs[i].offset);
+            numSymbols = shdrs[i].size / shdrs[i].entsize;
+        }
+    }
+
+    // Count number of functions
+    int numFunctions = 0;
+    for (i = 0; i < numSymbols; i++)
+    {
+        if (ELF32_ST_TYPE(symtab[i].info) == STT_FUNC && symtab[i].name > 0)
+            numFunctions++;
+    }
+
+    // We now know the number of functions, we have the symbol table and the string table
+    // Time to combine it all into the result
+    *info = (func_info*)palloc(numFunctions * sizeof(func_info));
+    int curFuncIndex = 0;
+    for (i = 0; i < numSymbols; i++)
+    {
+        // Skip irrelevant symbols
+        if (ELF32_ST_TYPE(symtab[i].info) != STT_FUNC || symtab[i].name == 0)
+            continue;
+
+        elf_sym* sym = &symtab[i];
+
+        func_info* curFun = &(*info)[curFuncIndex++];
+        curFun->address = sym->value;
+
+        char* name = strtab + sym->name;
+        int nameLen = my_strlen(name);
+
+        curFun->name = (char*)palloc(nameLen + 1);
+        my_strcpy_s(curFun->name, nameLen + 1, name);
+    }
+
+    return numFunctions;
 }
 
 int elf_load(char* file, int file_size, unsigned int mem_base)
