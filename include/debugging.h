@@ -15,6 +15,7 @@ typedef struct {
     unsigned int address;
 } func_info;
 
+char* Debug_GetClosestPreviousFunction(unsigned int address);
 void Debug_ReadFunctionNames(void);
 void Debug_PrintCallstack();
 

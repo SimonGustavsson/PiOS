@@ -26,6 +26,45 @@ void reboot(void)
     while (1);
 }
 
+static void swap(void *x, void *y, unsigned int l) {
+    char *a = x, *b = y, c;
+    while (l--) {
+        c = *a;
+        *a++ = *b;
+        *b++ = c;
+    }
+}
+
+// sort() shamelessly copied from Wikipedia because I'm tired
+// TODO: Look into better ways to do this?
+static void sort(char *array, unsigned int size, int(*cmp)(void*, void*), int begin, int end) {
+    if (end > begin) {
+        void *pivot = array + begin;
+        int l = begin + size;
+        int r = end;
+        while (l < r) {
+            if (cmp(array + l, pivot) <= 0) {
+                l += size;
+            }
+            else if (cmp(array + r, pivot) > 0)  {
+                r -= size;
+            }
+            else if (l < r) {
+                swap(array + l, array + r, size);
+            }
+        }
+        l -= size;
+        swap(array + begin, array + l, size);
+        sort(array, size, cmp, begin, l);
+        sort(array, size, cmp, r, end);
+    }
+}
+
+void qsort(void* base, unsigned int nitems, unsigned int element_size, int(*comparer)(const void*, const void*))
+{
+    sort(base, element_size, comparer, 0, (nitems - 1)*element_size);
+}
+
 void HexDump(void* mem, unsigned int size)
 {
     unsigned char* memPtr = (unsigned char*)mem;

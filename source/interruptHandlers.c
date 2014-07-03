@@ -27,7 +27,7 @@ void c_abort_data_handler(unsigned int address, unsigned int errorType, unsigned
 {
     // NOTE: fault_reg isn't used (yet), we should just use that and extract the Fault status from
     // it here as opposed to doing it in asm and pass it in as a separate argument
-    printf("Instruction at 0x%h caused a data abort accessing memory at 0x%h (", address, accessedAddr);
+    printf("Instruction in %s at 0x%h caused a data abort accessing memory at 0x%h (", Debug_GetClosestPreviousFunction(address), address, accessedAddr);
     print_abort_error(errorType);
     printf(")\n");
     

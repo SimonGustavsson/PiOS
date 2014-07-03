@@ -7,6 +7,15 @@
 extern unsigned int LNK_KERNEL_END;
 
 func_info* gFunctions;
+unsigned int gNFunctions;
+
+int func_info_comparer(const void* item0, const void* item1)
+{
+    func_info* first = (func_info*)item0;
+    func_info* second = (func_info*)item1;
+
+    return second->address - first->address;
+}
 
 void Debug_ReadFunctionNames(void)
 {
@@ -20,6 +29,7 @@ void Debug_ReadFunctionNames(void)
     blob += 5;
 
     gFunctions = (func_info*)palloc(sizeof(func_info) * num_funcs);
+    gNFunctions = num_funcs;
 
     unsigned int i;
     for (i = 0; i < num_funcs; i++)
@@ -40,18 +50,44 @@ void Debug_ReadFunctionNames(void)
 
         blob += 4;
     }
+    
+    printf("Loaded %d function names, sorting by address... ", num_funcs);
 
-    printf("Loaded %d function names\n", num_funcs);
+    qsort(gFunctions, num_funcs, sizeof(func_info), func_info_comparer);
+
+    printf("Done!\n");
+}
+
+char* Debug_GetClosestPreviousFunction(unsigned int address)
+{
+    unsigned int i;
+    func_info* best_match = (void*)0;
+    int best_match_diff = 0xFFFF;
+    for (i = 0; i < gNFunctions; i++)
+    {
+        func_info* cur = &gFunctions[i];
+
+        int diff = address - cur->address;
+        if (diff > 0 && diff < best_match_diff)
+        {
+            best_match = cur;
+            best_match_diff = diff;
+        }
+    }
+
+    if (best_match == ((void*)0))
+        return "Unknown";
+    
+    return best_match->name;
 }
 
 void Debug_PrintCallstack(void)
 {
-    printf("Stack trace: ");
     int lr = 0;
     int depth = 0;
     int* fp = get_fp();
 
-    printf("From: 0x%h -> ", (int)fp);
+    printf("Frame 0: %s(0x%h)\n", Debug_GetClosestPreviousFunction((unsigned int)fp), fp);
     do
     {
         if ((int)fp == 0 || (int)fp > 0x0A827000)
@@ -60,11 +96,9 @@ void Debug_PrintCallstack(void)
         lr = *fp;
         fp = (int*)*(fp - 1);
 
-        printf("0x%h -> ", lr);
+        printf("Frame %d: %s (0x%h)\n", depth, Debug_GetClosestPreviousFunction(lr), lr);
 
     } while (fp != 0 && depth++ < 3 && lr != 0x80CC); // Address of branch to cmain from asm
-
-    printf("\n");
 }
 
 void debugDumpStack(unsigned int* sp)

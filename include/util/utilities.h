@@ -50,6 +50,7 @@ static inline unsigned int byte_swap(unsigned int in)
     return ret;
 }
 
+void qsort(void* base, unsigned int nitems, unsigned int element_size, int(*comparer)(const void*, const void*));
 void* my_memcpy(const void* dest, const void* src, unsigned int bytesToCopy);
 void HexDump(void* mem, unsigned int size);
 void reboot(void);
