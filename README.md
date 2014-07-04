@@ -15,9 +15,10 @@ This file is used to track its current state and what I'm currently working on.
 * Fat32 - Small subset (read-only)
 * Loading and executing binaries (ELFs)
 * UART and MiniUart send/receive (interrupt based receive)
+* Virtual memory (high memory kernel, Low memory user)
+* Stacktraces on faults
 
 #### What I'm planning to do / working on:
-* Virtual memory (high memory kernel, Low memory user)
 * Multitasking
 * Fat32 - Writing
 * Audio
