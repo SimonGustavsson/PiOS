@@ -95,9 +95,11 @@ void Debug_PrintCallstack(void)
         lr = *fp;
         fp = (int*)*(fp - 1);
 
-        printf("Frame %d: %s (0x%h)\n", depth, Debug_GetClosestPreviousFunction(lr), lr);
+        // Skip the two data_fault functions
+        if (depth > 1)
+            printf("Frame %d: %s (0x%h)\n", depth - 2, Debug_GetClosestPreviousFunction(lr), lr);
 
-    } while (fp != 0 && depth++ < 3 && lr != 0x80CC); // Address of branch to cmain from asm
+    } while (fp != 0 && depth++ < MAX_FRAME_DEPTH && lr != 0x80CC); // Address of branch to cmain from asm
 }
 
 void debugDumpStack(unsigned int* sp)

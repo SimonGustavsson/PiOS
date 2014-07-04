@@ -5,6 +5,7 @@
 #include "memory_map.h"
 
 ;@ C Signature void do_mmu(uint* ttb0, uint* ttb1, uint split)
+.type do_mmu %function
 .section .text.init
 .globl do_mmu
 do_mmu:
@@ -87,6 +88,7 @@ do_mmu:
 ;@ C Signature: void set_ttb0(unsigned int* pt, unsigned int cacheable)
 ;@              pt: Physical address of the page table to install into ttb0
 ;@              cacheable: Whether the memory is cacheable. 1 = Cacheable, 0 = Noncacheable
+.type set_ttb0 %function
 .section .text
 .globl set_ttb0
 set_ttb0:
@@ -122,6 +124,7 @@ set_ttb0:
 ;@ Gets the value of the Control register configuration data
 ;@ C Signature: unsigned int get_crcd(void)
 ;@
+.type get_crcd %function
 .globl get_crcd
 get_crcd:
     mrc p15, 0, r0, c1, c0, 0
@@ -131,6 +134,7 @@ get_crcd:
 ;@ Gets the value of the Translation table 0 base register
 ;@ C Signature: unsigned int get_ttb0(void)
 ;@
+.type get_ttb0 %function
 .globl get_ttb0
 get_ttb0:
     mrc p15, 0, r0, c2, c0, 0
@@ -140,6 +144,7 @@ get_ttb0:
 ;@ Gets the value of the Translation Table 1 Base Register
 ;@ C Signature: unsigned int get_ttb1(void)
 ;@
+.type get_ttb1 %function
 .globl get_ttb1
 get_ttb1:
     mrc p15, 0, r0, c2, c0, 1
@@ -149,6 +154,7 @@ get_ttb1:
 ;@ Gets the value of the Translation table base control register
 ;@ C Signature: unsigned int get_ttbc(void)
 ;@
+.type get_ttbc %function
 .globl get_ttbc
 get_ttbc:
 	mrc p15, 0, r0, c2, c0, 2    
@@ -158,6 +164,8 @@ get_ttbc:
 ;@ Sets the value of the Translation Table Base Control register
 ;@ C Signature: void set_ttbc(unsigned int val);
 ;@
+
+.type set_ttbc %function
 .globl set_ttbc
 set_ttbc:
     mcr p15, 0, r0, c2, c0, 2
@@ -167,6 +175,7 @@ set_ttbc:
 ;@ Sets the value of the Domain Access Control Register
 ;@ C Signature: void set_domain_register(unsigned int)
 ;@
+.type set_domain_register %function
 .globl set_domain_register
 set_domain_register:
     MCR p15, 0, r0, c3, c0, 0
@@ -177,6 +186,8 @@ set_domain_register:
 ;@ Gets the value of the domain register
 ;@ C Signature: unsigned int get_domain_register(void)
 ;@
+.type get_domain_register %function
+.type get_domain_register %function
 .globl get_domain_register
 get_domain_register:
     mrc p15, 0, r0, c3, c0, 0

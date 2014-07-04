@@ -2,6 +2,7 @@
 ;@ Interrupt vector functions - do NOT call these from C code!
 ;@ 
 
+.type irq %function
 .globl irq
 irq:
     ;@ We have no idea what might be in these registers, so make sure they're
@@ -23,6 +24,7 @@ irq:
 	;@ Offset: FIQ=4, IRQ=4, Pre-Fetch=4, SWI=0, Undefined=0, DataAbort=8, Reset=n/a
     subs pc,lr,#4
 
+.type data_abort %function
 .globl data_abort
 data_abort:
     ;@ Proloque
@@ -54,6 +56,8 @@ data_abort:
 
 	subs PC, lr, #4
 
+    
+.type instruction_abort %function
 .globl instruction_abort
 instruction_abort:
 	push {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,lr}
@@ -71,6 +75,8 @@ instruction_abort:
 	
 	subs PC, lr, #4
 
+    
+.type undefined %function
 .globl undefined
 undefined:
     push {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,lr}
@@ -83,6 +89,8 @@ undefined:
 
 	subs PC, lr, #4
 
+    
+.type swi %function
 .globl swi
 swi:
     ;@ Save registers and LR onto stack

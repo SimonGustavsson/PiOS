@@ -6,6 +6,7 @@
 ;@ Updates CPSR to enable IRQ interrupts
 ;@ C Signature: void enable_irq(void)
 ;@
+.type enable_irq %function
 .globl enable_irq ;@ 
 enable_irq:
     mrs r0, cpsr     ;@ Retrieve status
@@ -17,6 +18,7 @@ enable_irq:
 ;@ Updates CPSR to disable IRQ interrupts
 ;@ C Signature: void disable_irq(void)
 ;@
+.type disable_irq %function
 .globl disable_irq
 disable_irq:
 	mrs r0, cpsr      ;@ Retrieve status
@@ -28,6 +30,7 @@ disable_irq:
 ;@ Updates CPSR to enable FIQ interrupts
 ;@ C Signature: void enable_fiq(void)
 ;@
+.type enable_fiq %function
 .globl enable_fiq
 enable_fiq:
 	mrs r0, cpsr
@@ -39,6 +42,7 @@ enable_fiq:
 ;@ Updates CPSR to disable FIQ interrupts
 ;@ C Signature: void disable_fiq(void)
 ;@
+.type disable_fiq %function
 .globl disable_fiq
 disable_fiq:
 	mrs r0, cpsr

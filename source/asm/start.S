@@ -1,5 +1,7 @@
 #include "memory_map.h"
 
+
+.type reset %function
 .section .text.boot
 .globl reset
 reset:
@@ -42,6 +44,8 @@ reset:
 	blx r0
 
 ;@ cmain should never return, just hang around (heh.. get it?)
+
+.type hang %function
 .section .text.boot
 .globl hang
 hang: 
