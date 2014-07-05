@@ -31,7 +31,7 @@ void c_abort_data_handler(unsigned int address, unsigned int errorType, unsigned
     print_abort_error(errorType);
     printf(")\n");
     
-    Debug_PrintCallstack();
+    Debug_PrintCallstack(2);
  
     wait(INTERRUPT_HANDLER_DELAY);
 }

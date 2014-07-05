@@ -1,10 +1,14 @@
 #include "memory_map.h"
 
-
 .type reset %function
 .section .text.boot
 .globl reset
 reset:
+    ;@ Args from bootloader
+    mov r4, r0 ;@ Machine type (Rpi bootloader)
+    mov r5, r1 ;@ Atags PA (Rpi bootloader)
+    mov r6, r2 ;@ Debugging symbols (PiOS Loader)
+
 	mov r0,#0x8000
     mov r1,#0x0000
 	
@@ -39,9 +43,14 @@ reset:
     msr cpsr_c,r0
     ldr sp, =SVC_STACK_PA_START
 	
+    ;@ Pass in the args
+    mov r0, r4
+    mov r1, r5
+    mov r2, r6
+
 	;@ Kick of system initialization (init.c)
-	ldr r0, =sysinit_stage1
-	blx r0
+	ldr r3, =sysinit_stage1
+	blx r3
 
 ;@ cmain should never return, just hang around (heh.. get it?)
 

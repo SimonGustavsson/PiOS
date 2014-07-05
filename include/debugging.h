@@ -16,7 +16,9 @@ typedef struct {
 } func_info;
 
 char* Debug_GetClosestPreviousFunction(unsigned int address);
-void Debug_ReadFunctionNames(void);
-void Debug_PrintCallstack();
+void Debug_ReadFunctionNames(char* symbolAddr);
+
+// skipFrames is the amount of stack from to skip (from the current)
+void Debug_PrintCallstack(unsigned int skipFrames);
 
 #endif

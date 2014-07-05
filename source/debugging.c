@@ -17,12 +17,8 @@ int func_info_comparer(const void* item0, const void* item1)
     return second->address - first->address;
 }
 
-void Debug_ReadFunctionNames(void)
+void Debug_ReadFunctionNames(char* blob)
 {
-    unsigned int kernel_va_end = &LNK_KERNEL_END;
-
-    char* blob = (char*)(kernel_va_end);
-
     printf("Reading debugging symbols from 0x%h\n", blob);
 
     unsigned int num_funcs = (blob[0] << 24) | (blob[1] << 16) | (blob[2] << 8) | blob[3];
@@ -81,24 +77,31 @@ char* Debug_GetClosestPreviousFunction(unsigned int address)
     return best_match->name;
 }
 
-void Debug_PrintCallstack(void)
+void Debug_PrintCallstack(unsigned int skipFrames)
 {
     int lr = 0;
     int depth = 0;
     int* fp = get_fp();
 
+    // Depth is 0-index, compensate for this
+    skipFrames -= 1;
+
     do
     {
-        if ((int)fp == 0 || (int)fp > 0x0A827000)
-            break;
-
         lr = *fp;
         fp = (int*)*(fp - 1);
 
         // Skip the two data_fault functions
-        if (depth > 1)
+        if (depth > skipFrames)
             printf("Frame %d: %s (0x%h)\n", depth - 2, Debug_GetClosestPreviousFunction(lr), lr);
 
+        // Have we reached the end?
+        // Note: FP Might point to the physical location of the stack
+        // If the frame was set up before virtual memory was enabled, if so, compensate
+        if (fp < KERNEL_VA_START)
+            fp += KERNEL_VA_START;
+        else if (fp > KERNEL_VA_START + 0x10000000)
+            break;
     } while (fp != 0 && depth++ < MAX_FRAME_DEPTH && lr != 0x80CC); // Address of branch to cmain from asm
 }
 

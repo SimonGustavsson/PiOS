@@ -31,7 +31,7 @@ __attribute__((naked, aligned(32))) static void interrupt_vector(void)
     );
 }
 
-void sysinit_stage1(void)
+void sysinit_stage1(int machineType, int aTagsPA, int dbgsymboladdr)
 {
     // First thing we want to do is map the kernel and peripherals into high memory
     unsigned int* basePageTable = (unsigned int *)KERNEL_PA_PT;
@@ -49,10 +49,10 @@ void sysinit_stage1(void)
 
     // Memory is all set up, time to branch into high memory
     // to move to stage 2 of initialization
-    sysinit_stage2();
+    sysinit_stage2(machineType, aTagsPA, dbgsymboladdr);
 }
 
-void sysinit_stage2(void)
+void sysinit_stage2(int machineType, int atagsPa, int dbgsymboladdr)
 {
     // Setup the interrupt vector
     asm volatile("mcr p15, 0, %[addr], c12, c0, 0" : : [addr] "r" (&interrupt_vector));
@@ -110,7 +110,8 @@ void sysinit_stage2(void)
         while (1);
     }
 
-    Debug_ReadFunctionNames();
+    char* dbgSymbolsVa = (char*)(KERNEL_VA_START + dbgsymboladdr);
+    Debug_ReadFunctionNames(dbgSymbolsVa);
 
     // Now that the terminal is initialized, add a VA mapping for it
     size fbSize = Fb_GetScreenSize();    
@@ -172,6 +173,10 @@ void sysinit_stage2(void)
     // Show some usage of reserved memory at boot now that we're done reserving
     mem_printUsage();
     
+    printf("Our machine type is: 0x%h\n", machineType);
+    printf("ATAGS start at 0x%h\n", atagsPa);
+    printf("Debugging symbols are at 0x%h\n", dbgsymboladdr);
+
     // Enter... the kernel!
     cmain();
 }
