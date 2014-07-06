@@ -37,7 +37,7 @@ static void swap(void *x, void *y, unsigned int l) {
 
 // sort() shamelessly copied from Wikipedia because I'm tired
 // TODO: Look into better ways to do this?
-static void sort(char *array, unsigned int size, int(*cmp)(void*, void*), int begin, int end) {
+static void sort(char *array, unsigned int size, int(*cmp)(const void*, const void*), int begin, int end) {
     if (end > begin) {
         void *pivot = array + begin;
         int l = begin + size;
