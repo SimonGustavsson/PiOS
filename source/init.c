@@ -1,4 +1,5 @@
 #include "asm.h"
+#include "atags.h"
 #include "debugging.h"
 #include "fs/fat32driver.h"
 #include "fs/fs.h"
@@ -176,6 +177,8 @@ void sysinit_stage2(int machineType, int atagsPa, int dbgsymboladdr)
     printf("Our machine type is: 0x%h\n", machineType);
     printf("ATAGS start at 0x%h\n", atagsPa);
     printf("Debugging symbols are at 0x%h\n", dbgsymboladdr);
+
+    atags_parse(KERNEL_VA_START + atagsPa);
 
     // Enter... the kernel!
     cmain();

@@ -51,6 +51,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\include\asm.h" />
+    <ClInclude Include="..\include\atags.h" />
     <ClInclude Include="..\include\debugging.h" />
     <ClInclude Include="..\include\elf.h" />
     <ClInclude Include="..\include\fs\fat32driver.h" />
@@ -90,6 +91,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\memorymap.c" />
+    <ClCompile Include="..\source\atags.c" />
     <ClCompile Include="..\source\debugging.c" />
     <ClCompile Include="..\source\elf.c" />
     <ClCompile Include="..\source\fs\fat32driver.c" />
