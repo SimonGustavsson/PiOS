@@ -14,6 +14,7 @@
 
 // Defines to get the VS editor to stop complaining about various GNU stuff
 #ifdef _MSC_VER
+    #define volatile(a)
     #define __attribute__(a)
     #define asm 
 #endif

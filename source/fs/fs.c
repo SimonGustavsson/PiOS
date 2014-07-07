@@ -239,7 +239,7 @@ int fs_open(char* filename, file_mode mode)
     direntry* fileEntry = 0;
     if (part->driver->operation(part->driver, fs_op_open, filename, &fileEntry, 0) != S_OK)
     {
-        printf("Failed to get directory entry for '%s', does it really exist?\n", filename);
+        //printf("Failed to get directory entry for '%s', does it really exist?\n", filename);
         return INVALID_HANDLE;
     }
 

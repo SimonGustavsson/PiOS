@@ -53,6 +53,7 @@
     <ClInclude Include="..\include\asm.h" />
     <ClInclude Include="..\include\atags.h" />
     <ClInclude Include="..\include\debugging.h" />
+    <ClInclude Include="..\include\dwarf.h" />
     <ClInclude Include="..\include\elf.h" />
     <ClInclude Include="..\include\fs\fat32driver.h" />
     <ClInclude Include="..\include\fs\fs.h" />

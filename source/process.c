@@ -15,7 +15,6 @@ static int Process_GetElfData(char* filename, char** buffer)
     int handle = fs_open(filename, file_read);
     if (handle == INVALID_HANDLE)
     {
-        printf("Failed to open %s\n", filename);
         return -1;
     }
 
@@ -48,7 +47,6 @@ static process_entry_func Process_LoadElf(char* filename, unsigned int addr)
 
     if (file_size == -1)
     {
-        printf("Failed to load '%s'\n", filename);
         return NULL;
     }
 
@@ -100,7 +98,7 @@ Process* Process_Create(char* filename, char* name)
     process_entry_func func = Process_LoadElf(filename, memory_start);
     if (func == NULL)
     {
-        printf("Scheduler_Enqueue: Failed to load elf '%s'\n", filename);
+        printf("Scheduler_Enqueue: Failed to load elf '%s', does it exist?\n", filename);
 
         Process_Delete(p);
 

@@ -3,7 +3,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LocalDebuggerCommand>cmd.exe</LocalDebuggerCommand>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerCommandArguments>/C "$(ProjectDir)..\..\PiOSLoader\deployer\bin\Debug\PiOSDeployer.exe $(ProjectDir)..\bin\kernel.elf"</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>/C "$(ProjectDir)..\..\PiOSLoader\deployer\bin\Debug\PiOSDeployer.exe $(ProjectDir)..\bin\kernel.elf 460800"</LocalDebuggerCommandArguments>
     <LocalDebuggerDebuggerType>ManagedOnly</LocalDebuggerDebuggerType>
   </PropertyGroup>
 </Project>
