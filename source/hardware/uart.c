@@ -24,10 +24,13 @@ void Uart_Initialize() {
 	gUart->icr = 0x7FF;
 
 	// Set integer & fractional part of baud rate.
+    // At 8MHz uart clock, this is 460800 baud
+    // See: http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0183g/I49493.html
+    // For calculations
 	gUart->ibrd = 1;
-	gUart->fbrd = 40;
+    gUart->fbrd = 5;
 
-	// 8 bit data transmissio (1 stop bit, no parity). (Note: Not enabling fifo)
+	// 8 bit data transmission (1 stop bit, no parity). (Note: Not enabling fifo)
 	gUart->lcrh = (1 << 5) | (1 << 6);
 
 	// Mask all interrupts.
