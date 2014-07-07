@@ -114,6 +114,64 @@ unsigned int Mailbox_GetPowerState(unsigned int deviceId)
 	return mailbuffer[6];
 }
 
+unsigned int Mailbox_GetClockRate(unsigned int clockId)
+{
+    volatile unsigned int mailbuffer[256] __attribute__((aligned(16)));
+
+    unsigned int bufSize = 1;
+    mailbuffer[bufSize++] = 0;                 // 1. Indicates Requests
+    mailbuffer[bufSize++] = MBT_GET_CLOCKRATE; // 2. Tag
+    mailbuffer[bufSize++] = 0x8;               // 3. Value buffer size
+    mailbuffer[bufSize++] = 0x4;               // 4. Value size
+    mailbuffer[bufSize++] = clockId;           // 5. Value - Clock Id
+    mailbuffer[bufSize++] = 0;                 // 6. Response - Rate (in Hz)
+    mailbuffer[bufSize++] = 0;                 // 7. End of message tag
+    mailbuffer[0] = bufSize * 4;               // 0. Size o entire buffer (in bytes)
+
+    Mailbox_Write(8, (unsigned int)mailbuffer);
+
+    Mailbox_Read(8);
+
+    if (mailbuffer[1] != RESPONSE_SUCCESS)
+    {
+        printf("Mailbox: Failed to retrieve clock rate for clock with id %d\n", clockId);
+        return -1;
+    }
+
+    return mailbuffer[6];
+}
+
+unsigned int Mailbox_SetClockRate(unsigned int clockId, unsigned int rate)
+{
+    volatile unsigned int mailbuffer[256] __attribute__((aligned(16)));
+
+    unsigned int bufSize = 1;
+    mailbuffer[bufSize++] = 0;                 // 1. Request indicator
+    mailbuffer[bufSize++] = MBT_SET_CLOCKRATE; // 2. Tag
+    mailbuffer[bufSize++] = 0x8;               // 3. Value buffer size
+    mailbuffer[bufSize++] = 0x8;               // 4. Value size
+    mailbuffer[bufSize++] = clockId;           // 5. Id of clock to change (see mb_clock_id enum)
+    mailbuffer[bufSize++] = rate;              // 6. New clock rate (in Hz)
+    mailbuffer[bufSize++] = 0;                 // 7. End of message
+    mailbuffer[0] = bufSize * 4;               // 0. Size of this buffer
+
+    Mailbox_Write(8, (unsigned int)mailbuffer);
+
+    if (mailbuffer[1] != RESPONSE_SUCCESS)
+    {
+        printf("Failed to set clock rate for clock %d, Invalid mailbox response.\n", clockId);
+        return -1;
+    }
+
+    if (mailbuffer[6] == 0)
+    {
+        printf("Failed to set clock rate for clock %d, Invalid clock id.\n", clockId);
+        return -1;
+    }
+
+    return mailbuffer[6];
+}
+
 int Mailbox_SetDevicePowerState(unsigned int deviceId, unsigned int powerState)
 {
 	volatile unsigned int mailbuffer[256] __attribute__ ((aligned (16)));

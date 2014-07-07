@@ -6,6 +6,7 @@
 #include "util/utilities.h"
 #include "hardware/paging.h"
 #include "asm.h"
+#include "hardware/mailbox.h"
 
 // This variable makes sure we have something in the .data section,
 // Because we place .bss before data, this will make sure that the compiler
@@ -22,14 +23,16 @@ int cmain(void)
     Terminal_PrintPrompt();
 
     // Create two dummy tasks and add them to the scheduler
-    Process* dummy1 = Process_Create("/dev/sd0/dummy1.elf", "Dummy1");
-    if (dummy1 != NULL)
+    //Process* dummy1 = Process_Create("/dev/sd0/dummy1.elf", "Dummy1");
+    //if (dummy1 != NULL)
     {
-        Scheduler_Enqueue(dummy1);
+      //  Scheduler_Enqueue(dummy1);
 
         // Just fire it off straight away or debugging as the scheduler isn't started now
         //Scheduler_StartTask(dummy1);
     }
+
+    printf("Uart clock speed is: %dHz\n", Mailbox_GetClockRate(MBC_ID_UART));
 
     //printf("Starting scheduler...\n");
     //Scheduler_Start();
