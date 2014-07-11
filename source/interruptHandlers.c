@@ -73,7 +73,7 @@ void c_swi_handler(unsigned int r0, unsigned int r1, unsigned int r2, unsigned i
     }
 }
 
-void c_irq_handler(volatile unsigned int* r0)
+void c_irq_handler(volatile unsigned int* sp)
 {
     unsigned int pendingIrq = Arm_IrqGetPending();
 
@@ -83,9 +83,8 @@ void c_irq_handler(volatile unsigned int* r0)
         {
             // Note IRQ has no acccess to peripherals? :(
             
-            Scheduler_TimerTick((registers*)r0);
+            Scheduler_TimerTick((registers*)(sp - 1));
 
-            //gTaskSchedulerTick = 1;
             break;
         }
         case interrupt_source_uart:

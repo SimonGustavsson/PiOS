@@ -22,26 +22,42 @@ typedef enum {
 	processPriorityVeryHigh
 } processPriority;
 
+typedef unsigned int uint32;
+
 // Stores process state when another process is being scheduled
 typedef struct {
-	unsigned int r0;
-	unsigned int r1;
-	unsigned int r2;
-	unsigned int r3;
-	unsigned int r4;
+    uint32 lr;
+    uint32 sprs;
+    uint32 sp;
+    uint32 lr2;
 
-	unsigned int r5;
-	unsigned int r6;
-	unsigned int r7;
-	unsigned int r8;
-	unsigned int r9;
+    uint32 r0;
+    uint32 r1;
+    uint32 r2;
+    uint32 r3;
+    uint32 r4;
+    uint32 r5;
+    uint32 r6;
+    uint32 r7;
+    uint32 r8;
+    uint32 r9;
+    uint32 r10;
+    uint32 r11;
+    uint32 r12;
 
-	unsigned int r10;
-	unsigned int r11;
-	unsigned int r12;
-	unsigned int r13; // SP
-	unsigned int r14; // LR
-	unsigned int r15; // PC
+	//uint32 r12;
+	//uint32 r11;
+	//uint32 r10;
+	//uint32 r9;
+	//uint32 r8;
+	//uint32 r7;
+	//uint32 r6;
+	//uint32 r5;
+	//uint32 r4;
+	//uint32 r3;
+	//uint32 r2;
+	//uint32 r1;
+ //   uint32 r0;
 } registers;
 
 typedef struct {

@@ -5,24 +5,42 @@
 .type irq %function
 .globl irq
 irq:
-    ;@ We have no idea what might be in these registers, so make sure they're
-	;@ saved so we can go back to the previous state once the interrupt has been handled
-	;@ TODO: Use STMFD?
-    push {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,lr}
+    sub lr, #4
+
+    push {r0-r12,lr}
+    
+    ;@
+    ;@ Save the context
+    ;@
+    msr cpsr_c, #0xD3 ;@ Hop into SVC mode to save registers
+    mrs r0, spsr      ;@ Save banked registers
+    mov r1, sp  
+    mov r2, lr  
+
+    msr cpsr_c, #0xD2 ;@ Back to IRQ mode
+    push {r0-r2}      ;@ Push values to IRQ stack
 
     ;@ Pass in a pointer to the registers as a param to the irq handler
     mov r0, sp
 
+    ;@
 	;@ Jump to C Handler
+    ;@
     bl c_irq_handler
 
-	;@ TODO: Use LDMFD?
-    pop  {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,lr}
+    ;@ Restore saved registers
+    pop {r0-r2}        ;@ Restore banked registers from IRQ stack
+    msr cpsr_c, #0xD3  ;@ Get into SVC mode
+    msr spsr_svc, r0
+    msr spsr, r0       ;@ Restore registers
+    mov sp, r1
+    mov lr, r2
+
+    msr cpsr_c, #0xD2 ;@ Hop back into IRQ mode
+
+    pop  {r0-r12,lr}
 	
-	;@ Due to the CPU pipeline, we have to manipulate the return address
-	;@ The value stored in LR will include an offset which we need to subtract
-	;@ Offset: FIQ=4, IRQ=4, Pre-Fetch=4, SWI=0, Undefined=0, DataAbort=8, Reset=n/a
-    subs pc,lr,#4
+    movs pc, lr   ;@ Return!
 
 .type data_abort %function
 .globl data_abort

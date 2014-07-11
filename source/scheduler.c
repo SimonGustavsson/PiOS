@@ -10,6 +10,7 @@
 #include "memory_map.h"
 #include "asm.h"
 #include "mem.h"
+#include "main.h"
 
 // This is really the heart of PiOS - this is where PiOS sits constantly
 
@@ -126,11 +127,21 @@ void Scheduler_StartTask(Process* p)
 
 void Scheduler_TimerTick(registers* regs)
 {
-    printf("Task scheduler tick!\n");
+    printf("regs are at 0x%h\n", &regs);
+    printf("r0: 0x%h\t r1: 0x%h\t r2: 0x%h\n", regs->r0, regs->r1, regs->r2);
+    printf("r3: 0x%h\t r4: 0x%h\t r5: 0x%h\n", regs->r3, regs->r4, regs->r5);
+    printf("r6: 0x%h\t r7: 0x%h\t r8: 0x%h\n", regs->r6, regs->r7, regs->r8);
+    printf("r9: 0x%h\t r10: 0x%h\t r11(FP): 0x%h\n", regs->r9, regs->r10, regs->r11);
+    printf("r12(IP): 0x%h\t LR: 0x%h\t SPRS: 0x%h\t SP: 0x%h\t LR2: 0x%h\n", regs->r12, regs->lr, regs->sprs, regs->sp, regs->lr2);
+    printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
 
     // Restart the timer
     Timer_Clear();
     Timer_SetInterval(TASK_SCHEDULER_TICK_MS);
+    Arm_IrqEnable(interrupt_source_system_timer);
+
+    // Jump to callFoo!
+    regs->lr2 = &callFoo;
 
     //Scheduler_NextTask();
 }
@@ -143,7 +154,7 @@ Process* Scheduler_CreateTask(void(*mainFunction)(void))
 
     // Set PC to the task's function so that as soon as we switch modes, that
     // function is invoked
-	p->registers->r15 = (unsigned long)&mainFunction;
+	//p->registers->r15 = (unsigned long)&mainFunction;
 	p->state = Ready;
 
 	// Allocate frames (start size = 5 MB / task)

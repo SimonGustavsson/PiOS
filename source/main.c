@@ -13,6 +13,24 @@
 // Zeroes out the .bss region for us, as it pads it with 0's
 volatile unsigned int dataVarForPadding = 42;
 
+void callFoo()
+{
+    printf("Go foo!\n");
+
+    foo();
+}
+
+void foo()
+{
+    unsigned int i;
+    while (1)
+    {
+        printf("Meep\n");
+     
+        for (i = 0; i < 30000000; i++);
+    }
+}
+
 int cmain(void)
 {
     Uart_SendString("Initialization complete. Go main!\n");
@@ -34,9 +52,12 @@ int cmain(void)
 
     printf("Uart clock speed is: %dHz\n", Mailbox_GetClockRate(MBC_ID_UART));
 
-    //printf("Starting scheduler...\n");
-    //Scheduler_Start();
+    printf("Starting scheduler...\n");
+    Scheduler_Start();
     printf("\nNot sure what to do now...\n");
+
+    foo();
+
     unsigned int i;
     while (1)
     {
