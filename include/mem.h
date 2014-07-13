@@ -3,7 +3,7 @@
 #define MAX_AVAILABLE_MEMORY 536870912 // 512MB
 #define MAX_ALLOCATED_PAGES (MAX_AVAILABLE_MEMORY / PAGE_SIZE)
 
-//#define PAGEMEM_DEBUG
+#define PAGEMEM_DEBUG
 
 int mem_init(void);
 
@@ -23,3 +23,4 @@ int mem_reserveRange(unsigned int startAddr, unsigned int endAddr);
 
 unsigned int mem_getAvailable(void);
 unsigned int mem_getAllocated(void);
+void mem_printUsage(void);

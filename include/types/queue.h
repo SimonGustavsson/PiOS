@@ -15,7 +15,7 @@ typedef struct {
 	unsigned int numNodes;
 } Queue;
 
-void Queue_Enqueue(Queue* queue, void* node);
+void Queue_Enqueue(Queue* queue, void* item);
 void* Queue_Dequeue(Queue* queue);
 void* Queue_Peek(Queue* queue);
 

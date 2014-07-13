@@ -5,42 +5,41 @@
 .type irq %function
 .globl irq
 irq:
-    sub lr, #4
+    sub lr, #4         ;@ (Required to return from exception)
 
-    push {r0-r12,lr}
+    ;@ Save context
+    push {r0-r12, lr}  ;@ Save registers onto IRQ stack
     
-    ;@
-    ;@ Save the context
-    ;@
-    msr cpsr_c, #0xD3 ;@ Hop into SVC mode to save registers
-    mrs r0, spsr      ;@ Save banked registers
-    mov r1, sp  
-    mov r2, lr  
+    mrs r0, spsr
+    ;@msr cpsr_c, #0xD3 ;@ Hop into SVC mode to save banked registers
+    cps #0x13           ;@ SVC mode
+    mov r1, sp
+    mov r2, lr
 
-    msr cpsr_c, #0xD2 ;@ Back to IRQ mode
-    push {r0-r2}      ;@ Push values to IRQ stack
+    ;@msr cpsr_c, #0xD2;@ Get back to IRQ mode
+    cps #0x12          ;@ IRC mode
+    push {r0-r2}       ;@ Push values to IRQ stack
 
-    ;@ Pass in a pointer to the registers as a param to the irq handler
-    mov r0, sp
+    mov r0, sp         ;@ Pass in a pointer to the registers as a param to the irq handler
+    add r0, #4
 
-    ;@
-	;@ Jump to C Handler
-    ;@
-    bl c_irq_handler
+    bl c_irq_handler   ;@ Osdev note: All this does is print out the registers struct
 
-    ;@ Restore saved registers
-    pop {r0-r2}        ;@ Restore banked registers from IRQ stack
+    ;@ Restore context
+    pop {r0-r2}        ;@ 
+    msr spsr, r0       ;@ Restore banked registers
+
     msr cpsr_c, #0xD3  ;@ Get into SVC mode
-    msr spsr_svc, r0
-    msr spsr, r0       ;@ Restore registers
+    cps #0x13          ;@ SVC mode
     mov sp, r1
     mov lr, r2
 
-    msr cpsr_c, #0xD2 ;@ Hop back into IRQ mode
+    ;@msr cpsr_c, #0xD2  ;@ Hop back into IRQ mode
+    cps #0x12
 
     pop  {r0-r12,lr}
 	
-    movs pc, lr   ;@ Return!
+    movs pc, lr
 
 .type data_abort %function
 .globl data_abort

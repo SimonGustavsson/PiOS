@@ -13,11 +13,26 @@
 // Zeroes out the .bss region for us, as it pads it with 0's
 volatile unsigned int dataVarForPadding = 42;
 
-void callFoo()
+void foo3()
 {
-    printf("Go foo!\n");
+    unsigned int i;
+    while (1)
+    {
+        Uart_SendString("Leep!\n");
 
-    foo();
+        for (i = 0; i < 30000000; i++);
+    }
+}
+
+void foo2()
+{
+    unsigned int i;
+    while (1)
+    {
+        Uart_SendString("BEEP!\n");
+
+        for (i = 0; i < 30000000; i++);
+    }
 }
 
 void foo()
@@ -25,7 +40,7 @@ void foo()
     unsigned int i;
     while (1)
     {
-        printf("Meep\n");
+        Uart_SendString("Meeeeeep!\n");
      
         for (i = 0; i < 30000000; i++);
     }
@@ -40,23 +55,42 @@ int cmain(void)
     Terminal_PrintWelcome();
     Terminal_PrintPrompt();
 
-    // Create two dummy tasks and add them to the scheduler
-    //Process* dummy1 = Process_Create("/dev/sd0/dummy1.elf", "Dummy1");
-    //if (dummy1 != NULL)
+    printf("Address of foo: 0x%h\n", &foo);
+    Process* fooProcess = Process_Create((unsigned int)&foo, "Foo(Test)");
+    if (fooProcess == NULL)
     {
-      //  Scheduler_Enqueue(dummy1);
-
-        // Just fire it off straight away or debugging as the scheduler isn't started now
-        //Scheduler_StartTask(dummy1);
+        printf("Failed to create foo task!\n");
+    }
+    else
+    {
+        Scheduler_Enqueue(fooProcess);
     }
 
-    printf("Uart clock speed is: %dHz\n", Mailbox_GetClockRate(MBC_ID_UART));
+    printf("Address of foo2: 0x%h\n", &foo2);
+    Process* fooProcess2 = Process_Create((unsigned int)&foo2, "Foo2(Test)");
+    if (fooProcess2 == NULL)
+    {
+        printf("Failed to create foo2 task!\n");
+    }
+    else
+    {
+        Scheduler_Enqueue(fooProcess2);
+    }
+
+    printf("Address of foo3: 0x%h\n", &foo3);
+    Process* fooProcess3 = Process_Create((unsigned int)&foo3, "Foo3(Test)");
+    if (fooProcess3 == NULL)
+    {
+        printf("Failed to create foo3 task!\n");
+    }
+    else
+    {
+        Scheduler_Enqueue(fooProcess3);
+    }
 
     printf("Starting scheduler...\n");
     Scheduler_Start();
     printf("\nNot sure what to do now...\n");
-
-    foo();
 
     unsigned int i;
     while (1)

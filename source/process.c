@@ -75,54 +75,15 @@ static process_entry_func Process_LoadElf(char* filename, unsigned int addr)
     return (process_entry_func)addr;
 }
 
-Process* Process_Create(char* filename, char* name)
-{
-    Process* p = (Process*)palloc(sizeof(Process));
-
-    p->active = 0;
-    p->priority = processPriorityMedium;
-    p->state = Ready;
-    p->timeElapsed = 0;
-    p->started = 0;
-    p->id = Scheduler_GetNextTID();
-    p->path = NULL;
-    if (Process_InitializeMemory(p) != 0)
-    {
-        phree(p);
-        return NULL;
-    }
-
-    // NOTE: This assumes the kernel ttb1 identity maps physical memory to KERNEL_VA_START
-    unsigned int memory_start = (KERNEL_VA_START + p->mem_pages[0]);
-    
-    process_entry_func func = Process_LoadElf(filename, memory_start);
-    if (func == NULL)
-    {
-        printf("Scheduler_Enqueue: Failed to load elf '%s', does it exist?\n", filename);
-
-        Process_Delete(p);
-
-        phree(p);
-
-        return NULL;
-    }
-
-    p->name = name;
-    p->path = (char*)palloc(my_strlen(filename));
-    my_strcpy(filename, p->path);
-
-    p->entry = func;
-
-    return p;
-}
-
-int Process_InitializeMemory(Process* t)
+static int Process_InitializeMemory(Process* t)
 {
     unsigned int* pages = (unsigned int*)palloc(8 * sizeof(unsigned int*));
     unsigned int pages_allocated = 0;
 
     // Create TTB0 - 128byte TT - Covering 32MB of Virtual Memory - this fits neatly into 8 pages
     int physical_tt = mem_nextFreeContiguous(PROCESS_START_PAGE_COUNT);
+
+    printf("Initializing PT for process at 0x%h\n", physical_tt);
 
     if (physical_tt == -1)
         goto cleanup;
@@ -152,7 +113,7 @@ int Process_InitializeMemory(Process* t)
     for (i = 0; i < PROCESS_START_PAGE_COUNT; i++)
     {
         unsigned int page = mem_nextFree();
-        
+
         if (page == -1)
             goto cleanup;
 
@@ -167,6 +128,8 @@ int Process_InitializeMemory(Process* t)
         FlushTLB(USR_VA_START + (i * 0x1000));
     }
 
+    printf("Initialized Process memory 0x%h -> 0x%h\n", pages[0], pages[pages_allocated - 1]);
+
     unsigned int lvl1_entries_num_pages = TTB_SIZE_32MB_SIZE / PAGE_SIZE;
 
     // Might not fit exactly into pages, add one if the level 1 entries spills over into a page
@@ -176,7 +139,7 @@ int Process_InitializeMemory(Process* t)
 
     t->ttb0_size = ttbc_128bytes;
     t->ttb0 = temp_va_tt;
-    t->ttb0_physical = (unsigned int)physical_tt;
+    t->ttb0_physical = (unsigned int*)physical_tt;
     t->mem_pages = pages;
     t->num_mem_pages = PROCESS_START_PAGE_COUNT;
 
@@ -204,6 +167,79 @@ cleanup:
     phree(t);
 
     return -1;
+}
+
+Process* Process_Init(char* name)
+{
+    Process* p = (Process*)palloc(sizeof(Process));
+
+    p->active = 0;
+    p->priority = processPriorityMedium;
+    p->state = TS_Ready;
+    p->timeElapsed = 0;
+    p->started = 0;
+    p->id = Scheduler_GetNextTID();
+    p->path = NULL;
+    p->registers = (registers*)pcalloc(sizeof(registers), 1);
+    if (Process_InitializeMemory(p) != 0)
+    {
+        phree(p);
+        return NULL;
+    }
+
+    p->registers->sprs = 0x12; // SVC mode, TODO: Switch to user
+    p->registers->sp = USR_VA_START + (PAGE_SIZE * p->num_mem_pages);// +p->mem_pages[p->num_mem_pages - 1] + PAGE_SIZE;
+    p->registers->r11 = p->registers->sp;
+    p->registers->r12 = p->registers->sp;
+    p->registers->r7 = p->registers->sp;
+
+    printf("Initializing Process sp to 0x%h\n", p->registers->sp);
+
+    p->name = (char*)palloc(my_strlen(name));
+    my_strcpy(name, p->name);
+
+    return p;
+}
+
+Process* Process_CreateFromFile(char* filename, char* name)
+{
+    Process* p = Process_Init(name);
+
+    if (p == NULL)
+    {
+        printf("Failed to create task '%s'\n", name);
+        return NULL;
+    }
+
+    // Load executable
+    process_entry_func func = Process_LoadElf(filename, (KERNEL_VA_START + p->mem_pages[0]));
+    if (func == NULL)
+    {
+        printf("Failed to load executable '%s'\n", filename);
+        Process_Delete(p);
+        phree(p);
+        return NULL;
+    }
+
+    p->path = (char*)palloc(my_strlen(filename));
+
+    p->registers->lr2 = (unsigned int)func;
+}
+
+Process* Process_Create(unsigned int entryFuncAddr, char* name)
+{
+    Process* p = Process_Init(name);
+
+    if (p == NULL)
+    {
+        printf("Failed to create task '%s'\n", name);
+        return NULL;
+    }
+
+    printf("Setting PC of task to 0x%h\n", entryFuncAddr);
+    p->registers->lr2 = entryFuncAddr;
+
+    return p;
 }
 
 void Process_Delete(Process* p)

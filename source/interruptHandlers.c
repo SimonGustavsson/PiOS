@@ -11,20 +11,37 @@
 // Abort interrupts of various types, this adds a delay to the abort handlers
 // So that I have time to read the error before spam scrolls it out of view
 // </Lazymode> :-)
-#define INTERRUPT_HANDLER_DELAY 20 // in ms
+#define INTERRUPT_HANDLER_DELAY 2000 // in ms
+
+unsigned int in_fault = 0;
+
+void double_fault(void)
+{
+    printf("Double fault!\n");
+    printf("* * * PANIC * * *\n");
+    while (1);
+}
+
 
 void c_undefined_handler(void* lr)
 {
+    if (in_fault == 1)
+        double_fault();
+    in_fault = 1;
     printf("Undefined instruction at 0x%h. (instruction: %d).\n", lr, *((unsigned int*)lr));
 
     //unsigned int* instAddr = (unsigned int*)*(r14 - 1) + 4;
     //printf("Instruction that cause abort is at 0x%h (%d) - SPSR: 0x%h.\n", instAddr, *instAddr, 42);// spsr);
 
     wait(INTERRUPT_HANDLER_DELAY);
+    in_fault = 0;
 }
 
 void c_abort_data_handler(unsigned int address, unsigned int errorType, unsigned int accessedAddr, unsigned int fault_reg)
 {
+    if (in_fault == 1)
+        double_fault();
+    in_fault = 1;
     // NOTE: fault_reg isn't used (yet), we should just use that and extract the Fault status from
     // it here as opposed to doing it in asm and pass it in as a separate argument
     printf("Instruction in %s at 0x%h caused a data abort accessing memory at 0x%h (", Debug_GetClosestPreviousFunction(address), address, accessedAddr);
@@ -34,10 +51,14 @@ void c_abort_data_handler(unsigned int address, unsigned int errorType, unsigned
     Debug_PrintCallstack(2);
  
     wait(INTERRUPT_HANDLER_DELAY);
+    in_fault = 0;
 }
 
 void c_abort_instruction_handler(unsigned int address, unsigned int errorType)
 {
+    if (in_fault == 1)
+        double_fault();
+    in_fault = 1;
     if (*(unsigned int*)address == 0xE1200070)
     {
         printf("* * Breakpoint! * * \n");
@@ -50,6 +71,8 @@ void c_abort_instruction_handler(unsigned int address, unsigned int errorType)
     }
     
     wait(INTERRUPT_HANDLER_DELAY);
+
+    in_fault = 0;
 }
 
 void c_swi_handler(unsigned int r0, unsigned int r1, unsigned int r2, unsigned int swi)

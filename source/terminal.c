@@ -404,7 +404,8 @@ void print_internal(char* string, unsigned int length, unsigned int important)
 
 void Terminal_PrintImportant(char* string, unsigned int length)
 {
-	print_internal(string, length, 1);
+    volatile unsigned int k = 1;
+	print_internal(string, length, k);
 }
 
 void Terminal_Print(char* string, unsigned int length)

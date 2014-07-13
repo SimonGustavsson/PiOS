@@ -10,9 +10,9 @@
 typedef int(*process_entry_func)(void);
 
 typedef enum {
-	Running, // Currently executing
-	Waiting, // Waiting for resource/IO etc
-	Ready    // Ready to be executed
+	TS_Running, // Currently executing
+	TS_Waiting, // Waiting for resource/IO etc
+	TS_Ready    // Ready to be executed
 } processState;
 
 typedef enum {
@@ -26,10 +26,9 @@ typedef unsigned int uint32;
 
 // Stores process state when another process is being scheduled
 typedef struct {
-    uint32 lr;
     uint32 sprs;
     uint32 sp;
-    uint32 lr2;
+    uint32 lr;
 
     uint32 r0;
     uint32 r1;
@@ -44,20 +43,7 @@ typedef struct {
     uint32 r10;
     uint32 r11;
     uint32 r12;
-
-	//uint32 r12;
-	//uint32 r11;
-	//uint32 r10;
-	//uint32 r9;
-	//uint32 r8;
-	//uint32 r7;
-	//uint32 r6;
-	//uint32 r5;
-	//uint32 r4;
-	//uint32 r3;
-	//uint32 r2;
-	//uint32 r1;
- //   uint32 r0;
+    uint32 lr2;
 } registers;
 
 typedef struct {
@@ -82,7 +68,8 @@ typedef struct {
     ttbc_ttbr0_size ttb0_size;     // The size of the ttb0 to set TTBC split to
 } Process;
 
-Process* Process_Create(char* filename, char* name);
+Process* Process_CreateFromFile(char* filename, char* name);
+Process* Process_Create(unsigned int entryFuncAddr, char* name);
 
 // Frees all memory associated with the given task
 void Process_Delete(Process* p);

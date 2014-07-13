@@ -33,7 +33,7 @@ void map_page(unsigned int* pt, unsigned int num_lvl1_entries, unsigned int pa, 
     // Make sure the level 1 entry is initialized
     if ((*lvl1_entry_va & PAGE_TABLE_MASK) == 0)
     {
-        *lvl1_entry_va = (((unsigned int)lvl2_entry) & 0xFFFFFC00) | PAGE_TABLE_COARSE;
+        *lvl1_entry_va = ((((unsigned int)lvl2_entry) & 0x3FFFFF) << 10) | PAGE_TABLE_COARSE;
     }
 
     unsigned int entry = (pa & 0xFFFFF000) | PAGE_SMALL | flags;
@@ -42,7 +42,8 @@ void map_page(unsigned int* pt, unsigned int num_lvl1_entries, unsigned int pa, 
     *lvl2_entry_va = entry;
 
 #ifdef PAGEMEM_DEBUG
-    printf("Mapped 0x%h (0x%h) to 0x%h: lvl1: 0x%h(at 0x%h) lvl2: 0x%h(at 0x%h)\n", pa, (pa & 0xFFFFF000), va, *lvl1_entry_va, lvl1_entry, *lvl2_entry_va, lvl2_entry);
+    printf("Mapped 0x%h (0x%h) to 0x%h: lvl1: 0x%h(at 0x%h) lvl2: 0x%h(at 0x%h) ~ TT addr: 0x%h\n", pa, (pa & 0xFFFFF000), va, *lvl1_entry_va, lvl1_entry, 
+        *lvl2_entry_va, lvl2_entry, pt);
 #endif
 }
 

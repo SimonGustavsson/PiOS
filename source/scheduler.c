@@ -1,27 +1,49 @@
-#include "scheduler.h"
+#include "asm.h"
+#include "main.h"
+#include "mem.h"
 #include "memory.h"
-#include "types/string.h"
-#include "util/utilities.h"
+#include "memory_map.h"
+#include "scheduler.h"
+#include "stddef.h"
+#include "hardware/interrupts.h"
 #include "hardware/mmu_c.h"
 #include "hardware/timer.h"
+#include "types/string.h"
 #include "types/queue.h"
-#include "hardware/interrupts.h"
-#include "stddef.h"
-#include "memory_map.h"
-#include "asm.h"
-#include "mem.h"
-#include "main.h"
-
-// This is really the heart of PiOS - this is where PiOS sits constantly
+#include "util/utilities.h"
 
 static taskScheduler* gScheduler;
 static unsigned int gNextTID;
+
+
+void Scheduler_PrintRegs(registers* regs)
+{
+    printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+    printf("0x%h r0: 0x%h\n", &regs->r0, regs->r0);
+    printf("0x%h r1: 0x%h\n", &regs->r1, regs->r1);
+    printf("0x%h r2: 0x%h\n", &regs->r2, regs->r2);
+    printf("0x%h r3: 0x%h\n", &regs->r3, regs->r3);
+    printf("0x%h r4: 0x%h\n", &regs->r4, regs->r4);
+    printf("0x%h r5: 0x%h\n", &regs->r5, regs->r5);
+    printf("0x%h r6: 0x%h\n", &regs->r6, regs->r6);
+    printf("0x%h r7: 0x%h\n", &regs->r7, regs->r7);
+    printf("0x%h r8: 0x%h\n", &regs->r8, regs->r8);
+    printf("0x%h r9: 0x%h\n", &regs->r9, regs->r9);
+    printf("0x%h r10: 0x%h\n", &regs->r10, regs->r10);
+    printf("0x%h r11: 0x%h\n", &regs->r11, regs->r11);
+    printf("0x%h r12: 0x%h\n", &regs->r12, regs->r12);
+    printf("0x%h LR: 0x%h\n", &regs->lr, regs->lr);
+
+    printf("0x%h lr2: 0x%h\n", &regs->lr2, regs->lr2);
+    printf("0x%h SPRS: 0x%h\n", &regs->sprs, regs->sprs);
+    printf("0x%h SP: 0x%h\n", &regs->sp, regs->sp);
+    printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+}
 
 void Scheduler_Initialize(void)
 {
 	gScheduler = (taskScheduler*)palloc(sizeof(taskScheduler));
 	gScheduler->currentTask = 0;
-	gScheduler->tasksRunning = 0;
 	gScheduler->tasks.back = 0;
 	gScheduler->tasks.front = 0;
 	gScheduler->tasks.numNodes = 0;
@@ -49,118 +71,98 @@ void Scheduler_Enqueue(Process* task)
 {
 	// Add it to the queue for processing
 	Queue_Enqueue(&gScheduler->tasks, task);
-
-    gScheduler->tasksRunning++;
 }
 
-void Scheduler_NextTask(void)
+void Scheduler_NextTask(registers* reg)
 {
-    Process* old = gScheduler->currentTask;
-    if (old != 0)
+    unsigned int shouldSwitchTask = 0;
+    Process* cur = gScheduler->currentTask;
+    if (cur != NULL && gScheduler->tasks.numNodes > 0)
     {
-        // Switch out the old task
+        //printf("Scheduler: Have a current running task!\n");
+
+        cur->timeElapsed += TASK_SCHEDULER_TICK_MS;
+
+        // Has this task had it's fair share?
+        if (cur->timeElapsed >= 2000)
+        {
+            //printf("Scheduler: Switching out %s\n", cur->name);
+
+            shouldSwitchTask = 1;
+
+            // Save registers
+            my_memcpy(cur->registers, reg, sizeof(registers));
+
+            cur->state = TS_Ready;
+            cur->active = 0;
+
+            // Put it back in the queue
+            Queue_Enqueue(&gScheduler->tasks, cur);
+        }
+    }
+    else if (cur == NULL)
+    {
+        //printf("Scheduler: First run? Switch to a task!\n");
+        shouldSwitchTask = 1;
     }
 
+    if (shouldSwitchTask && gScheduler->tasks.numNodes > 0)
+    {
+        //printf("Registers before: \n");
+        //Scheduler_PrintRegs(reg);
 
-    //unsigned int shouldSwitchTask = 0;
-    //if (gScheduler->currentTask != 0)
-    //{
-    //    // Increment the amount of time this task has been running
-    //    gScheduler->currentTask->timeElapsed += TASK_SCHEDULER_TICK_MS;
+        Process* next = (Process*)Queue_Dequeue(&gScheduler->tasks);
 
-    //    // Has it had it's fair share? if so save its state so we can switch it out
-    //    if (gScheduler->currentTask->timeElapsed > 2000)
-    //    {
-    //        shouldSwitchTask = 1;
+        if (next == NULL)
+        {
+            printf("Failed to retrieve next task, how can it be null!? Skippin CTX switch...\n");
+            return;
+        }
 
-    //        // Save the current tasks registers to memory
-    //        my_memcpy((const void*)&gScheduler->currentTask->registers, (const void*)regs, sizeof(registers));
+        //printf("Scheduler: Switching in %s\n", next->name);
 
-    //        // Reschedule the task for execution (at the end of the queue)
-    //        pqueue_enqueue(&gScheduler->tasks, gScheduler->currentTask);
-    //    }
-    //}
+        next->active = 1;
+        next->state = TS_Running;
+        gScheduler->currentTask = next;
 
-    //// Nothing is running but we do have tasks waiting - so activate one
-    //if (gScheduler->currentTask == 0 && gScheduler->tasks.numNodes > 0)
-    //    shouldSwitchTask = 1;
+        //printf("Updating TTBC, Size: %d\n", next->ttb0_size);
 
-    //if (shouldSwitchTask && gScheduler->tasks.numNodes > 0)
-    //{
-    //    Task* task = (Task*)pqueue_dequeue(&gScheduler->tasks);
+        // Update TTCR
+        unsigned int ttbc = get_ttbc();
+        ttbc &= next->ttb0_size;
+        set_ttbc(ttbc);
 
-    //    if (task == 0)
-    //    {
-    //        printf("Woah, woah! I can't switch task to nothing! HALTING!\n");
-    //        while (1);
-    //    }
+        // Switch in the process' TT
+        //printf("Switch to task's TTB0, ttb0 addr (Physical): 0x%h\n", next->ttb0_physical);
+        set_ttb0(next->ttb0_physical, 1);
 
-    //    gScheduler->currentTask = task;
-    //}
+        for (int i = 0; i < 1000; i++);
 
-    // if the new task's "started" value == 0, call Task_StartupFunction()
-}
+        // Restore the tasks registers
+        my_memcpy(reg, next->registers, sizeof(registers));
 
-void Scheduler_StartTask(Process* p)
-{
-    printf("Starting task '%s', Id: %d, ttb0: 0x%h, Priority: %d. Path: %s\n",
-        p->name, p->id, p->ttb0, p->priority, p->path);
-
-    // Activate the translation table for the task
-    set_ttb0(p->ttb0, 1);
-
-    // Update the Translation Table Control register with the task's TT's size
-    unsigned int ttbc = get_ttbc();
-    ttbc &= p->ttb0_size;
-    set_ttbc(ttbc);
-
-    // Jump to the startup procedure of the task
-    // TODO: We can't do this, when the user's main function returns
-    // The process is still in user mode and this will fault.
-    //  Will need to wrap the users main function in a function
-    // We insert into user space that calls the users main function
-    // and perforce an exit() syscall when it returns
-    p->result = p->entry();
-
-    // TODO: Remove task from scheduler
+        //Scheduler_PrintRegs(reg);
+    }
+    else
+    {
+        printf("Scheduler: Task switch not necessary...\n");
+    }
 }
 
 void Scheduler_TimerTick(registers* regs)
 {
-    printf("regs are at 0x%h\n", &regs);
-    printf("r0: 0x%h\t r1: 0x%h\t r2: 0x%h\n", regs->r0, regs->r1, regs->r2);
-    printf("r3: 0x%h\t r4: 0x%h\t r5: 0x%h\n", regs->r3, regs->r4, regs->r5);
-    printf("r6: 0x%h\t r7: 0x%h\t r8: 0x%h\n", regs->r6, regs->r7, regs->r8);
-    printf("r9: 0x%h\t r10: 0x%h\t r11(FP): 0x%h\n", regs->r9, regs->r10, regs->r11);
-    printf("r12(IP): 0x%h\t LR: 0x%h\t SPRS: 0x%h\t SP: 0x%h\t LR2: 0x%h\n", regs->r12, regs->lr, regs->sprs, regs->sp, regs->lr2);
-    printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
-
+    // A switch isn't necessary
+    if (gScheduler->tasks.numNodes == 0 && gScheduler->currentTask != NULL)
+    {
+        printf("Scheduler: Not enough tasks running to bother...\n");
+    }
+    else
+    {
+        Scheduler_NextTask(regs);
+    }
+    
     // Restart the timer
     Timer_Clear();
-    Timer_SetInterval(TASK_SCHEDULER_TICK_MS);
-    Arm_IrqEnable(interrupt_source_system_timer);
-
-    // Jump to callFoo!
-    regs->lr2 = &callFoo;
-
-    //Scheduler_NextTask();
-}
-
-Process* Scheduler_CreateTask(void(*mainFunction)(void))
-{
-	Process* p = (Process*)palloc(sizeof(Process));
-
-	p->priority = processPriorityMedium;
-
-    // Set PC to the task's function so that as soon as we switch modes, that
-    // function is invoked
-	//p->registers->r15 = (unsigned long)&mainFunction;
-	p->state = Ready;
-
-	// Allocate frames (start size = 5 MB / task)
-    // Ask the mmu for some user pages and store the physical address we get in the tasks 
-    // memory mappings so that we can update the page table to point to those physical locations
-    // When we swap the task in. (We do this because all tasks share the same virtual memory address space)
-
-	return p;
+    Timer_SetInterval(TASK_SCHEDULER_TICK_MS * 2);
+    Arm_IrqEnable(interrupt_source_system_timer); // Don't think I have to do this?
 }
