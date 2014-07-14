@@ -6,6 +6,8 @@
 #include "util/utilities.h"
 #include "debugging.h"
 #include "scheduler.h"
+#include "stddef.h"
+#include "stdbool.h"
 
 // Because I sometimes mess up and end up getting spammed with
 // Abort interrupts of various types, this adds a delay to the abort handlers
@@ -15,13 +17,39 @@
 
 unsigned int in_fault = 0;
 
+swi_handler gSwiHandlers[MAX_SWI_NUM];
+
+void swi_init(void)
+{
+    for (uint32 i = 0; i < MAX_SWI_NUM; i++)
+        gSwiHandlers[i] = NULL;
+}
+
+bool swi_install(unsigned int swiNum, swi_handler handler)
+{
+    if (swiNum > MAX_SWI_NUM)
+    {
+        printf("Swi: Can't install swi handler for %d, MAX_SWI_NUL=%d\n", swiNum, MAX_SWI_NUM);
+        return false;
+    }
+
+    if (gSwiHandlers[swiNum] != NULL)
+    {
+        printf("Swi: Can't install swi handler for %d, a handler is already present\n", swiNum);
+        return false;
+    }
+
+    gSwiHandlers[swiNum] = handler;
+
+    return true;
+}
+
 void double_fault(void)
 {
     printf("Double fault!\n");
     printf("* * * PANIC * * *\n");
     while (1);
 }
-
 
 void c_undefined_handler(void* lr)
 {
@@ -77,22 +105,18 @@ void c_abort_instruction_handler(unsigned int address, unsigned int errorType)
 
 void c_swi_handler(unsigned int r0, unsigned int r1, unsigned int r2, unsigned int swi)
 {
-    switch (swi)
+    // This shouldn't happen, but who knows what users do..
+    if (swi > MAX_SWI_NUM)
+        return;
+
+    swi_handler handler = gSwiHandlers[swi];
+    if (handler != NULL)
     {
-    case 12: // sys_print
-        // r0 should be a char*, TODO: add validation
-        printf("%s", (char*)(r0));
-        break;
-    case 95:
-        // Print example
-        printf("Swi example print call(95)\n");
-        break;
-    case 96:
-        printf("Second printf SVC call(96)!\n");
-        break;
-    default:
-        printf("Unhandled SWI call: %d.\n", swi);
-        break;
+        handler(r0, r1, r2);
+    }
+    else
+    {
+        printf("swi: Undefined SWI handler for swi %d\n", swi);
     }
 }
 

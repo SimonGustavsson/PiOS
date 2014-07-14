@@ -14,6 +14,7 @@
 #include "mem.h"
 #include "memory.h"
 #include "memory_map.h"
+#include "syscalls.h"
 #include "types/string.h"
 #include "terminal.h"
 
@@ -179,6 +180,8 @@ void sysinit_stage2(int machineType, int atagsPa, int dbgsymboladdr)
     printf("Debugging symbols are at 0x%h\n", dbgsymboladdr);
 
     atags_parse(KERNEL_VA_START + atagsPa);
+
+    syscalls_init();
 
     // Enter... the kernel!
     cmain();

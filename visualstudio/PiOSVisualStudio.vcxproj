@@ -74,6 +74,7 @@
     <ClInclude Include="..\include\memory.h" />
     <ClInclude Include="..\include\memory_map.h" />
     <ClInclude Include="..\include\stdarg.h" />
+    <ClInclude Include="..\include\syscalls.h" />
     <ClInclude Include="..\include\terminalCommands.h" />
     <ClInclude Include="..\include\thread.h" />
     <ClInclude Include="..\include\types\queue.h" />
@@ -115,6 +116,7 @@
     <ClCompile Include="..\source\platform.c" />
     <ClCompile Include="..\source\process.c" />
     <ClCompile Include="..\source\scheduler.c" />
+    <ClCompile Include="..\source\syscalls.c" />
     <ClCompile Include="..\source\terminalCommands.c" />
     <ClCompile Include="..\source\terminal.c" />
     <ClCompile Include="..\source\hardware\timer.c" />

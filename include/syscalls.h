@@ -1,0 +1,1 @@
+void syscalls_init(void);

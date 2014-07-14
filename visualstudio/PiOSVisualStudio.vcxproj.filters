@@ -168,6 +168,9 @@
     <ClInclude Include="..\include\dwarf.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\syscalls.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\main.c">
@@ -267,6 +270,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\source\atags.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\syscalls.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
