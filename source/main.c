@@ -55,39 +55,18 @@ int cmain(void)
     Terminal_PrintWelcome();
     Terminal_PrintPrompt();
 
-    printf("Address of foo: 0x%h\n", &foo);
-    Process* fooProcess = Process_Create((unsigned int)&foo, "Foo(Test)");
+    Process* fooProcess = Process_Create((unsigned int)&foo, "Foo(Test)", true);
     if (fooProcess == NULL)
-    {
         printf("Failed to create foo task!\n");
-    }
-    else
-    {
-        Scheduler_Enqueue(fooProcess);
-    }
 
-    printf("Address of foo2: 0x%h\n", &foo2);
-    Process* fooProcess2 = Process_Create((unsigned int)&foo2, "Foo2(Test)");
+    Process* fooProcess2 = Process_Create((unsigned int)&foo2, "Foo2(Test)", true);
     if (fooProcess2 == NULL)
-    {
         printf("Failed to create foo2 task!\n");
-    }
-    else
-    {
-        Scheduler_Enqueue(fooProcess2);
-    }
 
-    printf("Address of foo3: 0x%h\n", &foo3);
-    Process* fooProcess3 = Process_Create((unsigned int)&foo3, "Foo3(Test)");
+    Process* fooProcess3 = Process_Create((unsigned int)&foo3, "Foo3(Test)", true);
     if (fooProcess3 == NULL)
-    {
         printf("Failed to create foo3 task!\n");
-    }
-    else
-    {
-        Scheduler_Enqueue(fooProcess3);
-    }
-
+    
     printf("Starting scheduler...\n");
     Scheduler_Start();
     printf("\nNot sure what to do now...\n");

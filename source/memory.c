@@ -4,6 +4,7 @@
 #include "types/types.h"
 #include "types/string.h"
 #include "util/memutil.h"
+#include "stddef.h"
 
 unsigned char* gBitmap;
 unsigned char* gMemory;
@@ -193,6 +194,53 @@ static int get_first_available_slice(unsigned int requestedSize)
     }
 
     return clear_bits_start;
+}
+
+void* realloc(void* ptr, unsigned int size)
+{
+    if (size == 0)
+    {
+        if (ptr != NULL)
+        {
+            phree(ptr);
+        }
+
+        return NULL;
+    }
+    else
+    {
+        void* newPtr = palloc(size);
+        if (newPtr == NULL)
+            return NULL;
+
+        if (ptr != NULL)
+        {
+            char* charPtr = (char*)ptr;
+
+            //How large is the allocation of the passed in ptr?
+            unsigned int num_slices = (*(charPtr - 4) << 24) |
+                (*(charPtr - 3) << 16) |
+                (*(charPtr - 2) << 8) |
+                *(charPtr - 1);
+
+            unsigned int allocatedBytes = num_slices / BYTES_PER_SLICE;
+            printf("realloc: Old size: %d - New Size: %d\n", allocatedBytes, size);
+            
+            // Copy over the old data
+            unsigned int bytesToCopy = 0;
+
+            if (allocatedBytes >= size)
+                bytesToCopy = size;
+            else
+                bytesToCopy = allocatedBytes;
+
+            printf("Copying %d bytes from previous allocation.\n", bytesToCopy);
+
+            my_memcpy(newPtr, charPtr, bytesToCopy);
+        }
+
+        return newPtr;
+    }
 }
 
 void* palloc(unsigned int size)

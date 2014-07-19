@@ -179,7 +179,7 @@ void sysinit_stage2(int machineType, int atagsPa, int dbgsymboladdr)
     printf("ATAGS start at 0x%h\n", atagsPa);
     printf("Debugging symbols are at 0x%h\n", dbgsymboladdr);
 
-    atags_parse(KERNEL_VA_START + atagsPa);
+    atags_parse((int*)(KERNEL_VA_START + atagsPa));
 
     syscalls_init();
 

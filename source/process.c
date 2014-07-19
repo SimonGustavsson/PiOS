@@ -174,26 +174,14 @@ Process* Process_Init(char* name)
     Process* p = (Process*)palloc(sizeof(Process));
 
     p->active = 0;
-    p->priority = processPriorityMedium;
     p->state = TS_Ready;
-    p->timeElapsed = 0;
-    p->started = 0;
     p->id = Scheduler_GetNextTID();
     p->path = NULL;
-    p->registers = (registers*)pcalloc(sizeof(registers), 1);
     if (Process_InitializeMemory(p) != 0)
     {
         phree(p);
         return NULL;
     }
-
-    p->registers->sprs = 0x12; // SVC mode, TODO: Switch to user
-    p->registers->sp = USR_VA_START + (PAGE_SIZE * p->num_mem_pages);// +p->mem_pages[p->num_mem_pages - 1] + PAGE_SIZE;
-    p->registers->r11 = p->registers->sp;
-    p->registers->r12 = p->registers->sp;
-    p->registers->r7 = p->registers->sp;
-
-    printf("Initializing Process sp to 0x%h\n", p->registers->sp);
 
     p->name = (char*)palloc(my_strlen(name));
     my_strcpy(name, p->name);
@@ -201,7 +189,26 @@ Process* Process_Init(char* name)
     return p;
 }
 
-Process* Process_CreateFromFile(char* filename, char* name)
+static bool Process_CreateMainThread(Process* p, thread_entry entry)
+{
+    printf("Process '%s' creating main thread, entry: 0x%h\n", p->name, entry);
+
+    p->threads = (thread*)palloc(sizeof(thread));
+    thread* mainThread = thread_createWithOwner(entry, p);
+
+    if (mainThread == NULL)
+    {
+        printf("Failed to create main thread for process.\n");
+        phree(p->threads);
+        return false;
+    }
+
+    p->threads[0] = mainThread;
+    p->mainThread = mainThread;
+    p->nThreads = 1;
+}
+
+Process* Process_CreateFromFile(char* filename, char* name, bool start)
 {
     Process* p = Process_Init(name);
 
@@ -222,11 +229,22 @@ Process* Process_CreateFromFile(char* filename, char* name)
     }
 
     p->path = (char*)palloc(my_strlen(filename));
+        
+    if (!Process_CreateMainThread(p, (thread_entry)func))
+    {
+        printf("Failed to create main thread for process '%s'\n", name);
+        Process_Delete(p);
+        phree(p);
+        return NULL;
+    }
 
-    p->registers->lr2 = (unsigned int)func;
+    if (start)
+        Scheduler_Enqueue(p);
+
+    return p;
 }
 
-Process* Process_Create(unsigned int entryFuncAddr, char* name)
+Process* Process_Create(unsigned int entryFuncAddr, char* name, bool start)
 {
     Process* p = Process_Init(name);
 
@@ -236,8 +254,10 @@ Process* Process_Create(unsigned int entryFuncAddr, char* name)
         return NULL;
     }
 
-    printf("Setting PC of task to 0x%h\n", entryFuncAddr);
-    p->registers->lr2 = entryFuncAddr;
+    Process_CreateMainThread(p, (thread_entry)entryFuncAddr);
+
+    if (start)
+        Scheduler_Enqueue(p);
 
     return p;
 }

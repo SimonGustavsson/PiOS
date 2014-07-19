@@ -19,3 +19,8 @@ void* palloc(unsigned int size);
 void* pcalloc(unsigned int itemSize, unsigned int size);
 
 void phree(void* pointer);
+
+// Resizes a previously allocated chunk of memory and returns a pointer
+// to the new chunk. If size is 0, ptr is freed and NULL is returned.
+// if ptr is NULL, a new chunk is allocated.
+void* realloc(void* ptr, unsigned int size);

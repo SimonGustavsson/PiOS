@@ -3,6 +3,8 @@
 #include "stddef.h"
 #include "hardware/paging.h"
 #include "types/string.h"
+#include "process.h"
+#include "scheduler.h"
 
 static bool thread_initStack(thread* t, Process* owner)
 {
@@ -23,7 +25,15 @@ static bool thread_initStack(thread* t, Process* owner)
 
 thread* thread_create(thread_entry entry)
 {
-    Process* cur = scheduler_get_cur_process();
+    thread* currentThread = Scheduler_GetCurrentThread();
+
+    if (currentThread == NULL)
+    {
+        printf("Cannot create a thread without an owner.\n");
+        return NULL;
+    }
+
+    Process* cur = currentThread->owner;
     if (cur == NULL)
     {
         printf("Cannot create a thread as no process is running...\n");
@@ -53,6 +63,7 @@ thread* thread_createWithOwner(thread_entry entry, Process* owner)
     t->registers.sp = (uint32_t)t->virtStack;
     t->registers.r7 = (uint32_t)t->virtStack; // FP! Or is it r11/r12?
     t->registers.sprs = 0x12; // SVC MODE, TODO: User threads?
+    t->registers.lr2 = entry;
 
     return t;
 }
@@ -68,7 +79,7 @@ void thread_setPriority(thread* t, thread_priority p)
 
 void thread_kill(thread* t)
 {
-    if (scheduler_get_cur_thread() == t)
+    if (Scheduler_GetCurrentThread() == t)
     {
         // Thread is currently running
         // Remote it from the scheduler
@@ -83,14 +94,4 @@ void thread_kill(thread* t)
     }
 
     phree(t);
-}
-
-thread* scheduler_get_cur_thread(void)
-{
-    return NULL; // TODO: NYI
-}
-
-Process* scheduler_get_cur_process(void)
-{
-    return NULL; // TODO: NYI
 }

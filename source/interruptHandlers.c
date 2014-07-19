@@ -8,6 +8,7 @@
 #include "scheduler.h"
 #include "stddef.h"
 #include "stdbool.h"
+#include "stdint.h"
 
 // Because I sometimes mess up and end up getting spammed with
 // Abort interrupts of various types, this adds a delay to the abort handlers
@@ -21,7 +22,7 @@ swi_handler gSwiHandlers[MAX_SWI_NUM];
 
 void swi_init(void)
 {
-    for (uint32 i = 0; i < MAX_SWI_NUM; i++)
+    for (uint32_t i = 0; i < MAX_SWI_NUM; i++)
         gSwiHandlers[i] = NULL;
 }
 
@@ -130,7 +131,7 @@ void c_irq_handler(volatile unsigned int* sp)
         {
             // Note IRQ has no acccess to peripherals? :(
             
-            Scheduler_TimerTick((registers*)(sp - 1));
+            Scheduler_TimerTick((thread_regs*)(sp - 1));
 
             break;
         }

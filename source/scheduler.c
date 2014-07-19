@@ -1,3 +1,4 @@
+#include "util/utilities.h"
 #include "asm.h"
 #include "main.h"
 #include "mem.h"
@@ -10,13 +11,14 @@
 #include "hardware/timer.h"
 #include "types/string.h"
 #include "types/queue.h"
-#include "util/utilities.h"
+#include "thread.h"
+#include "process.h"
+#include "thread.h"
 
 static taskScheduler* gScheduler;
 static unsigned int gNextTID;
 
-
-void Scheduler_PrintRegs(registers* regs)
+void Scheduler_PrintRegs(thread_regs* regs)
 {
     printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
     printf("0x%h r0: 0x%h\n", &regs->r0, regs->r0);
@@ -43,10 +45,10 @@ void Scheduler_PrintRegs(registers* regs)
 void Scheduler_Initialize(void)
 {
 	gScheduler = (taskScheduler*)palloc(sizeof(taskScheduler));
-	gScheduler->currentTask = 0;
-	gScheduler->tasks.back = 0;
-	gScheduler->tasks.front = 0;
-	gScheduler->tasks.numNodes = 0;
+	gScheduler->currentThread = NULL;
+    gScheduler->threads.back = NULL;
+    gScheduler->threads.front = NULL;
+    gScheduler->threads.numNodes = 0;
 
     gNextTID = 1;
 }
@@ -66,18 +68,18 @@ unsigned int Scheduler_GetNextTID(void)
     return gNextTID++;
 }
 
-// This is probably not going to be "task" but rather "StartInfo" or similar
+// This is obsolete, don't use it? Should enqueue threads instead
 void Scheduler_Enqueue(Process* task)
 {
 	// Add it to the queue for processing
-	Queue_Enqueue(&gScheduler->tasks, task);
+	Queue_Enqueue(&gScheduler->threads, task->mainThread);
 }
 
-void Scheduler_NextTask(registers* reg)
+void Scheduler_NextTask(thread_regs* reg)
 {
     unsigned int shouldSwitchTask = 0;
-    Process* cur = gScheduler->currentTask;
-    if (cur != NULL && gScheduler->tasks.numNodes > 0)
+    thread* cur = gScheduler->currentThread;
+    if (cur != NULL && gScheduler->threads.numNodes > 0)
     {
         //printf("Scheduler: Have a current running task!\n");
 
@@ -91,13 +93,13 @@ void Scheduler_NextTask(registers* reg)
             shouldSwitchTask = 1;
 
             // Save registers
-            my_memcpy(cur->registers, reg, sizeof(registers));
+            my_memcpy(&cur->registers, reg, sizeof(thread_regs));
 
             cur->state = TS_Ready;
-            cur->active = 0;
+            cur->isRunning = false;
 
             // Put it back in the queue
-            Queue_Enqueue(&gScheduler->tasks, cur);
+            Queue_Enqueue(&gScheduler->threads, cur);
         }
     }
     else if (cur == NULL)
@@ -106,40 +108,40 @@ void Scheduler_NextTask(registers* reg)
         shouldSwitchTask = 1;
     }
 
-    if (shouldSwitchTask && gScheduler->tasks.numNodes > 0)
+    if (shouldSwitchTask && gScheduler->threads.numNodes > 0)
     {
         //printf("Registers before: \n");
         //Scheduler_PrintRegs(reg);
 
-        Process* next = (Process*)Queue_Dequeue(&gScheduler->tasks);
+        thread* next = (thread*)Queue_Dequeue(&gScheduler->threads);
 
         if (next == NULL)
         {
-            printf("Failed to retrieve next task, how can it be null!? Skippin CTX switch...\n");
+            printf("Failed to retrieve next thread, how can it be null!? Skippin CTX switch...\n");
             return;
         }
 
         //printf("Scheduler: Switching in %s\n", next->name);
 
-        next->active = 1;
+        next->isRunning = true;
         next->state = TS_Running;
-        gScheduler->currentTask = next;
+        gScheduler->currentThread = next;
 
         //printf("Updating TTBC, Size: %d\n", next->ttb0_size);
 
         // Update TTCR
         unsigned int ttbc = get_ttbc();
-        ttbc &= next->ttb0_size;
+        ttbc &= next->owner->ttb0_size;
         set_ttbc(ttbc);
 
         // Switch in the process' TT
         //printf("Switch to task's TTB0, ttb0 addr (Physical): 0x%h\n", next->ttb0_physical);
-        set_ttb0(next->ttb0_physical, 1);
+        set_ttb0(next->owner->ttb0_physical, 1);
 
         for (int i = 0; i < 1000; i++);
 
         // Restore the tasks registers
-        my_memcpy(reg, next->registers, sizeof(registers));
+        my_memcpy(reg, &next->registers, sizeof(thread_regs));
 
         //Scheduler_PrintRegs(reg);
     }
@@ -149,12 +151,12 @@ void Scheduler_NextTask(registers* reg)
     }
 }
 
-void Scheduler_TimerTick(registers* regs)
+void Scheduler_TimerTick(thread_regs* regs)
 {
     // A switch isn't necessary
-    if (gScheduler->tasks.numNodes == 0 && gScheduler->currentTask != NULL)
+    if (gScheduler->threads.numNodes == 0 && gScheduler->currentThread != NULL)
     {
-        printf("Scheduler: Not enough tasks running to bother...\n");
+        printf("Scheduler: Not enough threads running to bother...\n");
     }
     else
     {
@@ -165,4 +167,9 @@ void Scheduler_TimerTick(registers* regs)
     Timer_Clear();
     Timer_SetInterval(TASK_SCHEDULER_TICK_MS * 2);
     Arm_IrqEnable(interrupt_source_system_timer); // Don't think I have to do this?
+}
+
+thread* Scheduler_GetCurrentThread(void)
+{
+    return gScheduler->currentThread;
 }
