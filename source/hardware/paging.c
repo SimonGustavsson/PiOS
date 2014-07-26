@@ -10,8 +10,8 @@ void map_page(unsigned int* pt, unsigned int num_lvl1_entries, unsigned int pa, 
 
     // The shifts of the virtual address explained:
     // 31:20 map into lvl 1 table
-    // 12:19 map into lvl 2 page
-    // 12:0 index into the lvl 2 page (Not relevant to us)
+    // 19:12 map into lvl 2 page
+    // 11:0 index into the lvl 2 page (Not relevant to us)
     unsigned int lvl1_index = va >> 20;
     unsigned int* lvl1_entry = (physical_tt + lvl1_index);
     unsigned int* lvl1_entry_va = (pt + lvl1_index);
@@ -33,10 +33,11 @@ void map_page(unsigned int* pt, unsigned int num_lvl1_entries, unsigned int pa, 
     // Make sure the level 1 entry is initialized
     if ((*lvl1_entry_va & PAGE_TABLE_MASK) == 0)
     {
-        *lvl1_entry_va = ((((unsigned int)lvl2_entry) & 0x3FFFFF) << 10) | PAGE_TABLE_COARSE;
+        *lvl1_entry_va = (((unsigned int)lvl2_entry) & 0xFFFFFC00) | PAGE_TABLE_COARSE;
+        //*lvl1_entry_va = ((((unsigned int)lvl2_entry) & 0x3FFFFF) << 10) | PAGE_TABLE_COARSE;
     }
 
-    unsigned int entry = (pa & 0xFFFFF000) | PAGE_SMALL | flags;
+    unsigned int entry = (pa & 0xFFFFF000) | PAGE_SMALL | PAGE_EXECUTE_NEVER | flags;
 
     // Set the value of the level 2 entry
     *lvl2_entry_va = entry;
