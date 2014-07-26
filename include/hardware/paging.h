@@ -20,14 +20,14 @@
 
 // Values and their meanings for Translation Table Base Control Register 2:0
 typedef enum {
-    ttbc_16KB     = 0,
-    ttbc_8KB      = 1,
-    ttbc_4KB      = 2,
-    ttbc_2KB      = 3,
-    ttbc_1KB      = 4,
-    ttbc_512byte  = 5,
-    ttbc_256byte  = 6,
-    ttbc_128bytes = 7
+    ttbc_16KB     = 0, // 4GB Address space
+    ttbc_8KB      = 1, // 2GB Address space
+    ttbc_4KB      = 2, // 1GB Address space
+    ttbc_2KB      = 3, // 512MB Adress space
+    ttbc_1KB      = 4, // 256MB Address sapce
+    ttbc_512byte  = 5, // 128MB Address space
+    ttbc_256byte  = 6, // 64MB Address space
+    ttbc_128bytes = 7  // 32MB Address space
 } ttbc_ttbr0_size;
 
 enum PAGE_TABLE_TYPE{
