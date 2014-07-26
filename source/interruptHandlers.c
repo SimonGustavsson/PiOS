@@ -14,9 +14,9 @@
 // Abort interrupts of various types, this adds a delay to the abort handlers
 // So that I have time to read the error before spam scrolls it out of view
 // </Lazymode> :-)
-#define INTERRUPT_HANDLER_DELAY 2000 // in ms
+#define INTERRUPT_HANDLER_DELAY 100 // in ms
 
-unsigned int in_fault = 0;
+bool in_fault = false;
 
 swi_handler gSwiHandlers[MAX_SWI_NUM];
 
@@ -54,40 +54,49 @@ void double_fault(void)
 
 void c_undefined_handler(void* lr)
 {
-    if (in_fault == 1)
-        double_fault();
-    in_fault = 1;
+    bool doubleFault = in_fault == true;
+    in_fault = true;
+
     printf("Undefined instruction at 0x%h. (instruction: %d).\n", lr, *((unsigned int*)lr));
 
     //unsigned int* instAddr = (unsigned int*)*(r14 - 1) + 4;
     //printf("Instruction that cause abort is at 0x%h (%d) - SPSR: 0x%h.\n", instAddr, *instAddr, 42);// spsr);
 
     wait(INTERRUPT_HANDLER_DELAY);
-    in_fault = 0;
+
+    in_fault = false;
+
+    if (doubleFault)
+        double_fault();
 }
 
 void c_abort_data_handler(unsigned int address, unsigned int errorType, unsigned int accessedAddr, unsigned int fault_reg)
 {
-    if (in_fault == 1)
-        double_fault();
-    in_fault = 1;
+    bool doubleFault = in_fault == true;
+    in_fault = true;
+
     // NOTE: fault_reg isn't used (yet), we should just use that and extract the Fault status from
     // it here as opposed to doing it in asm and pass it in as a separate argument
     printf("Instruction in %s at 0x%h caused a data abort accessing memory at 0x%h (", Debug_GetClosestPreviousFunction(address), address, accessedAddr);
     print_abort_error(errorType);
     printf(")\n");
     
-    Debug_PrintCallstack(2);
+    //Debug_PrintCallstack(2);
  
     wait(INTERRUPT_HANDLER_DELAY);
-    in_fault = 0;
+    in_fault = false;
+
+    // Temporarily allow double faults due to bug with the translation tables
+    // when switching tasks
+ /*   if (doubleFault)
+        double_fault();*/
 }
 
 void c_abort_instruction_handler(unsigned int address, unsigned int errorType)
 {
-    if (in_fault == 1)
-        double_fault();
-    in_fault = 1;
+    bool doubleFault = in_fault == true;
+    in_fault = true;
+
     if (*(unsigned int*)address == 0xE1200070)
     {
         printf("* * Breakpoint! * * \n");
@@ -101,7 +110,10 @@ void c_abort_instruction_handler(unsigned int address, unsigned int errorType)
     
     wait(INTERRUPT_HANDLER_DELAY);
 
-    in_fault = 0;
+    in_fault = false;
+
+    if (doubleFault)
+        double_fault();
 }
 
 void c_swi_handler(unsigned int r0, unsigned int r1, unsigned int r2, unsigned int swi)
@@ -109,6 +121,8 @@ void c_swi_handler(unsigned int r0, unsigned int r1, unsigned int r2, unsigned i
     // This shouldn't happen, but who knows what users do..
     if (swi > MAX_SWI_NUM)
         return;
+
+    printf("SWI %d invoked\n", swi);
 
     swi_handler handler = gSwiHandlers[swi];
     if (handler != NULL)
