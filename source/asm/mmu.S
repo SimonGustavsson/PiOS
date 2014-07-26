@@ -93,30 +93,20 @@ do_mmu:
 .globl set_ttb0
 set_ttb0:
 
-    ;@ First things first, clear out all of the buffers and caches
-
-    ;@ Write clean and invalidate entire data cache
-    mov r2, #0
-    mcr p15, 0, r2, c7, c14, 0
-
-    ;@ Invalidate all unlocked TLB entries
-    mcr p15, 0, r2,c8, c5, 0
-
     ;@ Add Inner cacheable flag to address
     orr r0, r1
     
-    ;@ Flush prefetch buffer
-    mov r1, #0
-	mcr p15, 0, r1, c7, c5, 4
-
-    ;@ Invalidate Entire Data Cache
-	mcr p15, 0, r1, c7, c6, 0
-
-    ;@ Invalidate Entire Instruction Cache
-    MCR p15, 0, r1, c7, c5, 0
-    
     ;@ Set TTB0: (using defaults: No outer cacheable PT walks, not shared)
     mcr p15, 0, r0, c2, c0, 0
+    
+    mov r0, #0
+    mcr p15, 0, r0, c7, c14, 0   ;@ Write clean and invalidate entire data cache
+    mcr p15, 0, r0,c8, c5, 0     ;@ Invalidate all unlocked TLB entries
+    
+    mov r0, #0
+	mcr p15, 0, r0, c7, c5, 4 ;@ Flush prefetch buffer
+    mcr p15, 0, r0, c7, c5, 0 ;@ Invalidate Entire Instruction Cache
+    mcr p15, 0, r0, c7, c6, 0 ;@ Invalidate Entire Data Cache
     
     bx lr
     
