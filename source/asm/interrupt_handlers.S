@@ -10,13 +10,11 @@ irq:
     ;@ Save context
     push {r0-r12, lr}  ;@ Save registers onto IRQ stack
     
-    mrs r0, spsr
-    ;@msr cpsr_c, #0xD3 ;@ Hop into SVC mode to save banked registers
+    mrs r0, spsr        ;@ Save SPSR
     cps #0x13           ;@ SVC mode
     mov r1, sp
     mov r2, lr
 
-    ;@msr cpsr_c, #0xD2;@ Get back to IRQ mode
     cps #0x12          ;@ IRC mode
     push {r0-r2}       ;@ Push values to IRQ stack
 
@@ -26,16 +24,14 @@ irq:
     bl c_irq_handler   ;@ Osdev note: All this does is print out the registers struct
 
     ;@ Restore context
-    pop {r0-r2}        ;@ 
-    msr spsr, r0       ;@ Restore banked registers
+    pop {r0-r2}        ;@ Pop the saved banked registers off the IRQ stack
+    msr spsr, r0       ;@ Restore SPSR (Which is SPSR in the previous mode)
 
-    msr cpsr_c, #0xD3  ;@ Get into SVC mode
     cps #0x13          ;@ SVC mode
-    mov sp, r1
-    mov lr, r2
+    mov sp, r1         ;@ Restore SP
+    mov lr, r2         ;@ Restore LR
 
-    ;@msr cpsr_c, #0xD2  ;@ Hop back into IRQ mode
-    cps #0x12
+    cps #0x12          ;@ IRQ mode
 
     pop  {r0-r12,lr}
 	
