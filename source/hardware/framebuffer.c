@@ -5,23 +5,26 @@
 #include "types/string.h"
 #include "types/types.h"
 
-unsigned int gPitch;
-unsigned int gFbAddr;
-static size gScreenSize;
+rpi_fb gFb __attribute__ ((aligned (16)));
+size gScreenSize;
 
 unsigned int Fb_GetSize(void)
 {
-    return gScreenSize.width * gScreenSize.height * FB_BPP;
+    return gFb.width * gFb.height * FB_BPP;
 }
 
 unsigned int Fb_GetPhyAddr(void)
 {
-    return gFbAddr;
+    return gFb.address;
 }
 
 size Fb_GetScreenSize(void)
 {
-    return gScreenSize;
+	size s;
+	s.width = gFb.width;
+	s.height = gFb.height;
+
+    return s;
 }
 
 void Fb_DrawPixel(unsigned int x, unsigned int y, unsigned short int color)
@@ -29,7 +32,7 @@ void Fb_DrawPixel(unsigned int x, unsigned int y, unsigned short int color)
 	unsigned short int* ptr;
 	unsigned int offset;
 	
-	offset = (y * gPitch) + (x * 2);
+	offset = (y * gFb.pitch) + (x * 2);
     ptr = (unsigned short int*)(FRAMEBUFFER_VA_START + offset);
 	*ptr = color;
 }
@@ -69,7 +72,8 @@ static int GetScreenSizeFromTags()
 {
 	volatile unsigned int mailbuffer[256] __attribute__ ((aligned (16)));
 	unsigned int mailbufferAddr = (unsigned int)mailbuffer;
-	
+	mailbufferAddr -= KERNEL_VA_START;
+
 	mailbuffer[0] = 8 * 4;		// Total size
 	mailbuffer[1] = 0;			// Request
 	mailbuffer[2] = 0x40003;	// Display size
@@ -85,124 +89,15 @@ static int GetScreenSizeFromTags()
 	
 	if(mailbuffer[1] != 0x80000000)
 		return 1;
-		
-    gScreenSize.width = mailbuffer[5];
-    gScreenSize.height = mailbuffer[6];
-		
-    if (gScreenSize.width == 0 || gScreenSize.height == 0)
+
+    if (mailbuffer[5] == 0 || mailbuffer[6] == 0)
 		return 2;
+
+	gScreenSize.width = mailbuffer[5];
+	gScreenSize.height = mailbuffer[6];
 
 #ifdef FB_DEBUG
     printf("Framebuffer: Got screen size: %dx%d\n", gScreenSize.width, gScreenSize.height);
-#endif
-
-	return 0;
-}
-
-// 0: Success, 1: Invalid response to Setup screen request, 2: Framebuffer setup failed, Invalid tags, 3: Invalid tag response, 4: Invalid tag data
-static int SetupScreen()
-{
-	volatile unsigned int mailbuffer[256] __attribute__ ((aligned (16)));
-	unsigned int mailbufferAddr = (unsigned int)mailbuffer;
-	
-	mailbuffer[0] = 8 * 4; // NOT SURE IF WE NEED THIS
-	
-	unsigned int c = 1;
-	mailbuffer[c++] = 0;			 // This is a request
-	mailbuffer[c++] = 0x00048003;	 // Tag id (set physical size)
-	mailbuffer[c++] = 8;			 // Value buffer size (bytes)
-	mailbuffer[c++] = 8;			 // Req. + value length (bytes)
-	mailbuffer[c++] = PREFERRED_WIDTH;           // Horizontal resolution
-	mailbuffer[c++] = PREFERRED_HEIGHT;           // Vertical resolution
-
-	mailbuffer[c++] = 0x00048004;	   // Tag id (set virtual size)
-	mailbuffer[c++] = 8;			   // Value buffer size (bytes)
-	mailbuffer[c++] = 8;			   // Req. + value length (bytes)
-    mailbuffer[c++] = PREFERRED_WIDTH; // Horizontal resolution
-    mailbuffer[c++] = PREFERRED_HEIGHT;// Vertical resolution
-
-	mailbuffer[c++] = 0x00048005;	   // Tag id (set depth)
-	mailbuffer[c++] = 4;		       // Value buffer size (bytes)
-	mailbuffer[c++] = 4;			   // Req. + value length (bytes)
-    mailbuffer[c++] = FB_BPP;	       // 16 bpp
-
-	mailbuffer[c++] = 0x00040001;	   // Tag id (allocate framebuffer)
-	mailbuffer[c++] = 8;			   // Value buffer size (bytes)
-	mailbuffer[c++] = 4;			   // Req. + value length (bytes)
-    mailbuffer[c++] = FB_BPP;          // Alignment = 16
-	mailbuffer[c++] = 0;			   // Space for response
-
-	mailbuffer[c++] = 0;			   // Terminating tag
-
-	mailbuffer[0] = c*4;			   // Buffer size
-
-	Mailbox_Write(8, mailbufferAddr);
-	
-	Mailbox_Read(8);
-	
-	if(mailbuffer[1] != 0x80000000)
-		return 1;
-		
-	unsigned int temp;
-	unsigned int count = 2; // Read the first tag
-	while((temp = mailbuffer[count]))
-	{
-		if(temp == 0x40001)
-			break;
-			
-		count += 3 + (mailbuffer[count + 1] >> 2);		
-		if(count > c)
-			return 2; // Framebuffer setup failed, Invalid tags.
-	}
-	
-	// 8 bytes, plus the MSB is set to indicate that this is a response
-	if(mailbuffer[count + 2] != 0x80000008)
-		return 3; // Invalid tag response
-		
-	gFbAddr = mailbuffer[count + 3];
-	unsigned int screenSize = mailbuffer[count + 4];
-	
-	if(gFbAddr == 0)// || screenSize == 0)
-		return 4;
-		
-#ifdef FB_DEBUG
-    printf("Framebuffer intiialized, address: 0x%h\n", gFbAddr);
-#endif
-
-	return 0;
-}
-
-// 0: Success, 1: Invalid pitch response, 2: Invalid pitch response
-static int GetPitch()
-{
-	volatile unsigned int mailbuffer[256] __attribute__ ((aligned (16)));
-	unsigned int mailbufferAddr = (unsigned int)mailbuffer;
-	
-	// All super so far - Now time to get the pitch (bytes per line)
-	mailbuffer[0] = 7 * 4; 		// Total Size
-	mailbuffer[1] = 0; 			// This is a request
-	mailbuffer[2] = 0x40008;	// Display size
-	mailbuffer[3] = 4; 			// Buffer size
-	mailbuffer[4] = 0;			// Request size
-	mailbuffer[5] = 0; 			// REPONSE - Pitch
-	mailbuffer[6] = 0;			// end tag
-	
-	Mailbox_Write(8, mailbufferAddr);
-	
-	Mailbox_Read(8);
-
-	// 4 bytes, plus the MSB set to indicate a response
-	if(mailbuffer[4] != 0x80000004)
-		return 1; // Invalid pitch response
-					
-	unsigned int pitch = mailbuffer[5];
-	if(pitch == 0)
-		return 2; // Invalid pitch response
-		
-	gPitch = pitch;
-
-#ifdef FB_DEBUG
-    printf("Framebuffer: Got pitch: %d\n", gPitch);
 #endif
 
 	return 0;
@@ -212,39 +107,83 @@ void Fb_Clear(void)
 {
     // Draw background color to make it visually obvious how large the drawing area is
     unsigned int i, j;
-    for (i = 0; i < gScreenSize.width; i++)
+    for (i = 0; i < gFb.width; i++)
     {
-        for (j = 0; j < gScreenSize.height; j++)
+        for (j = 0; j < gFb.height; j++)
             Fb_DrawPixel(i, j, 0x1212);
     }
+}
+
+int fb_allocateBuffer(void)
+{
+	int width = PREFERRED_WIDTH;
+	int height = PREFERRED_HEIGHT;
+
+	// Attempt to retrieve the physical resolution of the monitor
+	if(GetScreenSizeFromTags() == 0)
+	{
+		width = gScreenSize.width;
+		height = gScreenSize.height;
+
+		printf("Allocating buffer based on resolution retrieved from VC (%dx%d)\n", width, height);
+	}
+	else
+	{
+		printf("Framebuffer: WARNING - using default resolution (%dx%d).\n", width, height);
+	}
+
+	gFb.width = width;     // Requested width of the physical display
+	gFb.height = height;   // Requested height of the physical display
+	gFb.v_width = width;   // Requested width of the virtual framebuffer
+	gFb.v_height = height; // Requested height of the virtual framebuffer
+	gFb.pitch = 0;                   // Pitch - Request: Set to 0, Response:  Number of bytes between each row of the frame buffer
+	gFb.depth = FB_BPP;              // Requested depth (bits per pixel)
+	gFb.offset_x = 0;                // Requested X offset of the virtual framebuffer
+	gFb.offset_y = 0;                // Requested Y offset of the virtual framebuffer
+	gFb.address = 0;                 // Framebuffer address - Request: 0, Response: Address of buffer allocated by VC, or zero if request fails
+	gFb.size = 0;                    // Framebuffer size - Request: 0, Response: Size of buffer allocated by VC
+
+	unsigned int fbStructAddr = &gFb;
+
+	// Mailbox requires the physical address
+	// TODO: Add some sort of function to do this instead? Doing his in a lot of places now...
+	fbStructAddr -= KERNEL_VA_START;
+
+	Mailbox_Write(1, fbStructAddr);
+
+	Mailbox_Read(1);
+
+	if(gFb.address == 0)
+		return 1; // Invalid FB address
+
+	return 0;
 }
 
 int Fb_Initialize()
 {	
 	unsigned int result = 0;
+	gScreenSize.width = 0;
+	gScreenSize.height = 0;
+
 	
-	if((result = GetScreenSizeFromTags()) > 0)
+	// For some reason known to no one, allocating the buffer might fail
+	// The first (few) time(s), so retry a couple of times (seems to succeed more often than not on the second)
+	int tries = 1;
+	do
 	{
-#ifdef FB_DEBUG
-        printf("Framebuffer: Failed to get screen size from tags\n");
-#endif
-		return result;
+		result = fb_allocateBuffer();
+	}while(tries++ < 5 && result != 0);
+
+	if(result == 0)
+	{
+		printf("Framebuffer: Successfully retrieved buffer after %d tries.\n", tries);
+		printf("Framebuffer: Pitch is %d\n", gFb.pitch);
+		printf("Framebuffer: Framebuffer address is  0x%h\n", gFb.address);
+		printf("Framebuffer: Resolution set to %dx%d\n", gFb.width, gFb.height);
 	}
-	
-	if((result = SetupScreen()) > 0)
-    {
-#ifdef FB_DEBUG
-        printf("Framebuffer: Failed to setup screen\n");
-#endif
-		return result;
-	}
-	
-	if((result = GetPitch()) > 0)
-    {
-#ifdef FB_DEBUG
-        printf("Framebuffer: Failed to get pitch\n");
-#endif
-		return result;
+	else
+	{
+		printf("Framebuffer: Failed to allocate framebuffer on VC\n");
 	}
 
 	return result;

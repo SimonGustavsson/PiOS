@@ -114,7 +114,7 @@ unsigned int Mailbox_GetPowerState(unsigned int deviceId)
 	return mailbuffer[6];
 }
 
-unsigned int Mailbox_GetClockRate(unsigned int clockId)
+int Mailbox_GetClockRate(unsigned int clockId)
 {
     volatile unsigned int mailbuffer[256] __attribute__((aligned(16)));
 

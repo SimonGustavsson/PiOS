@@ -134,6 +134,6 @@ void Mailbox_Write(unsigned int channel, unsigned int data);
 unsigned int Mailbox_Read(unsigned int channel);
 unsigned int Mailbox_GetPowerState(unsigned int deviceId);
 int Mailbox_SetDevicePowerState(unsigned int deviceId, unsigned int powerState);
-unsigned int Mailbox_GetClockRate(unsigned int clockId);
+int Mailbox_GetClockRate(unsigned int clockId);
 
 unsigned int Mailbox_SdGetBaseFrequency(void);
