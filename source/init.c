@@ -114,21 +114,13 @@ void sysinit_stage2(int machineType, int atagsPa, int dbgsymboladdr)
         while (1);
     }
 
-    // Now that the terminal is initialized, add a VA mapping for it
-    size fbSize = Fb_GetScreenSize();    
-    unsigned int fb_phy_addr = Fb_GetPhyAddr();
-    unsigned int fbSizeInMB = (((fbSize.width * fbSize.height * FB_BPP) / 1024) / 1024) + 1;
+    // Reserve physical pages for framebuffer
+    mem_reserve(Fb_GetPhyAddr(), Fb_GetSize());
 
     Fb_Clear();
     Terminal_Clear();
     
     printf("Kernel size: %d\n", kernel_size);
-
-    printf("Value at 0x100000 (which is user 0x0): %d\n", usrStartValBefore);
-    printf("Value at 0x200000 (which is user2 0x0): %d\n", usr2StartValBefore);
-    // Verify page table by attempting to access unmapped memory
-    //printf("Testing translation fault by accessing unmapped memory...\n");
-    //*((unsigned int*)0x10E00000) = 2;
 
     // Example usage of timer to measure performance
     long long start = Timer_GetTicks();
