@@ -105,6 +105,8 @@ void sysinit_stage2(int machineType, int atagsPa, int dbgsymboladdr)
     mem_reserve(SM_STACK_PA_START - SMALL_STACK_SIZE, SMALL_STACK_SIZE);
     // TODO: Need to allocate all static things, see memory_map.h
 
+    char* dbgSymbolsVa = (char*)(KERNEL_VA_START + dbgsymboladdr);
+    Debug_ReadFunctionNames(dbgSymbolsVa);
     // Initialize terminal first so we can print error messages if any (Hah, unlikely!)
     if(Terminal_Initialize() != 0)
     {
@@ -112,23 +114,10 @@ void sysinit_stage2(int machineType, int atagsPa, int dbgsymboladdr)
         while (1);
     }
 
-    char* dbgSymbolsVa = (char*)(KERNEL_VA_START + dbgsymboladdr);
-    Debug_ReadFunctionNames(dbgSymbolsVa);
-
     // Now that the terminal is initialized, add a VA mapping for it
     size fbSize = Fb_GetScreenSize();    
     unsigned int fb_phy_addr = Fb_GetPhyAddr();
     unsigned int fbSizeInMB = (((fbSize.width * fbSize.height * FB_BPP) / 1024) / 1024) + 1;
-
-    unsigned int i, addr;
-    for (i = 0; i < fbSizeInMB; i++)
-    {
-        // Note: At this point we still have a 1:1 mapping of the kernel, so we can use
-        // The physical address of the page table
-        addr = fb_phy_addr + (i << 20);
-        map_section((unsigned int*)KERNEL_PT_VA_START, addr, FRAMEBUFFER_VA_START + (i << 20), SECTION_AP_K_RW);
-        FlushTLB(addr);
-    }
 
     Fb_Clear();
     Terminal_Clear();
@@ -154,16 +143,16 @@ void sysinit_stage2(int machineType, int atagsPa, int dbgsymboladdr)
     else
     {
         // Initialize the SD block device
-        Sd_Register(sd);
+        //Sd_Register(sd);
 
         // Initialize global filesystem
-        fs_initialize();
+        //fs_initialize();
 
         // Add support for FAT32 partitions to filesystem
-        fs_register_driver_factory(&fat32_driver_factory);
+        //fs_register_driver_factory(&fat32_driver_factory);
 
         // Add the SD card to the file system
-        fs_add_device(sd);
+        //fs_add_device(sd);
     }
 
     long long end = Timer_GetTicks();

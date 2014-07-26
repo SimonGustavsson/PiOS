@@ -65,7 +65,10 @@ unsigned int Mailbox_SdGetBaseFrequency(void)
 	mailbuffer[bufSize++] = 0;          // 7. Closing tag
 	mailbuffer[0] = bufSize * 4;        // 0. Size of the entire buffer (in bytes)
 
-	Mailbox_Write(8, (unsigned int)mailbuffer);
+	unsigned int bufferAddr = &mailbuffer;
+	bufferAddr -= KERNEL_VA_START;
+
+	Mailbox_Write(8, bufferAddr);
 
 	Mailbox_Read(8);
 
@@ -101,8 +104,11 @@ unsigned int Mailbox_GetPowerState(unsigned int deviceId)
 	mailbuffer[bufSize++] = 0;          // 7. End of message tag
 	mailbuffer[0] = bufSize * 4;        // 0. Size of entire buffer (in bytes)
 	
-	Mailbox_Write(8, (unsigned int)mailbuffer);
-	
+	unsigned int bufferAddr = &mailbuffer;
+	bufferAddr -= KERNEL_VA_START;
+
+	Mailbox_Write(8, bufferAddr);
+
 	Mailbox_Read(8);
 	
 	if(mailbuffer[1] != RESPONSE_SUCCESS)
@@ -128,7 +134,10 @@ int Mailbox_GetClockRate(unsigned int clockId)
     mailbuffer[bufSize++] = 0;                 // 7. End of message tag
     mailbuffer[0] = bufSize * 4;               // 0. Size o entire buffer (in bytes)
 
-    Mailbox_Write(8, (unsigned int)mailbuffer);
+	unsigned int bufferAddr = &mailbuffer;
+	bufferAddr -= KERNEL_VA_START;
+
+	Mailbox_Write(8, bufferAddr);
 
     Mailbox_Read(8);
 
@@ -155,7 +164,10 @@ unsigned int Mailbox_SetClockRate(unsigned int clockId, unsigned int rate)
     mailbuffer[bufSize++] = 0;                 // 7. End of message
     mailbuffer[0] = bufSize * 4;               // 0. Size of this buffer
 
-    Mailbox_Write(8, (unsigned int)mailbuffer);
+	unsigned int bufferAddr = &mailbuffer;
+	bufferAddr -= KERNEL_VA_START;
+
+	Mailbox_Write(8, bufferAddr);
 
     if (mailbuffer[1] != RESPONSE_SUCCESS)
     {
@@ -186,7 +198,10 @@ int Mailbox_SetDevicePowerState(unsigned int deviceId, unsigned int powerState)
 	mailbuffer[bufSize++] = 0;          // 7. End of message tag
 	mailbuffer[0] = bufSize * 4;        // 0. Size of this buffer (in bytes)
 	
-	Mailbox_Write(8, (unsigned int)mailbuffer);
+	unsigned int bufferAddr = &mailbuffer;
+	bufferAddr -= KERNEL_VA_START;
+
+	Mailbox_Write(8, bufferAddr);
 	
 	wait(200); // Wait for device to power on (Note we're passing in "don't wait" to power cmd)
 	

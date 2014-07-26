@@ -9,6 +9,7 @@
 #include "hardware/mailbox.h"
 #include "syscalls.h"
 #include "memory_map.h"
+#include "hardware/framebuffer.h"
 
 // This variable makes sure we have something in the .data section,
 // Because we place .bss before data, this will make sure that the compiler

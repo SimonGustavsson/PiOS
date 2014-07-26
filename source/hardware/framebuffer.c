@@ -10,7 +10,7 @@ size gScreenSize;
 
 unsigned int Fb_GetSize(void)
 {
-    return gFb.width * gFb.height * FB_BPP;
+    return gFb.size;
 }
 
 unsigned int Fb_GetPhyAddr(void)
@@ -29,11 +29,12 @@ size Fb_GetScreenSize(void)
 
 void Fb_DrawPixel(unsigned int x, unsigned int y, unsigned short int color)
 {
+	x+= 60;
 	unsigned short int* ptr;
 	unsigned int offset;
 	
 	offset = (y * gFb.pitch) + (x * 2);
-    ptr = (unsigned short int*)(FRAMEBUFFER_VA_START + offset);
+    ptr = (unsigned short int*)((gFb.address) + offset);
 	*ptr = color;
 }
 
@@ -60,7 +61,7 @@ void Fb_DrawColoredCharacterAt(unsigned int ch, unsigned int x, unsigned int y, 
 			}
 			else
 			{
-                Fb_DrawPixel(x + i, y + row, 0x1212); // Same as background
+                Fb_DrawPixel(x + i, y + row, 0x0000); // Same as background
 			}
 			i++;
 		}
@@ -110,7 +111,7 @@ void Fb_Clear(void)
     for (i = 0; i < gFb.width; i++)
     {
         for (j = 0; j < gFb.height; j++)
-            Fb_DrawPixel(i, j, 0x1212);
+            Fb_DrawPixel(i, j, 0x0000);
     }
 }
 
@@ -136,12 +137,12 @@ int fb_allocateBuffer(void)
 	gFb.height = height;   // Requested height of the physical display
 	gFb.v_width = width;   // Requested width of the virtual framebuffer
 	gFb.v_height = height; // Requested height of the virtual framebuffer
-	gFb.pitch = 0;                   // Pitch - Request: Set to 0, Response:  Number of bytes between each row of the frame buffer
-	gFb.depth = FB_BPP;              // Requested depth (bits per pixel)
-	gFb.offset_x = 0;                // Requested X offset of the virtual framebuffer
-	gFb.offset_y = 0;                // Requested Y offset of the virtual framebuffer
-	gFb.address = 0;                 // Framebuffer address - Request: 0, Response: Address of buffer allocated by VC, or zero if request fails
-	gFb.size = 0;                    // Framebuffer size - Request: 0, Response: Size of buffer allocated by VC
+	gFb.pitch = 0;         // Pitch - Request: Set to 0, Response:  Number of bytes between each row of the frame buffer
+	gFb.depth = FB_BPP;    // Requested depth (bits per pixel)
+	gFb.offset_x = 0;      // Requested X offset of the virtual framebuffer
+	gFb.offset_y = 0;      // Requested Y offset of the virtual framebuffer
+	gFb.address = 0;       // Framebuffer address - Request: 0, Response: Address of buffer allocated by VC, or zero if request fails
+	gFb.size = 0;          // Framebuffer size - Request: 0, Response: Size of buffer allocated by VC
 
 	unsigned int fbStructAddr = &gFb;
 
@@ -177,9 +178,14 @@ int Fb_Initialize()
 	if(result == 0)
 	{
 		printf("Framebuffer: Successfully retrieved buffer after %d tries.\n", tries);
-		printf("Framebuffer: Pitch is %d\n", gFb.pitch);
-		printf("Framebuffer: Framebuffer address is  0x%h\n", gFb.address);
-		printf("Framebuffer: Resolution set to %dx%d\n", gFb.width, gFb.height);
+		printf("Framebuffer: Allocated buffer at 0x%h, %d BPP, pitch: %d, %dx%d (virtual %dx%d)\n",
+			gFb.address,
+			gFb.depth,
+			gFb.pitch,
+			gFb.width,
+			gFb.height,
+			gFb.v_width,
+			gFb.v_height);
 	}
 	else
 	{
