@@ -77,6 +77,8 @@ void Scheduler_Enqueue(Process* task)
 
 void Scheduler_NextTask(thread_regs* reg)
 {
+    printf("Scheduler - cpsr is: 0x%h\n", reg->sprs);
+
     unsigned int shouldSwitchTask = 0;
     thread* cur = gScheduler->currentThread;
     if (cur != NULL && gScheduler->threads.numNodes > 0)
@@ -127,6 +129,7 @@ void Scheduler_NextTask(thread_regs* reg)
         next->state = TS_Running;
         gScheduler->currentThread = next;
 
+        printf("Scheduler - Setting SPSR to: 0x%h\n", next->registers.sprs);
         //printf("Updating TTBC, Size: %d\n", next->ttb0_size);
 
         // Update TTCR
@@ -143,7 +146,8 @@ void Scheduler_NextTask(thread_regs* reg)
         // Restore the tasks registers
         my_memcpy(reg, &next->registers, sizeof(thread_regs));
 
-        //Scheduler_PrintRegs(reg);
+        printf("Switching in thread in process %s, new SP = 0x%h\n", next->owner->name, next->registers.sp);
+       // Scheduler_PrintRegs(reg);
     }
     else
     {

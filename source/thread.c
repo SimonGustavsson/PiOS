@@ -5,14 +5,13 @@
 #include "types/string.h"
 #include "process.h"
 #include "scheduler.h"
+#include "util/memutil.h"
 
 static bool thread_initStack(thread* t, Process* owner)
 {
     int freePage = mem_nextFree();
     if (freePage == -1)
         return false;
-
-    printf("Allocated page stack for thread at 0x%h\n", freePage);
 
     map_page(owner->ttb0, owner->ttb0_size, (unsigned int)freePage, THREAD_STACK_VA_START,
         PAGE_BUFFERABLE | PAGE_CACHEABLE | PAGE_AP_K_RW_U_RW);
@@ -25,6 +24,8 @@ static bool thread_initStack(thread* t, Process* owner)
 
 thread* thread_create(thread_entry entry)
 {
+    printf("Creating a new thread with entry 0x%h\n", entry);
+
     thread* currentThread = Scheduler_GetCurrentThread();
 
     if (currentThread == NULL)
@@ -45,6 +46,8 @@ thread* thread_create(thread_entry entry)
 
 thread* thread_createWithOwner(thread_entry entry, Process* owner)
 {
+    printf("Creating thread with owner %s\n", owner->name);
+
     thread* t = (thread*)pcalloc(sizeof(thread), 1);
 
     t->priority = THREAD_PRIO_MED;
@@ -60,9 +63,10 @@ thread* thread_createWithOwner(thread_entry entry, Process* owner)
     }
 
     // Initialize registers
+    printf("Creating thread, virtual SP: 0x%h\n", t->virtStack);
     t->registers.sp = (uint32_t)t->virtStack;
     t->registers.r7 = (uint32_t)t->virtStack; // FP! Or is it r11/r12?
-    t->registers.sprs = 0x12; // SVC MODE, TODO: User threads?
+    t->registers.sprs = 0x53; // SVC MODE, TODO: User threads?
     t->registers.lr2 = entry;
 
     return t;

@@ -6,7 +6,7 @@
 #include "process.h"
 
 #define THREAD_DEFAULT_STACK_SIZE 4096
-#define THREAD_STACK_VA_START 0x1900000
+#define THREAD_STACK_VA_START 0x900000
 
 typedef int(*thread_entry)(char*);
 
