@@ -164,13 +164,19 @@ void PresentBufferToScreen(void)
 	{
         for (col = 0; col < gTerminalSize.width; col++)
 		{
-			if(gTerminal[row][col] != gBuffer[row][col])
+			//if(gTerminal[row][col] != gBuffer[row][col])
             {
-				gTerminal[row][col] = gBuffer[row][col];
-				Fb_DrawCharacterAt(gTerminal[row][col], col * (CHAR_WIDTH + CHAR_HSPACING), row * (CHAR_HEIGHT + CHAR_VSPACING));
+               gTerminal[row][col] = gBuffer[row][col];
+				Fb_DrawCharacterAt(gBuffer[row][col], col * (CHAR_WIDTH + CHAR_HSPACING), row * (CHAR_HEIGHT + CHAR_VSPACING));
 			}
 		}
 	}
+}
+
+
+void terminal_setBuffer(int row, int col, char c)
+{
+	gBuffer[row][col] = c;
 }
 
 void Terminal_Clear(void)
@@ -211,7 +217,7 @@ int Terminal_Initialize(void)
 
     // TODO NOW:  Calculate gTerminalSize + gBufferSize
     gTerminalSize.width = (screenSize.width / (CHAR_WIDTH + CHAR_HSPACING)) - 1;
-    gTerminalSize.height = (screenSize.height / CHAR_HEIGHT + CHAR_VSPACING) - 1;
+    gTerminalSize.height = (screenSize.height / (CHAR_HEIGHT + CHAR_VSPACING)) - 1;
 
     // For now we don't really bufer...
     gBufferSize.width = gTerminalSize.width;
@@ -220,7 +226,7 @@ int Terminal_Initialize(void)
     // Allocate Terminal
     // Allocate first dimension
 	unsigned int i;
-    gTerminal = (char**)palloc(gTerminalSize.width * sizeof(char*));
+    gTerminal = (char**)pcalloc(sizeof(char*), gTerminalSize.width);
     if (gTerminal == 0)
     {
         Uart_SendString("Failed to allocated terminal array\n");
@@ -228,11 +234,11 @@ int Terminal_Initialize(void)
     }
     // Allocate second dimension
     for (i = 0; i < gTerminalSize.width; i++)
-        gTerminal[i] = (char*)palloc(gTerminalSize.height * sizeof(char));
+        gTerminal[i] = (char*)pcalloc(sizeof(char), gTerminalSize.height);
     
     // Allocate Buffer
     // Allocate first dimension
-    gBuffer = (char**)palloc(gTerminalSize.width * sizeof(char*));
+    gBuffer = (char**)pcalloc(sizeof(char*), gTerminalSize.width);
     if (gBuffer == 0)
     {
         Uart_SendString("Failed to allocated terminal buffer array\n");
@@ -241,7 +247,7 @@ int Terminal_Initialize(void)
 
     // Allocate second dimension
     for (i = 0; i < gBufferSize.width; i++)
-        gBuffer[i] = (char*)palloc(gBufferSize.height * sizeof(char));
+        gBuffer[i] = (char*)pcalloc(sizeof(char*), gBufferSize.height);
 
     if (gBuffer == 0)
     {
@@ -256,9 +262,9 @@ int Terminal_Initialize(void)
 	// Setup default built in commands
     TerminalCommands_Initialize();
 
-    printf("Terminal size: %dx%d\n", gBufferSize.width, gBufferSize.height);
-
 	gTerminalInitialized = 1;
+
+    printf("Terminal size: %dx%d\n", gBufferSize.width, gBufferSize.height);
 
 	return 0;
 }
@@ -276,12 +282,12 @@ void Terminal_back(void)
 		gBufferCaretCol = gBufferSize.width - 1;
 		
 		// We have to go back up a row
-		gBuffer[gBufferCaretRow][gBufferCaretCol] = ' ';
+		terminal_setBuffer(gBufferCaretRow, gBufferCaretCol, ' ');
 	}
 	else
 	{
 		gBufferCaretCol--;
-		gBuffer[gBufferCaretRow][gBufferCaretCol] = ' ';
+		terminal_setBuffer(gBufferCaretRow, gBufferCaretCol, ' ');
 	}
 	
 	PresentBufferToScreen();
@@ -310,7 +316,7 @@ void print_internal(char* string, unsigned int length, unsigned int important)
 		unsigned int i;
 		unsigned int charsToRemote = INPUT_BUFFER_SIZE + gInputBufferIndex;
 		for(i = 0; i < charsToRemote; i++)
-			gBuffer[gBufferCaretRow][i] = ' ';
+			terminal_setBuffer(gBufferCaretRow, i, ' ');
 		
 		gBufferCaretCol = 0;
 	}
@@ -335,7 +341,7 @@ void print_internal(char* string, unsigned int length, unsigned int important)
 			gBufferCaretCol = 0;
 			
 			// Print cursor
-			gBuffer[gBufferCaretRow][gBufferCaretCol] = (char)127;
+			terminal_setBuffer(gBufferCaretRow, gBufferCaretCol, (char)127);
 			continue;
 		}
 		
@@ -345,7 +351,7 @@ void print_internal(char* string, unsigned int length, unsigned int important)
 			unsigned int k;
 			for(k = 0; k < 4; k++)
 			{
-				gBuffer[gBufferCaretRow][gBufferCaretCol++] = ' ';
+				terminal_setBuffer(gBufferCaretRow, gBufferCaretCol++, ' ');
 				
 				// Make sure we move to the next row if we reach the end of the current row
 				if(gBufferCaretCol >= gBufferSize.width - 1)
@@ -359,7 +365,7 @@ void print_internal(char* string, unsigned int length, unsigned int important)
 		else if (gBuffer[gBufferCaretRow][gBufferCaretCol] != string[i])
 		{
             Uart_Send(string[i]);
-			gBuffer[gBufferCaretRow][gBufferCaretCol] = string[i];
+			terminal_setBuffer(gBufferCaretRow, gBufferCaretCol, string[i]);
 		}
 		else
 		{
@@ -395,7 +401,7 @@ void print_internal(char* string, unsigned int length, unsigned int important)
 		// Add the user input + caret
 		unsigned int j;
 		for(j = 0; j < gInputBufferIndex; j++)
-			gBuffer[gBufferCaretRow][gBufferCaretCol++] = gInputBuffer[j];
+			terminal_setBuffer(gBufferCaretRow, gBufferCaretCol++, gInputBuffer[i]);
 	}
 	
 	// 2. Flip buffer to screen

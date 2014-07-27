@@ -14,7 +14,9 @@
 // Abort interrupts of various types, this adds a delay to the abort handlers
 // So that I have time to read the error before spam scrolls it out of view
 // </Lazymode> :-)
-#define INTERRUPT_HANDLER_DELAY 100 // in ms
+#define INTERRUPT_HANDLER_DELAY 2000 // in ms
+
+extern int gTerminalInitialized;
 
 bool in_fault = false;
 
@@ -72,6 +74,7 @@ void c_undefined_handler(void* lr)
 
 void c_abort_data_handler(unsigned int address, unsigned int errorType, unsigned int accessedAddr, unsigned int fault_reg)
 {
+    gTerminalInitialized = 0;
     bool doubleFault = in_fault == true;
     in_fault = true;
 
@@ -90,6 +93,8 @@ void c_abort_data_handler(unsigned int address, unsigned int errorType, unsigned
     // when switching tasks
  /*   if (doubleFault)
         double_fault();*/
+
+    gTerminalInitialized = 1;
 }
 
 void c_abort_instruction_handler(unsigned int address, unsigned int errorType)

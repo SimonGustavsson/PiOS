@@ -4,9 +4,14 @@
 #include "myfont.h"
 #include "types/string.h"
 #include "types/types.h"
+#include "debugging.h"
+#include "hardware/timer.h"
 
 rpi_fb gFb __attribute__ ((aligned (16)));
 size gScreenSize;
+unsigned int gFbMaxAddr;
+
+extern int gTerminalInitialized;
 
 unsigned int Fb_GetSize(void)
 {
@@ -29,13 +34,29 @@ size Fb_GetScreenSize(void)
 
 void Fb_DrawPixel(unsigned int x, unsigned int y, unsigned short int color)
 {
-	x+= 60;
-	unsigned short int* ptr;
-	unsigned int offset;
-	
-	offset = (y * gFb.pitch) + (x * 2);
-    ptr = (unsigned short int*)((gFb.address) + offset);
-	*ptr = color;
+	// Offset into framebuffer
+	unsigned int offset = (y * gFb.pitch) + (x * 2);
+
+    unsigned short int* ptr = (unsigned short int*)((gFb.address) + offset);
+
+    if((unsigned int)ptr >= gFbMaxAddr)
+    {
+    	gTerminalInitialized = 0; // Stop printing to Framebuffer
+
+	   	printf("Framebuffer: Warning! Attempting to write outside buffer!\n");
+
+	   	Debug_PrintCallstack(2);
+
+	   	for(;;)
+	   	{
+	   		wait(2000);
+	   	}
+
+    }
+    else
+    {
+		*ptr = color;
+    }
 }
 
 void Fb_DrawCharacterAt(unsigned int ch, unsigned int x, unsigned int y)
@@ -186,6 +207,9 @@ int Fb_Initialize()
 			gFb.height,
 			gFb.v_width,
 			gFb.v_height);
+
+		gFbMaxAddr = gFb.address + gFb.size;
+		printf("Framebuffer: Framebuffer resides between 0x%h -> 0x%h (size: %d)\n", gFb.address, gFbMaxAddr, gFb.size);
 	}
 	else
 	{
