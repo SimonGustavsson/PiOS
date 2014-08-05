@@ -119,9 +119,9 @@ int cmain(void)
     Terminal_PrintWelcome();
     Terminal_PrintPrompt();
 
-    Process* fooProcess = Process_Create((unsigned int)&foo, "Foo(Test)", true);
-    if (fooProcess == NULL)
-        printf("Failed to create foo task!\n");
+    // Process* fooProcess = Process_Create((unsigned int)&foo, "Foo(Test)", true);
+    // if (fooProcess == NULL)
+    //     printf("Failed to create foo task!\n");
 
    // Process* fooProcess2 = Process_Create((unsigned int)&foo2, "Foo2(Test)", true);
     //if (fooProcess2 == NULL)

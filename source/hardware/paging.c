@@ -87,13 +87,10 @@ int INIT_kernel_tt_setup(unsigned int* ttb1, unsigned int* tmp_ttb0)
     for (i = 0; i < 20; i++)
         INIT_map_section(tmp_ttb0, (i << 20), (i << 20), PAGE_CACHEABLE | PAGE_BUFFERABLE | SECTION_AP_K_RW);
     
-    // Qemu Frame buffer, starts at 0x1C000000, not sure how big it is?
-    unsigned int qemuFbStart = 0x1C000000;
-    for(i = 0; i < 7; i++)
-    {
-        unsigned int addr = qemuFbStart + (i << 20);
-        INIT_map_section(tmp_ttb0, addr, addr, PAGE_CACHEABLE | PAGE_BUFFERABLE | SECTION_AP_K_RW);  
-    }
+    // Qemu Frame buffer
+    unsigned int qemuFbAddress2 = 0x1C100000;
+    for(i = 0; i < 2; i++)
+        INIT_map_section(ttb1, qemuFbAddress2 + (i << 20), FRAMEBUFFER_VA_START + (i << 20), SECTION_AP_K_RW);
 
     return 0;
 }

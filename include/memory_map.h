@@ -3,6 +3,9 @@
 #ifndef MEMORY_MAP_H
 #define MEMORY_MAP_H
 
+
+#define QEMU 1
+
 // Misc memory relevant defines
 #define SMALL_STACK_SIZE (PAGE_SIZE)
 #define MED_STACK_SIZE (PAGE_SIZE * 3)
@@ -58,14 +61,18 @@
 #define PERIPHERAL_VA_MINIUART      (PERIPHERAL_VA_START + 0x215000)
 #define PERIPHERAL_VA_EMMC          (PERIPHERAL_VA_START + 0x300000)
 
-// Note: The offset is the physical address of the FB, well, at least
-//       The address it has been allocated to in my tests
-#define FRAMEBUFFER_VA_START (KERNEL_VA_START + 0x0C006000)
+#ifdef QEMU
+	// Same thing here, thoguh it seems to be 0x1C100000 or 0x1C000000
+	#define FRAMEBUFFER_VA_START (KERNEL_VA_START + 0x1C000000)
+#else
+	// Note: The offset is the physical address of the FB, well, at least
+	//       The address it has been allocated to in my tests
+	#define FRAMEBUFFER_VA_START (KERNEL_VA_START + 0x0C006000)
+#endif
 
 //
 // Linker constants
 // 
-//#define QEMU 1
 
 #ifdef QEMU
 	#define LD_KRNL_ORIGIN 0x10000

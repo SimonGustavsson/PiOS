@@ -37,7 +37,7 @@ void Fb_DrawPixel(unsigned int x, unsigned int y, unsigned short int color)
 	// Offset into framebuffer
 	unsigned int offset = (y * gFb.pitch) + (x * 2);
 
-    unsigned short int* ptr = (unsigned short int*)((gFb.address) + offset);
+    unsigned short int* ptr = (unsigned short int*)((FRAMEBUFFER_VA_START) + offset);
 
     if((unsigned int)ptr >= gFbMaxAddr)
     {
@@ -147,7 +147,7 @@ int fb_allocateBuffer(void)
 		width = gScreenSize.width;
 		height = gScreenSize.height;
 
-		printf("Allocating buffer based on resolution retrieved from VC (%dx%d)\n", width, height);
+		printf("Framebuffer: Allocating buffer based on resolution retrieved from VC (%dx%d)\n", width, height);
 	}
 	else
 	{
@@ -208,8 +208,13 @@ int Fb_Initialize()
 			gFb.v_width,
 			gFb.v_height);
 
-		gFbMaxAddr = gFb.address + gFb.size;
-		printf("Framebuffer: Framebuffer resides between 0x%h -> 0x%h (size: %d)\n", gFb.address, gFbMaxAddr, gFb.size);
+		gFbMaxAddr = FRAMEBUFFER_VA_START + gFb.size;
+		printf("Framebuffer: Framebuffer resides between 0x%h (phy: 0x%h) -> 0x%h (phy: 0x%h) (size: %d)\n", 
+			FRAMEBUFFER_VA_START,
+			gFb.address, 
+			gFbMaxAddr,
+			gFb.address + gFb.size, 
+			gFb.size);
 	}
 	else
 	{
