@@ -119,16 +119,16 @@ int cmain(void)
     Terminal_PrintWelcome();
     Terminal_PrintPrompt();
 
-    // Process* fooProcess = Process_Create((unsigned int)&foo, "Foo(Test)", true);
-    // if (fooProcess == NULL)
-    //     printf("Failed to create foo task!\n");
+    Process* fooProcess = Process_Create((unsigned int)&foo, "Foo(Test)", true);
+    if (fooProcess == NULL)
+        printf("Failed to create foo task!\n");
 
    // Process* fooProcess2 = Process_Create((unsigned int)&foo2, "Foo2(Test)", true);
     //if (fooProcess2 == NULL)
      //   printf("Failed to create foo2 task!\n");
         
-    //printf("Starting scheduler...\n");
-    //Scheduler_Start();
+    printf("Starting scheduler...\n");
+    Scheduler_Start();
     printf("\nNot sure what to do now...\n");
 
     unsigned int i;

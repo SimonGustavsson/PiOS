@@ -15,7 +15,7 @@ void pios_print(const char* str)
 thread* pios_thread_create(thread_entry entry)
 {
     Uart_SendString("pios_create_thread called\n");
-    unsigned int res = NULL;
+    unsigned int res = 0;
     SWI_PARAM_WITH_RES(SYS_THREAD_CREATE, entry, res);
 
     return (thread*)res;
@@ -44,7 +44,7 @@ void* sys_dummy2(int arg1, int arg2, int arg3)
     return NULL;
 }
 
-thread* sys_create_thread(int arg1, int arg2, int arg3)
+void* sys_create_thread(int arg1, int arg2, int arg3)
 {
     printf("sys_create_thread called from SWI\n");
     return thread_create((thread_entry)arg1);
@@ -52,8 +52,8 @@ thread* sys_create_thread(int arg1, int arg2, int arg3)
 
 void syscalls_init(void)
 {
-    swi_install(12, sys_printf);
-    swi_install(SYS_THREAD_CREATE, sys_create_thread);
-    swi_install(95, sys_dummy1);
-    swi_install(96, sys_dummy2);
+    swi_install(12, &sys_printf);
+    swi_install(SYS_THREAD_CREATE, &sys_create_thread);
+    swi_install(95, &sys_dummy1);
+    swi_install(96, &sys_dummy2);
 }

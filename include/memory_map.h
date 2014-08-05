@@ -74,11 +74,8 @@
 // Linker constants
 // 
 
-#ifdef QEMU
-	#define LD_KRNL_ORIGIN 0x10000
-#else
-	#define LD_KRNL_ORIGIN 0x8000
-#endif
+#define LD_KRNL_ORIGIN 0x8000
+
 
 #define LD_PAGE_SIZE 4096
 
