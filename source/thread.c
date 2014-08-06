@@ -13,11 +13,15 @@ static bool thread_initStack(thread* t, Process* owner)
     if (freePage == -1)
         return false;
 
+    printf("Initializing thread stack at 0x%h (phys: 0x%h)\n", THREAD_STACK_VA_START, freePage);
+
     map_page(owner->ttb0, owner->ttb0_size, (unsigned int)freePage, THREAD_STACK_VA_START,
         PAGE_BUFFERABLE | PAGE_CACHEABLE | PAGE_AP_K_RW_U_RW);
 
     t->phyStack = (uint32_t*)(freePage + PAGE_SIZE);
-    t->virtStack = (uint32_t*)THREAD_STACK_VA_START + PAGE_SIZE;
+    t->virtStack = (uint32_t*)(THREAD_STACK_VA_START + PAGE_SIZE);
+
+    printf("Virtual stack: 0x%h - Physical stack: 0x%h\n", t->virtStack, t->phyStack);
 
     return true;
 }
