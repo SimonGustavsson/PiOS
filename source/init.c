@@ -110,8 +110,7 @@ void sysinit_stage2(int machineType, int atagsPa, int dbgsymboladdr)
     // Initialize terminal first so we can print error messages if any (Hah, unlikely!)
     if(Terminal_Initialize() != 0)
     {
-        Uart_SendString("Failed to initialize terminal, * * * HALTING * * *\n");
-        while (1);
+        Uart_SendString("Failed to initialize terminal\n");
     }
 
     // Reserve physical pages for framebuffer
