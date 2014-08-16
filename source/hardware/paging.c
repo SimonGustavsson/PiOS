@@ -6,7 +6,7 @@
 
 void map_page(unsigned int* pt, unsigned int num_lvl1_entries, unsigned int pa, unsigned int va, unsigned int flags)
 {
-    unsigned int* physical_tt = (pt - KERNEL_VA_START);
+    unsigned int* physical_tt = ((unsigned int)pt) - KERNEL_VA_START;
 
     // The shifts of the virtual address explained:
     // 31:20 map into lvl 1 table
@@ -28,7 +28,7 @@ void map_page(unsigned int* pt, unsigned int num_lvl1_entries, unsigned int pa, 
 
     unsigned int lvl2_index = (va >> 12) & 0xFF;
     unsigned int* lvl2_entry = (unsigned int*)(level2_entries_start_addr + ( (lvl1_index * 256) * sizeof(int)   ) + (lvl2_index << 2      )   );
-    unsigned int* lvl2_entry_va = lvl2_entry + KERNEL_VA_START;
+    unsigned int* lvl2_entry_va = ((unsigned int)lvl2_entry) + KERNEL_VA_START;
     
     // Make sure the level 1 entry is initialized
     if ((*lvl1_entry_va & PAGE_TABLE_MASK) == 0)
@@ -37,7 +37,7 @@ void map_page(unsigned int* pt, unsigned int num_lvl1_entries, unsigned int pa, 
         //*lvl1_entry_va = ((((unsigned int)lvl2_entry) & 0x3FFFFF) << 10) | PAGE_TABLE_COARSE;
     }
 
-    unsigned int entry = (pa & 0xFFFFF000) | PAGE_SMALL | PAGE_EXECUTE_NEVER | flags;
+    unsigned int entry = (pa & 0xFFFFF000) | PAGE_SMALL | flags;
 
     // Set the value of the level 2 entry
     *lvl2_entry_va = entry;
