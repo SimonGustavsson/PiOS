@@ -44,8 +44,8 @@ do_mmu:
 
     ;@ Enable MMU
     mov r1, #0
-    mrc p15, 0, r1, c1, c0, 0 ;@ Control register configuration data
-    ldr r2, =0x0480180D
+    mrc p15, 0, r1, c1, c0, 0 ;@ Control register configuration data (http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0301h/Chdgjaid.html)
+    ldr r2, =0x801805 ;@ (used to be 0x0480180D)
     orr r1, r2 
     mcr p15, 0, r1, c1, c0, 0
 
