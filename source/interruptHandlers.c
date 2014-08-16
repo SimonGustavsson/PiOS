@@ -74,7 +74,6 @@ void c_undefined_handler(void* lr)
 
 void c_abort_data_handler(unsigned int address, unsigned int errorType, unsigned int accessedAddr, unsigned int fault_reg)
 {
-    gTerminalInitialized = 0;
     bool doubleFault = in_fault == true;
     in_fault = true;
 
@@ -93,8 +92,6 @@ void c_abort_data_handler(unsigned int address, unsigned int errorType, unsigned
     // when switching tasks
  /*   if (doubleFault)
         double_fault();*/
-
-    gTerminalInitialized = 1;
 }
 
 void c_abort_instruction_handler(unsigned int address, unsigned int errorType)
