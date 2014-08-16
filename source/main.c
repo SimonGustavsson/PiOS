@@ -57,15 +57,15 @@ void foo2()
 
 void foo()
 {
-    printf("Inside foo() Testing page access\n");
+    Uart_SendString("Inside foo() Testing page access\n");
     //thread* child = pios_thread_create((thread_entry)&foo3);
 
-    *(int*)(0x1000 + 4092) = 1;
-    *(int*)(0x2000 + 4092) = 2;
-    *(int*)(0x3000 + 4092) = 3;
+     *(int*)(0x1000 + 4092) = 1;
+     *(int*)(0x2000 + 4092) = 2;
+     *(int*)(0x3000 + 4092) = 3;
 
-    unsigned int va = KERNEL_VA_START + Scheduler_GetCurrentThread()->owner->mem_pages[0];
-    printf("0x%h = 0x%h\n", va, *(unsigned int*)va);
+    //unsigned int va = KERNEL_VA_START + Scheduler_GetCurrentThread()->owner->mem_pages[0];
+    //printf("0x%h = 0x%h\n", va, *(unsigned int*)va);
 
     unsigned int i;
     while (1)
@@ -74,10 +74,10 @@ void foo()
      
         for (i = 0; i < 30000000; i++);
 
-        volatile unsigned int asd =  *(int*)(0x1000 + 4092);
-        volatile unsigned int sff =  *(int*)(0x2000 + 4092);
-        volatile unsigned int fasa = *(int*)(0x3000 + 4092);    
-        printf("Values: 0x%h, 0x%h, 0x%h\n", asd, sff, fasa);
+        // volatile unsigned int asd =  *(int*)(0x1000 + 4092);
+        // volatile unsigned int sff =  *(int*)(0x2000 + 4092);
+        // volatile unsigned int fasa = *(int*)(0x3000 + 4092);    
+        // printf("Values: 0x%h, 0x%h, 0x%h\n", asd, sff, fasa);
     }
 }
 
