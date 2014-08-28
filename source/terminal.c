@@ -345,6 +345,20 @@ void print_internal(char* string, unsigned int length, unsigned int important)
 			continue;
 		}
 		
+		if(string[i] == '\r')
+		{
+			// Erase the line
+			for(int charIndex = 0; charIndex < gBufferSize.width; charIndex++)
+				terminal_setBuffer(gBufferCaretRow, charIndex, ' ');
+
+			// Set caret on the first char
+			gBufferCaretCol = 0;
+			
+			Uart_SendString("\n");
+
+			continue;
+		}
+		
 		if(string[i] == '\t')
 		{
 			// Print tabs as 4 spaces
@@ -363,14 +377,10 @@ void print_internal(char* string, unsigned int length, unsigned int important)
             Uart_SendString("    ");
 		}
 		else if (gBuffer[gBufferCaretRow][gBufferCaretCol] != string[i])
-		{
-            Uart_Send(string[i]);
 			terminal_setBuffer(gBufferCaretRow, gBufferCaretCol, string[i]);
-		}
-		else
-		{
-            Uart_Send(string[i]);
-		}
+
+		// Print to uart no matter what it is
+        Uart_Send(string[i]);
 		
         if (gBufferCaretCol < gBufferSize.width - 1)
 		{
