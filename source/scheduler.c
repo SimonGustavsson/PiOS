@@ -77,7 +77,7 @@ void Scheduler_Enqueue(Process* task)
 
 void Scheduler_NextTask(thread_regs* reg)
 {
-    printf("Scheduler - cpsr is: 0x%h\n", reg->sprs);
+    //printf("Scheduler - cpsr is: 0x%h\n", reg->sprs);
 
     unsigned int shouldSwitchTask = 0;
     thread* cur = gScheduler->currentThread;
@@ -88,7 +88,7 @@ void Scheduler_NextTask(thread_regs* reg)
         cur->timeElapsed += TASK_SCHEDULER_TICK_MS;
 
         // Has this task had it's fair share?
-        if (cur->timeElapsed >= 2000)
+        if (cur->timeElapsed >= (TASK_SCHEDULER_TICK_MS * 2))
         {
             //printf("Scheduler: Switching out %s\n", cur->name);
 
@@ -96,6 +96,8 @@ void Scheduler_NextTask(thread_regs* reg)
 
             // Save registers
             my_memcpy(&cur->registers, reg, sizeof(thread_regs));
+
+            //printf("saved registers, sp: 0x%h\n", cur->registers.sp);
 
             cur->state = TS_Ready;
             cur->isRunning = false;
@@ -110,49 +112,46 @@ void Scheduler_NextTask(thread_regs* reg)
         shouldSwitchTask = 1;
     }
 
-    if (shouldSwitchTask && gScheduler->threads.numNodes > 0)
+    if (!shouldSwitchTask || gScheduler->threads.numNodes == 0)
+        return;
+
+    //printf("Registers before: \n");
+    //Scheduler_PrintRegs(reg);
+
+    thread* next = (thread*)Queue_Dequeue(&gScheduler->threads);
+
+    if (next == NULL)
     {
-        //printf("Registers before: \n");
-        //Scheduler_PrintRegs(reg);
-
-        thread* next = (thread*)Queue_Dequeue(&gScheduler->threads);
-
-        if (next == NULL)
-        {
-            printf("Failed to retrieve next thread, how can it be null!? Skippin CTX switch...\n");
-            return;
-        }
-
-        //printf("Scheduler: Switching in %s\n", next->name);
-
-        next->isRunning = true;
-        next->state = TS_Running;
-        gScheduler->currentThread = next;
-
-        printf("Scheduler - Setting SPSR to: 0x%h\n", next->registers.sprs);
-        //printf("Updating TTBC, Size: %d\n", next->ttb0_size);
-
-        // Update TTCR
-        unsigned int ttbc = get_ttbc();
-        ttbc &= next->owner->ttb0_size;
-        set_ttbc(ttbc);
-
-        // Switch in the process' TT
-        //printf("Switch to task's TTB0, ttb0 addr (Physical): 0x%h\n", next->ttb0_physical);
-        set_ttb0(next->owner->ttb0_physical, 1);
-
-        for (int i = 0; i < 1000; i++);
-
-        // Restore the tasks registers
-        my_memcpy(reg, &next->registers, sizeof(thread_regs));
-
-        printf("Switching in thread in process %s, new SP = 0x%h\n", next->owner->name, next->registers.sp);
-       // Scheduler_PrintRegs(reg);
+        printf("Failed to retrieve next thread, how can it be null!? Skippin CTX switch...\n");
+        return;
     }
-    else
-    {
-        printf("Scheduler: Task switch not necessary...\n");
-    }
+
+    //printf("Scheduler: Switching in %s\n", next->name);
+
+    next->isRunning = true;
+    next->state = TS_Running;
+    gScheduler->currentThread = next;
+
+    //printf("Scheduler - Setting SPSR to: 0x%h\n", next->registers.sprs);
+    //printf("Updating TTBC, Size: %d\n", next->ttb0_size);
+
+    // Update TTCR
+    unsigned int ttbc = get_ttbc();
+    ttbc = next->owner->ttb0_size;
+    set_ttbc(ttbc);
+    //printf("Set ttbc to: 0x%h\n", ttbc);
+
+    // Switch in the process' TT
+    //printf("Switch to task's TTB0, ttb0 addr (Physical): 0x%h\n", next->ttb0_physical);
+    set_ttb0(next->owner->ttb0_physical, 1);
+
+    for (int i = 0; i < 1000; i++);
+
+    // Restore the tasks registers
+    my_memcpy(reg, &next->registers, sizeof(thread_regs));
+
+    printf("\n* * Switching in thread '%s' in process %s * *\n", next->name, next->owner->name);
+    //Scheduler_PrintRegs(reg);
 }
 
 void Scheduler_TimerTick(thread_regs* regs)

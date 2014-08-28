@@ -13,7 +13,7 @@ static bool thread_initStack(thread* t, Process* owner)
     if (freePage == -1)
         return false;
 
-    printf("Initializing thread stack at 0x%h (phys: 0x%h)\n", THREAD_STACK_VA_START, freePage);
+    //printf("Initializing thread stack at 0x%h (phys: 0x%h)\n", THREAD_STACK_VA_START, freePage);
 
     map_page(owner->ttb0, owner->ttb0_size, (unsigned int)freePage, THREAD_STACK_VA_START,
         PAGE_BUFFERABLE | PAGE_CACHEABLE | PAGE_AP_K_RW_U_RW);
@@ -21,14 +21,14 @@ static bool thread_initStack(thread* t, Process* owner)
     t->phyStack = (uint32_t*)(freePage + PAGE_SIZE);
     t->virtStack = (uint32_t*)(THREAD_STACK_VA_START + PAGE_SIZE);
 
-    printf("Virtual stack: 0x%h - Physical stack: 0x%h\n", t->virtStack, t->phyStack);
+    //printf("Virtual stack: 0x%h - Physical stack: 0x%h\n", t->virtStack, t->phyStack);
 
     return true;
 }
 
 thread* thread_create(thread_entry entry)
 {
-    printf("Creating a new thread with entry 0x%h\n", entry);
+    //printf("Creating a new thread with entry 0x%h\n", entry);
 
     thread* currentThread = Scheduler_GetCurrentThread();
 
@@ -50,7 +50,7 @@ thread* thread_create(thread_entry entry)
 
 thread* thread_createWithOwner(thread_entry entry, Process* owner)
 {
-    printf("Creating thread with owner %s\n", owner->name);
+    //printf("Creating thread with owner %s\n", owner->name);
 
     thread* t = (thread*)pcalloc(sizeof(thread), 1);
 
@@ -67,9 +67,12 @@ thread* thread_createWithOwner(thread_entry entry, Process* owner)
     }
 
     // Initialize registers
-    printf("Creating thread, virtual SP: 0x%h\n", t->virtStack);
+    //printf("Creating thread, virtual SP: 0x%h, entry point: 0x%h\n", t->virtStack, entry);
+    t->registers.r0 = 1;
+    t->registers.r1 = 2;
     t->registers.sp = (uint32_t)t->virtStack;
     t->registers.r7 = (uint32_t)t->virtStack; // FP! Or is it r11/r12?
+    t->registers.r12 = (uint32_t)t->virtStack;
     t->registers.sprs = 0x53; // SVC MODE, TODO: User threads?
     t->registers.lr2 = entry;
 

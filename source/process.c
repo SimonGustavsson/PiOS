@@ -83,7 +83,7 @@ static int Process_InitializeMemory(Process* t)
     // Create TTB0 - 128byte TT - Covering 32MB of Virtual Memory - this fits neatly into 8 pages
     int physical_tt = mem_nextFreeContiguous(PROCESS_START_PAGE_COUNT);
 
-    printf("Initializing PT for process at 0x%h\n", physical_tt);
+    //printf("Initializing PT for process at 0x%h\n", physical_tt);
 
     if (physical_tt == -1)
         goto cleanup;
@@ -128,7 +128,7 @@ static int Process_InitializeMemory(Process* t)
         FlushTLB(USR_VA_START + (i * 0x1000));
     }
 
-    printf("Initialized Process memory 0x%h -> 0x%h\n", pages[0], pages[pages_allocated - 1]);
+    //printf("Initialized Process memory 0x%h -> 0x%h\n", pages[0], pages[pages_allocated - 1]);
 
     unsigned int lvl1_entries_num_pages = TTB_SIZE_32MB_SIZE / PAGE_SIZE;
 
@@ -191,10 +191,12 @@ Process* Process_Init(char* name)
 
 static bool Process_CreateMainThread(Process* p, thread_entry entry)
 {
-    printf("Process '%s' creating main thread, entry: 0x%h\n", p->name, entry);
+    printf("Created process '%s', creating main thread, entry: 0x%h\n", p->name, entry);
 
     p->threads = (thread*)palloc(sizeof(thread));
     thread* mainThread = thread_createWithOwner(entry, p);
+    mainThread->name = (char*)palloc(my_strlen("main"));
+    my_strcpy("main", mainThread->name);
 
     if (mainThread == NULL)
     {
