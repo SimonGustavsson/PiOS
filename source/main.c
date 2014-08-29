@@ -20,15 +20,10 @@ void foo3()
 {
     unsigned int i;
     unsigned int num = 0;
-    char buf[20];
     while (1)
     {
-        my_sscanf(&buf[0], "\rFoo3(): %d", num);
-        Uart_SendString(buf);
+        printf("\rFoo2(%d)", num);
         num++;
-
-        for(int k = 0; k < 20; k++)
-            buf[k] = 0;
 
         for (i = 0; i < 30000000; i++);
 
@@ -43,15 +38,10 @@ void foo2()
 {
     unsigned int i;
     unsigned int num = 0;
-    char buf[20];
     while (1)
     {
-        my_sscanf(&buf[0], "\rFoo2(): %d", num);
-        Uart_SendString(buf);
+        printf("\rFoo2(%d)", num);
         num++;
-
-        for(int k = 0; k < 20; k++)
-            buf[k] = 0;
 
         for (i = 0; i < 30000000; i++);
 
@@ -71,15 +61,10 @@ void foo()
 
     unsigned int i;
     unsigned int num = 0;
-    char buf[20];
     while (1)
     {
-        my_sscanf(&buf[0], "\rFoo(): %d", num);
-        Uart_SendString(buf);
+        printf("\rFoo(%d)", num);
         num++;
-
-        for(int k = 0; k < 20; k++)
-            buf[k] = 0;
      
         for (i = 0; i < 30000000; i++);
 
