@@ -9,17 +9,31 @@
 
 static bool thread_initStack(thread* t, Process* owner)
 {
-    int freePage = mem_nextFree();
-    if (freePage == -1)
+    int freePage0 = mem_nextFree();
+    if (freePage0 == -1)
         return false;
+
+    int freePage1 = mem_nextFree();
+    if(freePage1 == -1)
+    {
+        mem_free(freePage0);
+        return false;
+    }
 
     //printf("Initializing thread stack at 0x%h (phys: 0x%h)\n", THREAD_STACK_VA_START, freePage);
 
-    map_page(owner->ttb0, owner->ttb0_size, (unsigned int)freePage, THREAD_STACK_VA_START,
+    map_page(owner->ttb0, owner->ttb0_size, (unsigned int)freePage0, THREAD_STACK_VA_START - PAGE_SIZE,
         PAGE_BUFFERABLE | PAGE_CACHEABLE | PAGE_AP_K_RW_U_RW);
 
-    t->phyStack = (uint32_t*)(freePage + PAGE_SIZE);
-    t->virtStack = (uint32_t*)(THREAD_STACK_VA_START + PAGE_SIZE);
+    map_page(owner->ttb0, owner->ttb0_size, (unsigned int)freePage1, (THREAD_STACK_VA_START - (PAGE_SIZE * 2)),
+        PAGE_BUFFERABLE | PAGE_CACHEABLE | PAGE_AP_K_RW_U_RW);
+
+    t->stackPages = (int*)pcalloc(THREAD_MAX_PAGES, sizeof(int));
+    t->stackPages[0] = freePage0;
+    t->stackPages[1] = freePage1;
+    t->nStackPages = 2;
+
+    t->virtStack = (uint32_t*)(THREAD_STACK_VA_START);
 
     //printf("Virtual stack: 0x%h - Physical stack: 0x%h\n", t->virtStack, t->phyStack);
 
@@ -97,7 +111,10 @@ void thread_kill(thread* t)
     }
 
     // TODO: unmap_page t->phyStack
-    mem_free((unsigned int)t->phyStack - PAGE_SIZE);
+    for(int i = 0; i < THREAD_MAX_PAGES; i++)
+        mem_free(t->stackPages[i]);
+
+    phree(t->stackPages);
 
     if (t->name == NULL)
     {

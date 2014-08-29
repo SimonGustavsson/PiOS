@@ -94,6 +94,8 @@ void Scheduler_NextTask(thread_regs* reg)
 
             shouldSwitchTask = 1;
 
+            printf("Old threads SP: 0x%h\n", reg->sp);
+
             // Save registers
             my_memcpy(&cur->registers, reg, sizeof(thread_regs));
 

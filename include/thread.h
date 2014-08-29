@@ -5,8 +5,9 @@
 #include "stdint.h"
 #include "process.h"
 
-#define THREAD_DEFAULT_STACK_SIZE 4096
-#define THREAD_STACK_VA_START 0x10000
+#define THREAD_DEFAULT_STACK_SIZE (4096 * 2)
+#define THREAD_STACK_VA_START 0x40000
+#define THREAD_MAX_PAGES 10
 
 typedef int(*thread_entry)(char*);
 
@@ -58,9 +59,9 @@ typedef struct thread {
     thread_regs registers;        // Saved register state
     int32_t result;               // Return value of the threads main function
     thread_entry entry;           // The entry point of the thread
-    uint32_t* phyStack;           // Physical stack address (Growing downwards)
     uint32_t* virtStack;          // Virtual stack address (Growing downwards
-    uint32_t stackSize;           // Size of the stack
+    uint32_t* stackPages;         // Physical address of pages in the stack
+    uint32_t nStackPages;         // Stack size (in pages)
 } thread;
 
 thread* thread_create(thread_entry entry);
