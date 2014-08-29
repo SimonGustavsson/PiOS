@@ -22,7 +22,7 @@ void foo3()
     unsigned int num = 0;
     while (1)
     {
-        printf("\rFoo2(%d)", num);
+        printf("\rFoo3(%d)", num);
         num++;
 
         for (i = 0; i < 30000000; i++);
