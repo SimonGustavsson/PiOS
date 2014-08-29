@@ -354,7 +354,7 @@ void print_internal(char* string, unsigned int length, unsigned int important)
 			// Set caret on the first char
 			gBufferCaretCol = 0;
 			
-			Uart_SendString("\n");
+			Uart_SendString("\r");
 
 			continue;
 		}
