@@ -1,7 +1,7 @@
 #ifndef SCHEDULER_H
 #define SCHEDULER_H
 
-#define TASK_SCHEDULER_TICK_MS 2000
+#define TASK_SCHEDULER_TICK_MS 200
 #include "types/queue.h"
 #include "process.h"
 #include "thread.h"

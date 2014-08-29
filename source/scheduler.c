@@ -150,7 +150,7 @@ void Scheduler_NextTask(thread_regs* reg)
     // Restore the tasks registers
     my_memcpy(reg, &next->registers, sizeof(thread_regs));
 
-    printf("\n* * Switching in thread '%s' in process %s * *\n", next->name, next->owner->name);
+    //printf("\n* * Switching in thread '%s' in process %s * *\n", next->name, next->owner->name);
     //Scheduler_PrintRegs(reg);
 }
 
