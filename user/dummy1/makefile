@@ -49,7 +49,7 @@ $(BUILD_DIR)/$(APP_NAME).elf: $(COBJECT)
 	
 # Build C files
 $(OBJ_DIR)/%.o: $(SOURCE_DIR)/%.c $(CHEADERS)
-	$(TOOL)-gcc -c $< -o $@ $(CFLAGS) 
+	@$(TOOL)-gcc -c $< -o $@ $(CFLAGS) 
 
 # Create directories
 directories:

@@ -4,13 +4,15 @@ LINKER_FLAGS = --no-wchar-size-warning --no-undefined
 
 ASSEMBLER_FLAGS = -march=armv6j  -mfpu=vfp -mfloat-abi=hard
 
+TARGET_ARCH = $(shell ../default-target.sh)
 LIBRARIES =
 BUILD_DIR = bin
 SOURCE_DIR = source
 INCLUDE_DIR = include
 OBJ_DIR := $(BUILD_DIR)/obj
+ARCH_DIR := arch/$(TARGET_ARCH)
 DEPENDENCY_DIR := $(BUILD_DIR)/dependencies
-LINK_SCRIPT_SRC = linker.c
+LINK_SCRIPT_SRC = arch/$(TARGET_ARCH)/linker.c
 LINK_SCRIPT = $(BUILD_DIR)/memory.ld
 
 # Make sure gcc searches the include folder
@@ -30,14 +32,19 @@ SPACE     := $(null) $(null)
 VPATH := $(subst $(SPACE),:,$(C_INCLUDE_PATH))
 
 CHEADERS := $(shell find $(INCLUDE_DIR)/ -name '*.h')
+
 CSOURCE := $(shell find $(SOURCE_DIR)/ -name '*.c')
+CSOURCE += $(shell find $(ARCH_DIR)/source/ -name '*.c')
+
 ASOURCE := $(shell find $(SOURCE_DIR)/ -name '*.s')
 ASOURCE += $(shell find $(SOURCE_DIR)/ -name '*.S')
+ASOURCE += $(shell find $(ARCH_DIR)/source/ -name '*.s')
+ASOURCE += $(shell find $(ARCH_DIR)/source/ -name '*.S')
 
 _COBJECT := $(patsubst %.c,%.o, $(CSOURCE))
 _AOBJECT := $(patsubst %.S,%.o, $(patsubst %.s,%.o, $(ASOURCE)))
 AOBJECT := $(addprefix $(OBJ_DIR)/, $(notdir $(_AOBJECT)))
-COBJECT := $(addprefix $(OBJ_DIR)/, $(notdir $(_COBJECT)))
+COBJECT := $(addprefix $(OBJ_DIR)/, $(_COBJECT))
 
 # To figure out why objects are being build, uncomment this:
 #OLD_SHELL := $(SHELL)
@@ -82,8 +89,13 @@ $(LINK_SCRIPT): $(LINK_SCRIPT_SRC)
 	
 #build c files
 # The dependency stuff here is a hack, shouldn't have to do this?
-$(OBJ_DIR)/$(notdir %).o: %.c
-	@echo Building $<
+$(OBJ_DIR)/%.o: %.c
+	@echo Building $< percent: $@ star: $*
+	
+# Create the output directories if they don't exist
+	mkdir $(DEPENDENCY_DIR)/$(dir $*) -p
+	mkdir $(OBJ_DIR)/$(dir $*) -p
+
 	@$(TOOL)-gcc -c $< -o $@ $(CFLAGS) $(GCC_INCLUDE) -MD -MF $(DEPENDENCY_DIR)/$*.d 
 
 # Create a temp file
