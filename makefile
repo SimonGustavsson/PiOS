@@ -10,7 +10,7 @@ SOURCE_DIR = source
 INCLUDE_DIR = include
 OBJ_DIR := $(BUILD_DIR)/obj
 DEPENDENCY_DIR := $(BUILD_DIR)/dependencies
-LINK_SCRIPT_SRC = memorymap.c
+LINK_SCRIPT_SRC = linker.c
 LINK_SCRIPT = $(BUILD_DIR)/memory.ld
 
 # Make sure gcc searches the include folder
