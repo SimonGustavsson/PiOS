@@ -4,7 +4,17 @@ LINKER_FLAGS = --no-wchar-size-warning --no-undefined
 
 ASSEMBLER_FLAGS = -march=armv6j  -mfpu=vfp -mfloat-abi=hard
 
-TARGET_ARCH = $(shell ../default-target.sh)
+ifdef TARGET
+	TARGET_ARCH = TARGET
+else
+	TARGET_ARCH = $(shell ../default-target.sh)
+endif
+
+# Currently only support bcm2835
+ifneq ($(TARGET_ARCH), bcm2835)
+    $(error Unsupported target architecture, see 'make help' for a list of supported architectures)
+endif
+
 LIBRARIES =
 BUILD_DIR = bin
 SOURCE_DIR = source
@@ -59,6 +69,7 @@ PiOS: directories $(BUILD_DIR)/kernel.img
 $(BUILD_DIR)/kernel.img: $(BUILD_DIR)/kernel.elf $(BUILD_DIR)/kernel.elf.debug
 	@echo Creating flat binary...
 	@$(TOOL)-objcopy $(BUILD_DIR)/kernel.elf -O binary $(BUILD_DIR)/kernel.img
+	@echo Kernel built for $(TARGET_ARCH)
 
 # Create disassembly for ease of debugging
 debug:
@@ -126,9 +137,22 @@ directories:
 	@mkdir -p $(OBJ_DIR)
 	@mkdir -p $(DEPENDENCY_DIR)
 
-.PHONY: clean debug
+.PHONY: clean debug help fire
 
 clean:
-	@echo Cleaning kernel...
 	@rm -rfv $(BUILD_DIR)/*
 	@rm -rfv $(BUILD_DIR)
+
+fire:
+	@echo "Heh..."
+
+help:
+	@echo "MakeFile for PiOS"
+	@echo
+	@echo "Targets:"
+	@echo "	pios  - Builds the kernel"
+	@echo "	debug - Generates disassembly and Symbol Table"
+	@echo "	clean - Removes all built files"
+	@echo "Parameters:"
+	@echo "	TARGET:"
+	@echo "		bcm2835 (Raspberry Pi)"
