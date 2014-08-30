@@ -4,7 +4,7 @@ LINKER_FLAGS = --no-wchar-size-warning --no-undefined
 
 ASSEMBLER_FLAGS = -march=armv6j  -mfpu=vfp -mfloat-abi=hard
 
-LIBRARIES = csud
+LIBRARIES =
 BUILD_DIR = bin
 SOURCE_DIR = source
 INCLUDE_DIR = include
@@ -14,8 +14,6 @@ LINK_SCRIPT_SRC = memorymap.c
 LINK_SCRIPT = $(BUILD_DIR)/memory.ld
 
 # Make sure gcc searches the include folder
-
-#C_INCLUDE_PATH := include csud/include
 C_INCLUDE_PATH := $(shell find $(INCLUDE_DIR)/ -type d)
 C_INCLUDE_PATH += $(shell find $(SOURCE_DIR)/ -type d)
 
