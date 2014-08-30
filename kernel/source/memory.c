@@ -1,5 +1,5 @@
 #include "memory.h"
-#include "hardware/uart.h"
+#include "uart.h"
 #include "util/utilities.h"
 #include "types/types.h"
 #include "types/string.h"

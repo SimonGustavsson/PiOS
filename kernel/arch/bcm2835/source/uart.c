@@ -5,8 +5,8 @@
 */
 
 #include "memory_map.h"
-#include "hardware/uart.h"
-#include "hardware/gpio.h"
+#include "uart.h"
+#include "gpio.h"
 
 Uart* gUart;
 

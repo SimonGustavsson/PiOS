@@ -3,7 +3,7 @@
 #include "types/string.h"
 #include "stddef.h"
 #include "scheduler.h"
-#include "hardware/uart.h"
+#include "uart.h"
 
 void pios_print(const char* str)
 {

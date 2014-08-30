@@ -1,4 +1,4 @@
-#include "hardware/gpio.h"
+#include "gpio.h"
 #include "memory_map.h"
 
 static void delay(unsigned int count)

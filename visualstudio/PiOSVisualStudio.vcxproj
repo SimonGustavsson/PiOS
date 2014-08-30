@@ -61,6 +61,15 @@
     <None Include="..\README.md" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\kernel\arch\bcm2835\include\emmc.h" />
+    <ClInclude Include="..\kernel\arch\bcm2835\include\framebuffer.h" />
+    <ClInclude Include="..\kernel\arch\bcm2835\include\gpio.h" />
+    <ClInclude Include="..\kernel\arch\bcm2835\include\interrupts.h" />
+    <ClInclude Include="..\kernel\arch\bcm2835\include\mailbox.h" />
+    <ClInclude Include="..\kernel\arch\bcm2835\include\miniUart.h" />
+    <ClInclude Include="..\kernel\arch\bcm2835\include\paging.h" />
+    <ClInclude Include="..\kernel\arch\bcm2835\include\timer.h" />
+    <ClInclude Include="..\kernel\arch\bcm2835\include\uart.h" />
     <ClInclude Include="..\kernel\include\asm.h" />
     <ClInclude Include="..\kernel\include\atags.h" />
     <ClInclude Include="..\kernel\include\debugging.h" />
@@ -70,17 +79,6 @@
     <ClInclude Include="..\kernel\include\fs\fs.h" />
     <ClInclude Include="..\kernel\include\hardware\device\blockDevice.h" />
     <ClInclude Include="..\kernel\include\hardware\device\sdBlockDevice.h" />
-    <ClInclude Include="..\kernel\include\hardware\emmc.h" />
-    <ClInclude Include="..\kernel\include\hardware\framebuffer.h" />
-    <ClInclude Include="..\kernel\include\hardware\gpio.h" />
-    <ClInclude Include="..\kernel\include\hardware\interrupts.h" />
-    <ClInclude Include="..\kernel\include\hardware\keyboard.h" />
-    <ClInclude Include="..\kernel\include\hardware\mailbox.h" />
-    <ClInclude Include="..\kernel\include\hardware\miniUart.h" />
-    <ClInclude Include="..\kernel\include\hardware\mmu_c.h" />
-    <ClInclude Include="..\kernel\include\hardware\paging.h" />
-    <ClInclude Include="..\kernel\include\hardware\timer.h" />
-    <ClInclude Include="..\kernel\include\hardware\uart.h" />
     <ClInclude Include="..\kernel\include\init.h" />
     <ClInclude Include="..\kernel\include\interruptHandlers.h" />
     <ClInclude Include="..\kernel\include\main.h" />

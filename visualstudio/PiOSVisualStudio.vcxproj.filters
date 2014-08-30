@@ -101,39 +101,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\kernel\include\hardware\emmc.h">
-      <Filter>Header Files\include\hardware</Filter>
-    </ClInclude>
-    <ClInclude Include="..\kernel\include\hardware\framebuffer.h">
-      <Filter>Header Files\include\hardware</Filter>
-    </ClInclude>
-    <ClInclude Include="..\kernel\include\hardware\gpio.h">
-      <Filter>Header Files\include\hardware</Filter>
-    </ClInclude>
-    <ClInclude Include="..\kernel\include\hardware\interrupts.h">
-      <Filter>Header Files\include\hardware</Filter>
-    </ClInclude>
-    <ClInclude Include="..\kernel\include\hardware\keyboard.h">
-      <Filter>Header Files\include\hardware</Filter>
-    </ClInclude>
-    <ClInclude Include="..\kernel\include\hardware\mailbox.h">
-      <Filter>Header Files\include\hardware</Filter>
-    </ClInclude>
-    <ClInclude Include="..\kernel\include\hardware\miniUart.h">
-      <Filter>Header Files\include\hardware</Filter>
-    </ClInclude>
-    <ClInclude Include="..\kernel\include\hardware\mmu_c.h">
-      <Filter>Header Files\include\hardware</Filter>
-    </ClInclude>
-    <ClInclude Include="..\kernel\include\hardware\paging.h">
-      <Filter>Header Files\include\hardware</Filter>
-    </ClInclude>
-    <ClInclude Include="..\kernel\include\hardware\timer.h">
-      <Filter>Header Files\include\hardware</Filter>
-    </ClInclude>
-    <ClInclude Include="..\kernel\include\hardware\uart.h">
-      <Filter>Header Files\include\hardware</Filter>
-    </ClInclude>
     <ClInclude Include="..\kernel\include\hardware\device\blockDevice.h">
       <Filter>Header Files\include\hardware\device</Filter>
     </ClInclude>
@@ -229,6 +196,33 @@
     </ClInclude>
     <ClInclude Include="..\kernel\include\thread.h">
       <Filter>Header Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\arch\bcm2835\include\emmc.h">
+      <Filter>Header Files\arch\bcm2835\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\arch\bcm2835\include\framebuffer.h">
+      <Filter>Header Files\arch\bcm2835\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\arch\bcm2835\include\gpio.h">
+      <Filter>Header Files\arch\bcm2835\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\arch\bcm2835\include\interrupts.h">
+      <Filter>Header Files\arch\bcm2835\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\arch\bcm2835\include\mailbox.h">
+      <Filter>Header Files\arch\bcm2835\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\arch\bcm2835\include\miniUart.h">
+      <Filter>Header Files\arch\bcm2835\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\arch\bcm2835\include\paging.h">
+      <Filter>Header Files\arch\bcm2835\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\arch\bcm2835\include\timer.h">
+      <Filter>Header Files\arch\bcm2835\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\arch\bcm2835\include\uart.h">
+      <Filter>Header Files\arch\bcm2835\include</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

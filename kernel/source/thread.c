@@ -1,7 +1,7 @@
 #include "mem.h"
 #include "thread.h"
 #include "stddef.h"
-#include "hardware/paging.h"
+#include "paging.h"
 #include "types/string.h"
 #include "process.h"
 #include "scheduler.h"

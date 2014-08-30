@@ -4,12 +4,12 @@
 #include "terminal.h"
 #include "types/string.h"
 #include "util/utilities.h"
-#include "hardware/paging.h"
+#include "paging.h"
 #include "asm.h"
-#include "hardware/mailbox.h"
+#include "mailbox.h"
 #include "syscalls.h"
 #include "memory_map.h"
-#include "hardware/framebuffer.h"
+#include "framebuffer.h"
 
 // This variable makes sure we have something in the .data section,
 // Because we place .bss before data, this will make sure that the compiler

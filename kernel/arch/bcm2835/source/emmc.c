@@ -1,6 +1,6 @@
-#include "hardware/emmc.h"
-#include "hardware/mailbox.h"
-#include "hardware/timer.h"
+#include "emmc.h"
+#include "mailbox.h"
+#include "timer.h"
 #include "types/string.h"
 #include "util/utilities.h"
 

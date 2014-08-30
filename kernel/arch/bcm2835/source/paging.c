@@ -1,7 +1,7 @@
-#include "hardware/paging.h"
+#include "paging.h"
 #include "asm.h"
 #include "types/string.h"
-#include "hardware/uart.h"
+#include "uart.h"
 #include "mem.h"
 
 void map_page(unsigned int* pt, unsigned int num_lvl1_entries, unsigned int pa, unsigned int va, unsigned int flags)

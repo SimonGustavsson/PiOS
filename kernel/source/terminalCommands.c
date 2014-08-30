@@ -4,8 +4,8 @@
 #include "terminal.h"
 #include "types/string.h"
 #include "types/types.h"
-#include "hardware/mailbox.h"
-#include "hardware/emmc.h"
+#include "mailbox.h"
+#include "emmc.h"
 
 extern char gPrompt[TERMINAL_PROMPT_MAX_LENGTH]; // Defined in terminal.c
 TerminalCommand gCommands[MAX_COMMAND_COUNT];

@@ -1,4 +1,4 @@
-#include "hardware/timer.h"
+#include "timer.h"
 
 volatile timer* gTimer = (timer*)PERIPHERAL_VA_TIMER;
 

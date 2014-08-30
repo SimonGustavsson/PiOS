@@ -1,11 +1,11 @@
-#include "hardware/framebuffer.h"
-#include "hardware/mailbox.h"
+#include "framebuffer.h"
+#include "mailbox.h"
 #include "memory_map.h"
 #include "myfont.h"
 #include "types/string.h"
 #include "types/types.h"
 #include "debugging.h"
-#include "hardware/timer.h"
+#include "timer.h"
 
 rpi_fb gFb __attribute__ ((aligned (16)));
 size gScreenSize;

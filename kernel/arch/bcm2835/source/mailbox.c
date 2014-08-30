@@ -1,8 +1,8 @@
-#include "hardware/mailbox.h"
+#include "mailbox.h"
 #include "memory.h"
 #include "memory_map.h"
 #include "types/string.h"
-#include "hardware/timer.h"
+#include "timer.h"
 
 static volatile unsigned int *gMailbox0Read =   (unsigned int *)(PERIPHERAL_VA_MAILBOX_BASE);
 static volatile unsigned int *gMailbox0Status = (unsigned int *)(PERIPHERAL_VA_MAILBOX_BASE + 0x18);

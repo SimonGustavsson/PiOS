@@ -1,5 +1,5 @@
 #include "memory_map.h"
-#include "hardware/interrupts.h"
+#include "interrupts.h"
 
 static ArmInterrupts* gInterrupts;
 

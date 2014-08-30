@@ -4,12 +4,12 @@
 #define CHAR_HSPACING 4
 #define INPUT_BUFFER_SIZE 256
 
-#include "hardware/framebuffer.h"
+#include "framebuffer.h"
 #include "types/string.h"
 #include "memory.h"
 #include "terminalCommands.h"
-#include "hardware/uart.h"
-#include "hardware/timer.h"
+#include "uart.h"
+#include "timer.h"
 
 size gBufferSize;
 size gTerminalSize;

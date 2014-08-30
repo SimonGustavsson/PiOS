@@ -5,8 +5,7 @@
 #include "scheduler.h"
 #include "stddef.h"
 #include "fs/fs.h"
-#include "hardware/mmu_c.h"
-#include "hardware/paging.h"
+#include "paging.h"
 #include "types/string.h"
 #include "util/memutil.h"
 

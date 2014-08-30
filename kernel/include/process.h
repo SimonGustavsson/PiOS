@@ -1,8 +1,7 @@
 #ifndef PROCESS_H
 #define PROCESS_H
 
-#include "hardware/mmu_c.h"
-#include "hardware/paging.h"
+#include "paging.h"
 #include "stdint.h"
 #include "stdbool.h"
 
