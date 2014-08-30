@@ -18,6 +18,7 @@ LINK_SCRIPT = $(BUILD_DIR)/memory.ld
 # Make sure gcc searches the include folder
 C_INCLUDE_PATH := $(shell find $(INCLUDE_DIR)/ -type d)
 C_INCLUDE_PATH += $(shell find $(SOURCE_DIR)/ -type d)
+C_INCLUDE_PATH += $(shell find $(ARCH_DIR)/include -type d)
 
 GCC_INCLUDE = $(foreach d, $(C_INCLUDE_PATH), -I$d)
 
@@ -93,8 +94,8 @@ $(OBJ_DIR)/%.o: %.c
 	@echo Building $< percent: $@ star: $*
 	
 # Create the output directories if they don't exist
-	mkdir $(DEPENDENCY_DIR)/$(dir $*) -p
-	mkdir $(OBJ_DIR)/$(dir $*) -p
+	@mkdir $(DEPENDENCY_DIR)/$(dir $*) -p
+	@mkdir $(OBJ_DIR)/$(dir $*) -p
 
 	@$(TOOL)-gcc -c $< -o $@ $(CFLAGS) $(GCC_INCLUDE) -MD -MF $(DEPENDENCY_DIR)/$*.d 
 
@@ -126,6 +127,8 @@ directories:
 	@mkdir -p $(DEPENDENCY_DIR)
 
 .PHONY: clean debug
-    clean:
-	@rm -rf $(BUILD_DIR)/*
-	@rmdir $(BUILD_DIR)
+
+clean:
+	@echo Cleaning kernel...
+	@rm -rfv $(BUILD_DIR)/*
+	@rm -rfv $(BUILD_DIR)
