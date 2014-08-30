@@ -5,7 +5,6 @@
 #define INPUT_BUFFER_SIZE 256
 
 #include "hardware/framebuffer.h"
-#include "hardware/keyboard.h"
 #include "types/string.h"
 #include "memory.h"
 #include "terminalCommands.h"
@@ -83,75 +82,6 @@ void ExecuteCommand(char* cmd, unsigned int cmdLen)
 
 void Terminal_Update(void)
 {
-	KeyboardUpdate();
-		
-	short scanCode = KeyboardGetChar();		
-	
-	// Nothing pressed
-	if(scanCode == 0)
-		return;
-	
-	virtualkey vk = ScanToVirtual(scanCode);
-
-	if(vk == VK_ENTER)
-	{
-		// Remove cursor
-		gBuffer[gBufferCaretRow][gBufferCaretCol] = 0;
-		gInputBuffer[gInputBufferIndex] = '\0';
-		
-		// Give the command execution a fresh start on a new line
-		gBufferCaretRow++;
-		gBufferCaretCol = 0;
-		
-		// Execute the command
-		ExecuteCommand(gInputBuffer, gInputBufferIndex);
-		
-		// Clear the input buffer
-		unsigned int i;
-		for(i = 0; i < INPUT_BUFFER_SIZE; i++)
-			gInputBuffer[i] = 0;
-			
-		gInputBufferIndex = 0;
-	}
-	else if(vk == VK_BSP)
-	{
-		if(gInputBufferIndex == 0)
-			return; // No characters left to delete!
-			
-		// Remove current cursor
-		gInputBuffer[gInputBufferIndex] = 0; // Remove cursor
-		//gBuffer[gBufferCaretRow][gInputBufferIndex] = 0;
-		gBuffer[gBufferCaretRow][gBufferCaretCol] = 0;
-		
-		gBufferCaretCol--;
-		gInputBufferIndex--;
-		
-		gInputBuffer[gInputBufferIndex] = (char)127;
-		gBuffer[gBufferCaretRow][gBufferCaretCol] = gInputBuffer[gInputBufferIndex];
-	}
-	else
-	{	
-		char c;
-		
-		if((c = VirtualToAsci(vk, KeyboardShiftDown())) == 0 || gInputBufferIndex == INPUT_BUFFER_SIZE - 1)
-			return;
-		
-		// Set input buffer (this will replace the cursor)
-		gInputBuffer[gInputBufferIndex] = c;
-		
-		// Print the character (this will replace the cursor)
-		gBuffer[gBufferCaretRow][gBufferCaretCol] = gInputBuffer[gInputBufferIndex];
-		
-		gBufferCaretCol++;
-		gInputBufferIndex++;
-		
-		// Add cursor to input
-		gInputBuffer[gInputBufferIndex] = (char)127;
-		
-		// Print cursor
-		gBuffer[gBufferCaretRow][gBufferCaretCol] = gInputBuffer[gInputBufferIndex];
-	}
-	
 	// Flip buffer to screen
 	PresentBufferToScreen();
 }
