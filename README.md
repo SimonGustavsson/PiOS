@@ -30,3 +30,25 @@ This file is used to track its current state and what I'm currently working on.
 
 #### Building:
 Just clone the repository and run make in the root directory
+
+#### Branches:
+##### master
+Latest and greatest, not guaranteed to be stable.
+
+##### 0.01
+- Simple terminal
+- Framebuffer
+- Keyboard input (using Chadderz usb driver)
+
+##### 0.10
+Essentially started over, removed USB driver (I intend to write my own).
+- UART
+- Terminal output
+- Interrupt handling
+- Emmc driver
+- Mailbox
+- MMU
+- Timer
+- Reading elf
+- Stack trace with function names
+- Very crude multitasking (Multiple processes, each with one main thread)
