@@ -13,285 +13,65 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Header Files\fs">
-      <UniqueIdentifier>{d18ef4d9-1e41-4ade-bf92-3e8d83f6cb63}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\hardware">
-      <UniqueIdentifier>{243fbb03-099d-4a45-9db5-862763b3618f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\util">
-      <UniqueIdentifier>{da8fb55e-61b9-4140-95df-19ac3bc7ecc1}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\util">
-      <UniqueIdentifier>{808f5124-ce93-41e2-a922-7dfa917bdceb}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\hardware">
-      <UniqueIdentifier>{efc8aa51-7cc2-495e-8f1c-aea3ab8357d7}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\fs">
-      <UniqueIdentifier>{42091e25-d349-4809-a4ac-9a1d0c93fa3d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\types">
-      <UniqueIdentifier>{a4ac3e36-3fc8-4f13-92bc-6fb44daf3544}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\types">
-      <UniqueIdentifier>{cf523b7c-5030-43cf-8bc4-b48ee425ca19}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\hardware\device">
-      <UniqueIdentifier>{ea3e9a30-de6d-4397-b2f4-0fbf636f51ff}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\hardware\device">
-      <UniqueIdentifier>{130ff0a2-96a5-41bf-8178-0eb8708bb28b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\asm">
-      <UniqueIdentifier>{db50f4a1-3691-45f0-adf2-8999b8dab25f}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Project">
       <UniqueIdentifier>{6646d6cb-c3c8-4464-a46d-73bcd37be7f2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\source">
+      <UniqueIdentifier>{2a8023a8-bb3c-4973-a00f-b6e9129af32c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\arch">
+      <UniqueIdentifier>{d51e7890-4352-43b9-bbe6-f61af151d013}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\arch\bcm2835">
+      <UniqueIdentifier>{d88322c8-0e33-4926-ace8-670076a351c8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\source\asm">
+      <UniqueIdentifier>{73ddd539-5523-4bce-9beb-3d29da5b6bf0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\source\dev">
+      <UniqueIdentifier>{73296abf-363d-4075-bd24-8a5d83983a88}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\source\fs">
+      <UniqueIdentifier>{a82696c6-a6cf-4613-952b-4658f233a99f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\source\types">
+      <UniqueIdentifier>{a23570c6-672a-4e8a-8418-11c9dbf842a6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\source\util">
+      <UniqueIdentifier>{4198647a-e98d-4a73-88e2-94cc33cc9a5a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\arch\bcm2835\source">
+      <UniqueIdentifier>{77f7090d-03f1-4135-a89f-3fb4e2e342a4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\include">
+      <UniqueIdentifier>{d6f84828-be91-4ce3-8cdb-a4de08664483}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\include\hardware">
+      <UniqueIdentifier>{01180de7-25ff-414e-9ec4-c2cfec92869e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\include\hardware\device">
+      <UniqueIdentifier>{f9b054f4-408d-47eb-ac72-17b6bdf84bf2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\include\fs">
+      <UniqueIdentifier>{eaf80695-852e-48ba-9d3d-57af91daca55}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\include\util">
+      <UniqueIdentifier>{372c26e5-8379-48d1-9807-8a06c68591d1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\include\types">
+      <UniqueIdentifier>{e55a2a5f-edb5-48cb-9e33-a793b934ad41}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\arch">
+      <UniqueIdentifier>{c191678e-e898-4c2f-8c2a-15090d4c1e7c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\arch\bcm2835">
+      <UniqueIdentifier>{be6cc3a7-4542-46ef-b6c7-bf4f711010b1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\arch\bcm2835\include">
+      <UniqueIdentifier>{baf07b10-c275-4651-a4ad-b0856d4794c2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\include\memory.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\myfont.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\terminal.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\debugging.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\interruptHandlers.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\hardware\emmc.h">
-      <Filter>Header Files\hardware</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\hardware\framebuffer.h">
-      <Filter>Header Files\hardware</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\hardware\gpio.h">
-      <Filter>Header Files\hardware</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\hardware\interrupts.h">
-      <Filter>Header Files\hardware</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\hardware\keyboard.h">
-      <Filter>Header Files\hardware</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\hardware\mailbox.h">
-      <Filter>Header Files\hardware</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\hardware\timer.h">
-      <Filter>Header Files\hardware</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\hardware\uart.h">
-      <Filter>Header Files\hardware</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\util\utilities.h">
-      <Filter>Header Files\util</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\util\mmio.h">
-      <Filter>Header Files\util</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\hardware\miniUart.h">
-      <Filter>Header Files\hardware</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\terminalCommands.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\types\queue.h">
-      <Filter>Header Files\types</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\types\string.h">
-      <Filter>Header Files\types</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\types\types.h">
-      <Filter>Header Files\types</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\hardware\device\blockDevice.h">
-      <Filter>Header Files\hardware\device</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\hardware\device\sdBlockDevice.h">
-      <Filter>Header Files\hardware\device</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\fs\fs.h">
-      <Filter>Header Files\fs</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\fs\fat32driver.h">
-      <Filter>Header Files\fs</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\elf.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\stdarg.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\hardware\paging.h">
-      <Filter>Header Files\hardware</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\asm.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\memory_map.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\hardware\mmu_c.h">
-      <Filter>Header Files\hardware</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\init.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\main.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\mem.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\util\memutil.h">
-      <Filter>Header Files\util</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\scheduler.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\process.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\thread.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\atags.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\dwarf.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\syscalls.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\source\main.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\memory.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\terminal.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\debugging.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\interruptHandlers.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\hardware\emmc.c">
-      <Filter>Source Files\hardware</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\hardware\framebuffer.c">
-      <Filter>Source Files\hardware</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\hardware\interrupts.c">
-      <Filter>Source Files\hardware</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\hardware\mailbox.c">
-      <Filter>Source Files\hardware</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\hardware\uart.c">
-      <Filter>Source Files\hardware</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\hardware\timer.c">
-      <Filter>Source Files\hardware</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\hardware\keyboard.c">
-      <Filter>Source Files\hardware</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\hardware\gpio.c">
-      <Filter>Source Files\hardware</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\util\utilities.c">
-      <Filter>Source Files\util</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\platform.c">
-      <Filter>Source Files\hardware</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\terminalCommands.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\hardware\miniUart.c">
-      <Filter>Source Files\hardware</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\types\queue.c">
-      <Filter>Source Files\types</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\types\string.c">
-      <Filter>Source Files\types</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\hardware\device\sdBlockDevice.c">
-      <Filter>Source Files\hardware\device</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\fs\fs.c">
-      <Filter>Source Files\fs</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\fs\fat32driver.c">
-      <Filter>Source Files\fs</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\elf.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\hardware\paging.c">
-      <Filter>Source Files\hardware</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\hardware\mmu_c.c">
-      <Filter>Source Files\hardware</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\init.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\memorymap.c">
-      <Filter>Project</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\mem.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\util\memutil.c">
-      <Filter>Source Files\util</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\scheduler.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\process.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\thread.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\atags.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\syscalls.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\source\asm\utility.s">
-      <Filter>Source Files\asm</Filter>
-    </None>
-    <None Include="..\source\asm\irq.s">
-      <Filter>Source Files\asm</Filter>
-    </None>
-    <None Include="..\source\asm\start.S">
-      <Filter>Source Files\asm</Filter>
-    </None>
-    <None Include="..\source\asm\interrupt_handlers.S">
-      <Filter>Source Files\asm</Filter>
-    </None>
-    <None Include="..\source\asm\mmu.S">
-      <Filter>Source Files\asm</Filter>
-    </None>
     <None Include="..\.gitignore">
       <Filter>Project</Filter>
     </None>
@@ -301,5 +81,210 @@
     <None Include="..\README.md">
       <Filter>Project</Filter>
     </None>
+    <None Include="..\kernel\source\asm\interrupt_handlers.S">
+      <Filter>Source Files\source\asm</Filter>
+    </None>
+    <None Include="..\kernel\source\asm\irq.s">
+      <Filter>Source Files\source\asm</Filter>
+    </None>
+    <None Include="..\kernel\source\asm\mmu.S">
+      <Filter>Source Files\source\asm</Filter>
+    </None>
+    <None Include="..\kernel\source\asm\start.S">
+      <Filter>Source Files\source\asm</Filter>
+    </None>
+    <None Include="..\kernel\source\asm\utility.s">
+      <Filter>Source Files\source\asm</Filter>
+    </None>
+    <None Include="..\kernel\makefile">
+      <Filter>Source Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\kernel\include\hardware\emmc.h">
+      <Filter>Header Files\include\hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\include\hardware\framebuffer.h">
+      <Filter>Header Files\include\hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\include\hardware\gpio.h">
+      <Filter>Header Files\include\hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\include\hardware\interrupts.h">
+      <Filter>Header Files\include\hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\include\hardware\keyboard.h">
+      <Filter>Header Files\include\hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\include\hardware\mailbox.h">
+      <Filter>Header Files\include\hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\include\hardware\miniUart.h">
+      <Filter>Header Files\include\hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\include\hardware\mmu_c.h">
+      <Filter>Header Files\include\hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\include\hardware\paging.h">
+      <Filter>Header Files\include\hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\include\hardware\timer.h">
+      <Filter>Header Files\include\hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\include\hardware\uart.h">
+      <Filter>Header Files\include\hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\include\hardware\device\blockDevice.h">
+      <Filter>Header Files\include\hardware\device</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\include\hardware\device\sdBlockDevice.h">
+      <Filter>Header Files\include\hardware\device</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\include\fs\fat32driver.h">
+      <Filter>Header Files\include\fs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\include\fs\fs.h">
+      <Filter>Header Files\include\fs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\include\util\memutil.h">
+      <Filter>Header Files\include\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\include\util\mmio.h">
+      <Filter>Header Files\include\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\include\util\utilities.h">
+      <Filter>Header Files\include\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\include\types\queue.h">
+      <Filter>Header Files\include\types</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\include\types\string.h">
+      <Filter>Header Files\include\types</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\include\types\types.h">
+      <Filter>Header Files\include\types</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\include\asm.h">
+      <Filter>Header Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\include\atags.h">
+      <Filter>Header Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\include\debugging.h">
+      <Filter>Header Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\include\dwarf.h">
+      <Filter>Header Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\include\elf.h">
+      <Filter>Header Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\include\init.h">
+      <Filter>Header Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\include\interruptHandlers.h">
+      <Filter>Header Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\include\main.h">
+      <Filter>Header Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\include\mem.h">
+      <Filter>Header Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\include\memory.h">
+      <Filter>Header Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\include\memory_map.h">
+      <Filter>Header Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\include\myfont.h">
+      <Filter>Header Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\include\process.h">
+      <Filter>Header Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\include\scheduler.h">
+      <Filter>Header Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\include\stdarg.h">
+      <Filter>Header Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\include\stdbool.h">
+      <Filter>Header Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\include\stddef.h">
+      <Filter>Header Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\include\stdint.h">
+      <Filter>Header Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\include\syscalls.h">
+      <Filter>Header Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\include\terminal.h">
+      <Filter>Header Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\include\terminalCommands.h">
+      <Filter>Header Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\include\thread.h">
+      <Filter>Header Files\include</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\kernel\source\dev\sdBlockDevice.c">
+      <Filter>Source Files\source\dev</Filter>
+    </ClCompile>
+    <ClCompile Include="..\kernel\source\fs\fat32driver.c">
+      <Filter>Source Files\source\fs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\kernel\source\fs\fs.c">
+      <Filter>Source Files\source\fs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\kernel\source\types\queue.c">
+      <Filter>Source Files\source\types</Filter>
+    </ClCompile>
+    <ClCompile Include="..\kernel\source\types\string.c">
+      <Filter>Source Files\source\types</Filter>
+    </ClCompile>
+    <ClCompile Include="..\kernel\source\util\memutil.c">
+      <Filter>Source Files\source\util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\kernel\source\util\utilities.c">
+      <Filter>Source Files\source\util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\kernel\arch\bcm2835\source\emmc.c">
+      <Filter>Source Files\arch\bcm2835\source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\kernel\arch\bcm2835\source\framebuffer.c">
+      <Filter>Source Files\arch\bcm2835\source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\kernel\arch\bcm2835\source\gpio.c">
+      <Filter>Source Files\arch\bcm2835\source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\kernel\arch\bcm2835\source\interrupts.c">
+      <Filter>Source Files\arch\bcm2835\source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\kernel\arch\bcm2835\source\mailbox.c">
+      <Filter>Source Files\arch\bcm2835\source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\kernel\arch\bcm2835\source\miniUart.c">
+      <Filter>Source Files\arch\bcm2835\source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\kernel\arch\bcm2835\source\mmu_c.c">
+      <Filter>Source Files\arch\bcm2835\source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\kernel\arch\bcm2835\source\paging.c">
+      <Filter>Source Files\arch\bcm2835\source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\kernel\arch\bcm2835\source\timer.c">
+      <Filter>Source Files\arch\bcm2835\source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\kernel\arch\bcm2835\source\uart.c">
+      <Filter>Source Files\arch\bcm2835\source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\kernel\arch\bcm2835\linker.c">
+      <Filter>Source Files\arch\bcm2835</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
