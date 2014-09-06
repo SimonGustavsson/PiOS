@@ -25,7 +25,7 @@ typedef enum {
 	processPriorityVeryHigh
 } processPriority;
 
-typedef struct Process {
+typedef struct {
 	unsigned int    id;           
 	unsigned int    active;        // Whether this task is currently executing
 	processState    state;         // Current state of task

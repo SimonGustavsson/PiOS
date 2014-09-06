@@ -49,7 +49,7 @@ typedef enum {
     THREAD_STATE_READY
 } thread_state;
 
-typedef struct thread {
+typedef struct {
     bool isRunning;               // Whether the thread is currently running
     unsigned int timeElapsed;     // How long this task has been running since it was switched in
     thread_priority priority;     // Current priority

@@ -6,6 +6,7 @@
 #include "process.h"
 #include "scheduler.h"
 #include "util/memutil.h"
+#include "stdint.h"
 
 static bool thread_initStack(thread* t, Process* owner)
 {
@@ -28,7 +29,7 @@ static bool thread_initStack(thread* t, Process* owner)
     map_page(owner->ttb0, owner->ttb0_size, (unsigned int)freePage1, (THREAD_STACK_VA_START - (PAGE_SIZE * 2)),
         PAGE_BUFFERABLE | PAGE_CACHEABLE | PAGE_AP_K_RW_U_RW);
 
-    t->stackPages = (int*)pcalloc(THREAD_MAX_PAGES, sizeof(int));
+    t->stackPages = (uint32_t*)pcalloc(THREAD_MAX_PAGES, sizeof(int));
     t->stackPages[0] = freePage0;
     t->stackPages[1] = freePage1;
     t->nStackPages = 2;
@@ -88,7 +89,7 @@ thread* thread_createWithOwner(thread_entry entry, Process* owner)
     t->registers.r7 = (uint32_t)t->virtStack; // FP! Or is it r11/r12?
     t->registers.r12 = (uint32_t)t->virtStack;
     t->registers.sprs = 0x53; // SVC MODE, TODO: User threads?
-    t->registers.lr2 = entry;
+    t->registers.lr2 = (uint32_t)entry;
 
     return t;
 }
