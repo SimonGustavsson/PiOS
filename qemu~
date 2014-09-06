@@ -1,0 +1,2 @@
+#!/bin/bash
+/opt/qemu-rpi/bin/qemu-system-arm -kernel bin/kernel.elf -cpu arm1176 -m 512 -M raspi -no-reboot -sd /media/simon/Storage/deployer-sd.img -device usb-kbd -device usb-mouse -s -append "bcm2708_fb.fbwidth=1024 bcm2708_fb.fbheight=768 bcm2708.boardrev=0xf bcm2708.serial=0xcad0eedf bcm2708.emmc_clock_freq=100000000 vc_mem.mem_base=0x1c000000 vc_mem.mem_size=0x20000000" -serial stdio

@@ -28,9 +28,9 @@ void foo3()
 
         for (i = 0; i < 30000000; i++);
 
-        volatile unsigned int asd = *(int*)(0x1000 + 4092);
-        volatile unsigned int sff = *(int*)(0x2000 + 4092);
-        volatile unsigned int fasa = *(int*)(0x3000 + 4092);
+        // volatile unsigned int asd = *(int*)(0x1000 + 4092);
+        // volatile unsigned int sff = *(int*)(0x2000 + 4092);
+        // volatile unsigned int fasa = *(int*)(0x3000 + 4092);
       //  printf("Values: 0x%h, 0x%h, 0x%h\n", asd, sff, fasa);
     }
 }
@@ -46,9 +46,9 @@ void foo2()
 
         for (i = 0; i < 30000000; i++);
 
-        volatile unsigned int asd = *(int*)(0x1000 + 4092);
-        volatile unsigned int sff = *(int*)(0x2000 + 4092);
-        volatile unsigned int fasa = *(int*)(0x3000 + 4092);
+        // volatile unsigned int asd = *(int*)(0x1000 + 4092);
+        // volatile unsigned int sff = *(int*)(0x2000 + 4092);
+        // volatile unsigned int fasa = *(int*)(0x3000 + 4092);
     //    printf("Values: 0x%h, 0x%h, 0x%h\n", asd, sff, fasa);
     }
 }
@@ -97,15 +97,18 @@ void test_ttb0(void)
 
     printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
     printf("Testing %d bytes (0x%h)\n", bytesToCheck, bytesToCheck);
+    int k;
     for (int i = 0; i < bytesToCheck; i++)
     {
-        int k = *(int*)(0x1000 + i);
+        k = *(int*)(0x1000 + i);
     }
 
     printf("Tested %d bytes (%d pages). No output = Good output\n", bytesToCheck, bytesToCheck / 4096);
 
     printf("Reading bottom of stack...\n");
-    int stackbottom = *(int*)(THREAD_STACK_VA_START - 4);
+    int stackBottom = *(int*)(THREAD_STACK_VA_START - 4);
+
+    printf("Last read k: %d stack bottom: 0x%h\n", k, stackBottom);
 }
 
 int cmain(void)
@@ -132,7 +135,7 @@ int cmain(void)
 
     printf("Starting scheduler...\n");
     Scheduler_Start();
-    
+
     unsigned int i;
     while (1)
     {

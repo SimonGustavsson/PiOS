@@ -98,9 +98,9 @@ void Debug_PrintCallstack(unsigned int skipFrames)
         // Have we reached the end?
         // Note: FP Might point to the physical location of the stack
         // If the frame was set up before virtual memory was enabled, if so, compensate
-        if (fp < KERNEL_VA_START)
+        if ((unsigned int)fp < KERNEL_VA_START)
             fp += KERNEL_VA_START;
-        else if (fp > KERNEL_VA_START + 0x10000000)
+        else if ((unsigned int)fp > KERNEL_VA_START + 0x10000000)
             break;
     } while (fp != 0 && depth++ < MAX_FRAME_DEPTH && lr != 0x80CC); // Address of branch to cmain from asm
 }

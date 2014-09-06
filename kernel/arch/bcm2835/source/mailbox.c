@@ -3,6 +3,7 @@
 #include "memory_map.h"
 #include "types/string.h"
 #include "timer.h"
+#include "util/memutil.h"
 
 static volatile unsigned int *gMailbox0Read =   (unsigned int *)(PERIPHERAL_VA_MAILBOX_BASE);
 static volatile unsigned int *gMailbox0Status = (unsigned int *)(PERIPHERAL_VA_MAILBOX_BASE + 0x18);
@@ -65,7 +66,7 @@ unsigned int Mailbox_SdGetBaseFrequency(void)
 	mailbuffer[bufSize++] = 0;          // 7. Closing tag
 	mailbuffer[0] = bufSize * 4;        // 0. Size of the entire buffer (in bytes)
 
-	unsigned int bufferAddr = &mailbuffer;
+	unsigned int bufferAddr = (unsigned int)&mailbuffer;
 	bufferAddr -= KERNEL_VA_START;
 
 	Mailbox_Write(8, bufferAddr);
@@ -104,7 +105,7 @@ unsigned int Mailbox_GetPowerState(unsigned int deviceId)
 	mailbuffer[bufSize++] = 0;          // 7. End of message tag
 	mailbuffer[0] = bufSize * 4;        // 0. Size of entire buffer (in bytes)
 	
-	unsigned int bufferAddr = &mailbuffer;
+	unsigned int bufferAddr = (unsigned int)&mailbuffer;
 	bufferAddr -= KERNEL_VA_START;
 
 	Mailbox_Write(8, bufferAddr);
@@ -134,7 +135,7 @@ int Mailbox_GetClockRate(unsigned int clockId)
     mailbuffer[bufSize++] = 0;                 // 7. End of message tag
     mailbuffer[0] = bufSize * 4;               // 0. Size o entire buffer (in bytes)
 
-	unsigned int bufferAddr = &mailbuffer;
+	unsigned int bufferAddr = (unsigned int)&mailbuffer;
 	bufferAddr -= KERNEL_VA_START;
 
 	Mailbox_Write(8, bufferAddr);
@@ -164,7 +165,7 @@ unsigned int Mailbox_SetClockRate(unsigned int clockId, unsigned int rate)
     mailbuffer[bufSize++] = 0;                 // 7. End of message
     mailbuffer[0] = bufSize * 4;               // 0. Size of this buffer
 
-	unsigned int bufferAddr = &mailbuffer;
+	unsigned int bufferAddr = (unsigned int)&mailbuffer;
 	bufferAddr -= KERNEL_VA_START;
 
 	Mailbox_Write(8, bufferAddr);
@@ -198,7 +199,7 @@ int Mailbox_SetDevicePowerState(unsigned int deviceId, unsigned int powerState)
 	mailbuffer[bufSize++] = 0;          // 7. End of message tag
 	mailbuffer[0] = bufSize * 4;        // 0. Size of this buffer (in bytes)
 	
-	unsigned int bufferAddr = &mailbuffer;
+	unsigned int bufferAddr = (unsigned int)&mailbuffer;
 	bufferAddr -= KERNEL_VA_START;
 
 	Mailbox_Write(8, bufferAddr);

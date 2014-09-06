@@ -134,8 +134,6 @@ static int Process_InitializeMemory(Process* t)
     // Might not fit exactly into pages, add one if the level 1 entries spills over into a page
     lvl1_entries_num_pages += (TTB_SIZE_32MB_SIZE % PAGE_SIZE) == 0 ? 0 : 1;
 
-    unsigned int* level2_entries_start = (unsigned int*)(((unsigned int)temp_va_tt) + (lvl1_entries_num_pages * PAGE_SIZE));
-
     t->ttb0_size = ttbc_128bytes;
     t->ttb0 = temp_va_tt;
     t->ttb0_physical = (unsigned int*)physical_tt;
@@ -192,7 +190,7 @@ static bool Process_CreateMainThread(Process* p, thread_entry entry)
 {
     printf("Created process '%s', creating main thread, entry: 0x%h\n", p->name, entry);
 
-    p->threads = (thread*)palloc(sizeof(thread));
+    p->threads = (thread**)palloc(sizeof(thread));
     thread* mainThread = thread_createWithOwner(entry, p);
     mainThread->name = (char*)palloc(my_strlen("main"));
     my_strcpy("main", mainThread->name);
@@ -207,6 +205,8 @@ static bool Process_CreateMainThread(Process* p, thread_entry entry)
     p->threads[0] = mainThread;
     p->mainThread = mainThread;
     p->nThreads = 1;
+
+    return true;
 }
 
 Process* Process_CreateFromFile(char* filename, char* name, bool start)

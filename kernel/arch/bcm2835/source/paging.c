@@ -6,14 +6,14 @@
 
 void map_page(unsigned int* pt, unsigned int num_lvl1_entries, unsigned int pa, unsigned int va, unsigned int flags)
 {
-    unsigned int* physical_tt = ((unsigned int)pt) - KERNEL_VA_START;
+    unsigned int* physical_tt = (unsigned int*)(((unsigned int)pt) - KERNEL_VA_START);
 
     // The shifts of the virtual address explained:
     // 31:20 map into lvl 1 table
     // 19:12 map into lvl 2 page
     // 11:0 index into the lvl 2 page (Not relevant to us)
     unsigned int lvl1_index = va >> 20;
-    unsigned int* lvl1_entry = (physical_tt + lvl1_index);
+    //unsigned int* lvl1_entry = (physical_tt + lvl1_index);
     unsigned int* lvl1_entry_va = (pt + lvl1_index);
     
     // TODO: Check to make sure that it actually fits into the page table, or if we need to expand it (reallocate a series of more pages, update ttbc etc)
@@ -24,11 +24,11 @@ void map_page(unsigned int* pt, unsigned int num_lvl1_entries, unsigned int pa, 
     lvl1_entries_num_pages += (num_lvl1_entries % PAGE_SIZE) == 0 ? 0 : 1;
 
     unsigned int level2_entries_start_addr = ((unsigned int)physical_tt) + (lvl1_entries_num_pages * PAGE_SIZE);
-    unsigned int level2_entries_start_addr_va = level2_entries_start_addr + KERNEL_VA_START;
+    //unsigned int level2_entries_start_addr_va = level2_entries_start_addr + KERNEL_VA_START;
 
     unsigned int lvl2_index = (va >> 12) & 0xFF;
     unsigned int* lvl2_entry = (unsigned int*)(level2_entries_start_addr + ( (lvl1_index * 256) * sizeof(int)   ) + (lvl2_index << 2      )   );
-    unsigned int* lvl2_entry_va = ((unsigned int)lvl2_entry) + KERNEL_VA_START;
+    unsigned int* lvl2_entry_va = (unsigned int*)(((unsigned int)lvl2_entry) + KERNEL_VA_START);
     
     // Make sure the level 1 entry is initialized
     if ((*lvl1_entry_va & PAGE_TABLE_MASK) == 0)

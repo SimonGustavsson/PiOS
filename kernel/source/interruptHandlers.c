@@ -74,7 +74,7 @@ void c_undefined_handler(void* lr)
 
 void c_abort_data_handler(unsigned int address, unsigned int errorType, unsigned int accessedAddr, unsigned int fault_reg)
 {
-    bool doubleFault = in_fault == true;
+    //bool doubleFault = in_fault == true;
     in_fault = true;
 
     // NOTE: fault_reg isn't used (yet), we should just use that and extract the Fault status from

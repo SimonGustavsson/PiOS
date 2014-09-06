@@ -1,5 +1,5 @@
 TOOL = arm-none-eabi
-CFLAGS = -Wall -nostdlib -nostartfiles -ffreestanding --no-common -Wpadded -march=armv6j -mtune=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard -fno-omit-frame-pointer -mno-thumb-interwork -mlong-calls -marm -g -std=gnu11
+CFLAGS = -Wall -nostdlib -nostartfiles -ffreestanding --no-common -march=armv6j -mtune=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard -fno-omit-frame-pointer -mno-thumb-interwork -mlong-calls -marm -g -std=gnu11
 LINKER_FLAGS = --no-wchar-size-warning --no-undefined
 
 ASSEMBLER_FLAGS = -march=armv6j  -mfpu=vfp -mfloat-abi=hard
@@ -102,7 +102,7 @@ $(LINK_SCRIPT): $(LINK_SCRIPT_SRC)
 #build c files
 # The dependency stuff here is a hack, shouldn't have to do this?
 $(OBJ_DIR)/%.o: %.c
-	@echo Building $< percent: $@ star: $*
+	@echo Building $<
 	
 # Create the output directories if they don't exist
 	@mkdir $(DEPENDENCY_DIR)/$(dir $*) -p

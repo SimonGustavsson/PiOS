@@ -32,6 +32,8 @@ static inline unsigned int pfa_GetPageIndexOfAddr(unsigned int addr)
 int mem_init(void)
 {
     gPages = (int*)pcalloc(sizeof(int), MAX_ALLOCATED_PAGES);
+
+    return 0;
 }
 
 // Returns the next available page

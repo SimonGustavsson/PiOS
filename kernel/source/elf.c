@@ -4,6 +4,7 @@
 #include "util/utilities.h"
 #include "debugging.h"
 #include "stddef.h"
+#include "util/memutil.h"
 
 int elf_verify_header_ident(elf32_header* header)
 {
@@ -83,7 +84,7 @@ int elf_get_func_info(char* elf, int elf_size, func_info** info)
     elf32_header* header = (elf32_header*)elf;
 
     if (elf_verify_header_ident(header) != 0)
-        return NULL;
+        return -1;
 
     elf_shdr* shdrs = (elf_shdr*)&elf[header->shoff];
 

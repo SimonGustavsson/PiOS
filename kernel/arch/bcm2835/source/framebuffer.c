@@ -165,7 +165,7 @@ int fb_allocateBuffer(void)
 	gFb.address = 0;       // Framebuffer address - Request: 0, Response: Address of buffer allocated by VC, or zero if request fails
 	gFb.size = 0;          // Framebuffer size - Request: 0, Response: Size of buffer allocated by VC
 
-	unsigned int fbStructAddr = &gFb;
+	unsigned int fbStructAddr = (unsigned int)&gFb;
 
 	// Mailbox requires the physical address
 	// TODO: Add some sort of function to do this instead? Doing his in a lot of places now...

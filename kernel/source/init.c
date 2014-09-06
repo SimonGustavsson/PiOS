@@ -59,9 +59,6 @@ void sysinit_stage2(int machineType, int atagsPa, int dbgsymboladdr)
     // Setup the interrupt vector
     asm volatile("mcr p15, 0, %[addr], c12, c0, 0" : : [addr] "r" (&interrupt_vector));
 
-    volatile unsigned int usrStartValBefore = *(unsigned int*)0x100000;
-    volatile unsigned int usr2StartValBefore = *(unsigned int*)0x200000;
-
     // TODO: Trash the temporary TTB0, we shouldn't need it past this point
     //       Currently I think the emmc driver uses a hardcoded buffer in low memory
     unsigned int cur = 0;
@@ -84,7 +81,7 @@ void sysinit_stage2(int machineType, int atagsPa, int dbgsymboladdr)
     mem_init();
 
     // Calculate kernel size
-    unsigned int kernel_physical_end = &LNK_KERNEL_END;
+    unsigned int kernel_physical_end = (unsigned int)&LNK_KERNEL_END;
     kernel_physical_end -= KERNEL_VA_START;
     unsigned int kernel_size = kernel_physical_end - LD_KRNL_ORIGIN;
 

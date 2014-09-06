@@ -36,7 +36,7 @@ void Timer_Clear(void)
 // Gets the value of the free running timer
 long long Timer_GetTicks(void)
 {
-    return (gTimer->chi << 32) | gTimer->clo;
+    return ((long long)gTimer->chi) << 32 | gTimer->clo;
 }
 
 void wait(unsigned int milliSeconds)
