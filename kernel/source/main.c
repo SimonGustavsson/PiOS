@@ -4,6 +4,7 @@
 #include "terminal.h"
 #include "types/string.h"
 #include "util/utilities.h"
+#include "util/memutil.h"
 #include "paging.h"
 #include "asm.h"
 #include "mailbox.h"
@@ -98,7 +99,7 @@ void test_ttb0(void)
     printf("Testing %d bytes (0x%h)\n", bytesToCheck, bytesToCheck);
     for (int i = 0; i < bytesToCheck; i++)
     {
-        volatile int* k = *(int*)(0x1000 + i);
+        int k = *(int*)(0x1000 + i);
     }
 
     printf("Tested %d bytes (%d pages). No output = Good output\n", bytesToCheck, bytesToCheck / 4096);
