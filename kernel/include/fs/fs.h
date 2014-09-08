@@ -1,4 +1,4 @@
-#include "hardware/device/blockDevice.h"
+#include "hardware/blockDevice.h"
 #define BOOTABLE_FLAG 0x80
 
 #define E_UNSUPPORTED -2

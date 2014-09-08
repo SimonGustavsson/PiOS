@@ -49,9 +49,6 @@
     <Filter Include="Header Files\include\hardware">
       <UniqueIdentifier>{01180de7-25ff-414e-9ec4-c2cfec92869e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\include\hardware\device">
-      <UniqueIdentifier>{f9b054f4-408d-47eb-ac72-17b6bdf84bf2}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\include\fs">
       <UniqueIdentifier>{eaf80695-852e-48ba-9d3d-57af91daca55}</UniqueIdentifier>
     </Filter>
@@ -101,12 +98,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\kernel\include\hardware\device\blockDevice.h">
-      <Filter>Header Files\include\hardware\device</Filter>
-    </ClInclude>
-    <ClInclude Include="..\kernel\include\hardware\device\sdBlockDevice.h">
-      <Filter>Header Files\include\hardware\device</Filter>
-    </ClInclude>
     <ClInclude Include="..\kernel\include\fs\fat32driver.h">
       <Filter>Header Files\include\fs</Filter>
     </ClInclude>
@@ -200,9 +191,6 @@
     <ClInclude Include="..\kernel\arch\bcm2835\include\emmc.h">
       <Filter>Header Files\arch\bcm2835\include</Filter>
     </ClInclude>
-    <ClInclude Include="..\kernel\arch\bcm2835\include\framebuffer.h">
-      <Filter>Header Files\arch\bcm2835\include</Filter>
-    </ClInclude>
     <ClInclude Include="..\kernel\arch\bcm2835\include\gpio.h">
       <Filter>Header Files\arch\bcm2835\include</Filter>
     </ClInclude>
@@ -223,6 +211,18 @@
     </ClInclude>
     <ClInclude Include="..\kernel\arch\bcm2835\include\uart.h">
       <Filter>Header Files\arch\bcm2835\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\arch\bcm2835\include\bcm2835_fb.h">
+      <Filter>Header Files\arch\bcm2835\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\include\hardware\blockDevice.h">
+      <Filter>Header Files\include\hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\include\hardware\fb.h">
+      <Filter>Header Files\include\hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\include\hardware\sdBlockDevice.h">
+      <Filter>Header Files\include\hardware</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -279,6 +279,51 @@
     </ClCompile>
     <ClCompile Include="..\kernel\arch\bcm2835\linker.c">
       <Filter>Source Files\arch\bcm2835</Filter>
+    </ClCompile>
+    <ClCompile Include="..\kernel\source\atags.c">
+      <Filter>Source Files\source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\kernel\source\debugging.c">
+      <Filter>Source Files\source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\kernel\source\elf.c">
+      <Filter>Source Files\source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\kernel\source\init.c">
+      <Filter>Source Files\source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\kernel\source\interruptHandlers.c">
+      <Filter>Source Files\source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\kernel\source\main.c">
+      <Filter>Source Files\source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\kernel\source\mem.c">
+      <Filter>Source Files\source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\kernel\source\memory.c">
+      <Filter>Source Files\source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\kernel\source\platform.c">
+      <Filter>Source Files\source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\kernel\source\process.c">
+      <Filter>Source Files\source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\kernel\source\scheduler.c">
+      <Filter>Source Files\source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\kernel\source\syscalls.c">
+      <Filter>Source Files\source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\kernel\source\terminal.c">
+      <Filter>Source Files\source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\kernel\source\terminalCommands.c">
+      <Filter>Source Files\source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\kernel\source\thread.c">
+      <Filter>Source Files\source</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

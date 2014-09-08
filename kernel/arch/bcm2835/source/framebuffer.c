@@ -1,4 +1,5 @@
-#include "framebuffer.h"
+#include "bcm2835_fb.h"
+#include "hardware/fb.h"
 #include "mailbox.h"
 #include "memory_map.h"
 #include "myfont.h"
@@ -13,12 +14,12 @@ unsigned int gFbMaxAddr;
 
 extern int gTerminalInitialized;
 
-unsigned int Fb_GetSize(void)
+uint32_t Fb_GetSize(void)
 {
     return gFb.size;
 }
 
-unsigned int Fb_GetPhyAddr(void)
+uint32_t Fb_GetPhyAddr(void)
 {
     return gFb.address;
 }
@@ -32,7 +33,7 @@ size Fb_GetScreenSize(void)
     return s;
 }
 
-void Fb_DrawPixel(unsigned int x, unsigned int y, unsigned short int color)
+void Fb_DrawPixel(uint32_t x, uint32_t y, uint16_t color)
 {
 	// Offset into framebuffer
 	unsigned int offset = (y * gFb.pitch) + (x * 2);
@@ -59,12 +60,12 @@ void Fb_DrawPixel(unsigned int x, unsigned int y, unsigned short int color)
     }
 }
 
-void Fb_DrawCharacterAt(unsigned int ch, unsigned int x, unsigned int y)
+void Fb_DrawCharacterAt(uint16_t ch, uint32_t x, uint32_t y)
 {
 	Fb_DrawColoredCharacterAt(ch, x, y, 0xFFFF);
 }
 
-void Fb_DrawColoredCharacterAt(unsigned int ch, unsigned int x, unsigned int y, unsigned short color)
+void Fb_DrawColoredCharacterAt(uint16_t ch, uint32_t x, uint32_t y, uint16_t color)
 {
 	// Ensure valid char table lookup
 	ch = ch < 32 ? 0 : ch > 127 ? 0 : ch - 32;
@@ -90,7 +91,7 @@ void Fb_DrawColoredCharacterAt(unsigned int ch, unsigned int x, unsigned int y, 
 }
 
 // 0: Success. 1: Invalid response to property request, 2: Invalid screen size returned
-static int GetScreenSizeFromTags()
+static int32_t GetScreenSizeFromTags()
 {
 	volatile unsigned int mailbuffer[256] __attribute__ ((aligned (16)));
 	unsigned int mailbufferAddr = (unsigned int)mailbuffer;
@@ -181,7 +182,7 @@ int fb_allocateBuffer(void)
 	return 0;
 }
 
-int Fb_Initialize()
+int32_t Fb_Initialize()
 {	
 	unsigned int result = 0;
 	gScreenSize.width = 0;

@@ -61,8 +61,8 @@
     <None Include="..\README.md" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\kernel\arch\bcm2835\include\bcm2835_fb.h" />
     <ClInclude Include="..\kernel\arch\bcm2835\include\emmc.h" />
-    <ClInclude Include="..\kernel\arch\bcm2835\include\framebuffer.h" />
     <ClInclude Include="..\kernel\arch\bcm2835\include\gpio.h" />
     <ClInclude Include="..\kernel\arch\bcm2835\include\interrupts.h" />
     <ClInclude Include="..\kernel\arch\bcm2835\include\mailbox.h" />
@@ -77,8 +77,9 @@
     <ClInclude Include="..\kernel\include\elf.h" />
     <ClInclude Include="..\kernel\include\fs\fat32driver.h" />
     <ClInclude Include="..\kernel\include\fs\fs.h" />
-    <ClInclude Include="..\kernel\include\hardware\device\blockDevice.h" />
-    <ClInclude Include="..\kernel\include\hardware\device\sdBlockDevice.h" />
+    <ClInclude Include="..\kernel\include\hardware\blockDevice.h" />
+    <ClInclude Include="..\kernel\include\hardware\fb.h" />
+    <ClInclude Include="..\kernel\include\hardware\sdBlockDevice.h" />
     <ClInclude Include="..\kernel\include\init.h" />
     <ClInclude Include="..\kernel\include\interruptHandlers.h" />
     <ClInclude Include="..\kernel\include\main.h" />
@@ -115,9 +116,24 @@
     <ClCompile Include="..\kernel\arch\bcm2835\source\paging.c" />
     <ClCompile Include="..\kernel\arch\bcm2835\source\timer.c" />
     <ClCompile Include="..\kernel\arch\bcm2835\source\uart.c" />
+    <ClCompile Include="..\kernel\source\atags.c" />
+    <ClCompile Include="..\kernel\source\debugging.c" />
     <ClCompile Include="..\kernel\source\dev\sdBlockDevice.c" />
+    <ClCompile Include="..\kernel\source\elf.c" />
     <ClCompile Include="..\kernel\source\fs\fat32driver.c" />
     <ClCompile Include="..\kernel\source\fs\fs.c" />
+    <ClCompile Include="..\kernel\source\init.c" />
+    <ClCompile Include="..\kernel\source\interruptHandlers.c" />
+    <ClCompile Include="..\kernel\source\main.c" />
+    <ClCompile Include="..\kernel\source\mem.c" />
+    <ClCompile Include="..\kernel\source\memory.c" />
+    <ClCompile Include="..\kernel\source\platform.c" />
+    <ClCompile Include="..\kernel\source\process.c" />
+    <ClCompile Include="..\kernel\source\scheduler.c" />
+    <ClCompile Include="..\kernel\source\syscalls.c" />
+    <ClCompile Include="..\kernel\source\terminal.c" />
+    <ClCompile Include="..\kernel\source\terminalCommands.c" />
+    <ClCompile Include="..\kernel\source\thread.c" />
     <ClCompile Include="..\kernel\source\types\queue.c" />
     <ClCompile Include="..\kernel\source\types\string.c" />
     <ClCompile Include="..\kernel\source\util\memutil.c" />
