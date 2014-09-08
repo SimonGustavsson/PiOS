@@ -1,5 +1,6 @@
 #include "miniUart.h"
 #include "gpio.h"
+#include "bcm2835_gpio.h"
 #include "memory_map.h"
 
 static gpio_reg *gGpio;

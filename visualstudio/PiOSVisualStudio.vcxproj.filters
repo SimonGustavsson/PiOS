@@ -191,9 +191,6 @@
     <ClInclude Include="..\kernel\arch\bcm2835\include\emmc.h">
       <Filter>Header Files\arch\bcm2835\include</Filter>
     </ClInclude>
-    <ClInclude Include="..\kernel\arch\bcm2835\include\gpio.h">
-      <Filter>Header Files\arch\bcm2835\include</Filter>
-    </ClInclude>
     <ClInclude Include="..\kernel\arch\bcm2835\include\interrupts.h">
       <Filter>Header Files\arch\bcm2835\include</Filter>
     </ClInclude>
@@ -223,6 +220,9 @@
     </ClInclude>
     <ClInclude Include="..\kernel\include\hardware\sdBlockDevice.h">
       <Filter>Header Files\include\hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\arch\bcm2835\include\bcm2835_gpio.h">
+      <Filter>Header Files\arch\bcm2835\include</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

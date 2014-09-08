@@ -4,7 +4,7 @@
 #define CHAR_HSPACING 4
 #define INPUT_BUFFER_SIZE 256
 
-#include "framebuffer.h"
+#include "hardware/fb.h"
 #include "types/string.h"
 #include "memory.h"
 #include "terminalCommands.h"

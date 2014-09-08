@@ -1,4 +1,5 @@
 #include "gpio.h"
+#include "bcm2835_gpio.h"
 #include "memory_map.h"
 
 static void delay(unsigned int count)

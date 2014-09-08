@@ -30,7 +30,7 @@
     <NMakeReBuildCommandLine>$(ProjectDir)vsbuild.bat rebuild</NMakeReBuildCommandLine>
     <NMakePreprocessorDefinitions>WIN32;_DEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
     <NMakeIncludeSearchPath>..\include;$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
-    <IncludePath>..\include;$(IncludePath)</IncludePath>
+    <IncludePath>..\kernel\arch\bcm2835\include;..\kernel\include;..\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <!-- START: Manual project file hacking to remove unnecessary steps -->
   <PropertyGroup>
@@ -62,8 +62,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\kernel\arch\bcm2835\include\bcm2835_fb.h" />
+    <ClInclude Include="..\kernel\arch\bcm2835\include\bcm2835_gpio.h" />
     <ClInclude Include="..\kernel\arch\bcm2835\include\emmc.h" />
-    <ClInclude Include="..\kernel\arch\bcm2835\include\gpio.h" />
     <ClInclude Include="..\kernel\arch\bcm2835\include\interrupts.h" />
     <ClInclude Include="..\kernel\arch\bcm2835\include\mailbox.h" />
     <ClInclude Include="..\kernel\arch\bcm2835\include\miniUart.h" />
