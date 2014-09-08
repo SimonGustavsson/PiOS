@@ -6,7 +6,7 @@
 #include "memory_map.h"
 #include "scheduler.h"
 #include "stddef.h"
-#include "interrupts.h"
+#include "hardware/arm_interrupts.h"
 #include "timer.h"
 #include "types/string.h"
 #include "types/queue.h"

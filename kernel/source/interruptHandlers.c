@@ -1,5 +1,5 @@
 #include "interruptHandlers.h"
-#include "interrupts.h"
+#include "hardware/arm_interrupts.h"
 #include "timer.h"
 #include "uart.h"
 #include "types/string.h"

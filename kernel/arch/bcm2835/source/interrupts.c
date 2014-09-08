@@ -1,5 +1,6 @@
 #include "memory_map.h"
-#include "interrupts.h"
+#include "hardware/arm_interrupts.h"
+#include "bcm2835_interrupts.h"
 
 static ArmInterrupts* gInterrupts;
 
