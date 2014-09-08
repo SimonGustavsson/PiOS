@@ -7,7 +7,7 @@
 #include "hardware/fb.h"
 #include "hardware/arm_interrupts.h"
 #include "uart.h"
-#include "paging.h"
+#include "hardware/mmu.h"
 #include "timer.h"
 #include "hardware/sdBlockDevice.h"
 #include "main.h"
@@ -36,8 +36,8 @@ __attribute__((naked, aligned(32))) static void interrupt_vector(void)
 void sysinit_stage1(int machineType, int aTagsPA, int dbgsymboladdr)
 {
     // First thing we want to do is map the kernel and peripherals into high memory
-    unsigned int* basePageTable = (unsigned int *)KERNEL_PA_PT;
-    unsigned int* tmp_ttb0 = (unsigned int*)KERNEL_PA_TMP_TTB0;
+    uint32_t* basePageTable = (uint32_t*)KERNEL_PA_PT;
+    uint32_t* tmp_ttb0 = (uint32_t*)KERNEL_PA_TMP_TTB0;
 
     // (This also sets up a temporary mapping for ttb0 that we trash once we're in high memory)
     INIT_kernel_tt_setup(basePageTable, tmp_ttb0);
@@ -47,7 +47,7 @@ void sysinit_stage1(int machineType, int aTagsPA, int dbgsymboladdr)
     // That messes with the Frame Pointer (basically any C function)
     // The return from that function will reset SP to the physical address of the
     // FP and not the Virtual address set up by do_mmu
-    do_mmu(tmp_ttb0, basePageTable, TTBC_SPLIT_8KB);
+    do_mmu((unsigned int*)tmp_ttb0, (unsigned int*)basePageTable, TTBC_SPLIT_8KB);
 
     // Memory is all set up, time to branch into high memory
     // to move to stage 2 of initialization

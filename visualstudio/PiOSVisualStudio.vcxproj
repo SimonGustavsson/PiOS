@@ -67,7 +67,7 @@
     <ClInclude Include="..\kernel\arch\bcm2835\include\emmc.h" />
     <ClInclude Include="..\kernel\arch\bcm2835\include\bcm2835_interrupts.h" />
     <ClInclude Include="..\kernel\arch\bcm2835\include\bcm2835_miniUart.h" />
-    <ClInclude Include="..\kernel\arch\bcm2835\include\paging.h" />
+    <ClInclude Include="..\kernel\arch\bcm2835\include\bcm2835_mmu.h" />
     <ClInclude Include="..\kernel\arch\bcm2835\include\timer.h" />
     <ClInclude Include="..\kernel\arch\bcm2835\include\uart.h" />
     <ClInclude Include="..\kernel\include\asm.h" />
@@ -82,6 +82,7 @@
     <ClInclude Include="..\kernel\include\hardware\fb.h" />
     <ClInclude Include="..\kernel\include\hardware\gpio.h" />
     <ClInclude Include="..\kernel\include\hardware\miniUart.h" />
+    <ClInclude Include="..\kernel\include\hardware\mmu.h" />
     <ClInclude Include="..\kernel\include\hardware\sdBlockDevice.h" />
     <ClInclude Include="..\kernel\include\init.h" />
     <ClInclude Include="..\kernel\include\interruptHandlers.h" />

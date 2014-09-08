@@ -1,11 +1,13 @@
-#include "paging.h"
+#include "hardware/mmu.h"
+#include "bcm2835_mmu.h"
 #include "asm.h"
 #include "types/string.h"
 #include "uart.h"
 #include "mem.h"
 
-void map_page(unsigned int* pt, unsigned int num_lvl1_entries, unsigned int pa, unsigned int va, unsigned int flags)
+void map_kpage(uint32_t* pt, uint32_t num_lvl1_entries, uint32_t pa, uint32_t va)
 {
+    unsigned int flags = PAGE_BUFFERABLE | PAGE_CACHEABLE | PAGE_AP_K_RW_U_RW;
     unsigned int* physical_tt = (unsigned int*)(((unsigned int)pt) - KERNEL_VA_START);
 
     // The shifts of the virtual address explained:
@@ -14,7 +16,7 @@ void map_page(unsigned int* pt, unsigned int num_lvl1_entries, unsigned int pa, 
     // 11:0 index into the lvl 2 page (Not relevant to us)
     unsigned int lvl1_index = va >> 20;
     //unsigned int* lvl1_entry = (physical_tt + lvl1_index);
-    unsigned int* lvl1_entry_va = (pt + lvl1_index);
+    unsigned int* lvl1_entry_va = (((unsigned int*)pt) + lvl1_index);
     
     // TODO: Check to make sure that it actually fits into the page table, or if we need to expand it (reallocate a series of more pages, update ttbc etc)
     // Level 2 entries start on the first clean page after the end of the level 1 entries
@@ -48,7 +50,7 @@ void map_page(unsigned int* pt, unsigned int num_lvl1_entries, unsigned int pa, 
 #endif
 }
 
-void map_section(unsigned int* pt, unsigned int pa, unsigned int va, unsigned int flags)
+void map_section(uint32_t* pt, uint32_t pa, uint32_t va, uint32_t flags)
 {
     unsigned int va_base = (va >> 20) & 0xFFF;
     unsigned int pa_base = (pa >> 20) & 0xFFF;
@@ -57,7 +59,7 @@ void map_section(unsigned int* pt, unsigned int pa, unsigned int va, unsigned in
 }
 
 // NOTE: This is placed in low memory and NOT acessible after initialization
-void INIT_map_section(unsigned int* pt, unsigned int pa, unsigned int va, unsigned int flags)
+void INIT_map_section(uint32_t* pt, uint32_t pa, uint32_t va, uint32_t flags)
 {
     unsigned int va_base = (va >> 20) & 0xFFF;
     unsigned int pa_base = (pa >> 20) & 0xFFF;
@@ -65,7 +67,7 @@ void INIT_map_section(unsigned int* pt, unsigned int pa, unsigned int va, unsign
     *(pt + va_base) = (pa_base << 20) | PAGE_TABLE_SECTION | flags;
 }
 
-int INIT_kernel_tt_setup(unsigned int* ttb1, unsigned int* tmp_ttb0)
+int32_t INIT_kernel_tt_setup(uint32_t* ttb1, uint32_t* tmp_ttb0)
 {
     // Kernel 
     unsigned int i;
@@ -95,7 +97,7 @@ int INIT_kernel_tt_setup(unsigned int* ttb1, unsigned int* tmp_ttb0)
     return 0;
 }
 
-void mem_print_page_va_info(unsigned int* pt, unsigned int va)
+void mem_print_page_va_info(uint32_t* pt, uint32_t va)
 {
     // This function basically does the same as the MMU would when performing a
     // second level page table walk over Extended 4KB ARMv6 small pages.

@@ -5,7 +5,6 @@
 #include "types/string.h"
 #include "util/utilities.h"
 #include "util/memutil.h"
-#include "paging.h"
 #include "asm.h"
 #include "syscalls.h"
 #include "memory_map.h"

@@ -5,7 +5,7 @@
 #include "scheduler.h"
 #include "stddef.h"
 #include "fs/fs.h"
-#include "paging.h"
+#include "mmu.h"
 #include "types/string.h"
 #include "util/memutil.h"
 
@@ -122,7 +122,7 @@ static int Process_InitializeMemory(Process* t)
         // Keep track of number of pages so we can clean up if something goes wrong
         pages_allocated++;
 
-        map_page(temp_va_tt, TTB_SIZE_32MB_SIZE, page, USR_VA_START + (i * 0x1000), PAGE_BUFFERABLE | PAGE_CACHEABLE | PAGE_AP_K_RW_U_RW);
+        map_kpage(temp_va_tt, TTB_SIZE_32MB_SIZE, page, USR_VA_START + (i * 0x1000));
 
         FlushTLB(USR_VA_START + (i * 0x1000));
     }

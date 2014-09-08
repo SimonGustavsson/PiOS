@@ -191,9 +191,6 @@
     <ClInclude Include="..\kernel\arch\bcm2835\include\emmc.h">
       <Filter>Header Files\arch\bcm2835\include</Filter>
     </ClInclude>
-    <ClInclude Include="..\kernel\arch\bcm2835\include\paging.h">
-      <Filter>Header Files\arch\bcm2835\include</Filter>
-    </ClInclude>
     <ClInclude Include="..\kernel\arch\bcm2835\include\timer.h">
       <Filter>Header Files\arch\bcm2835\include</Filter>
     </ClInclude>
@@ -231,6 +228,12 @@
       <Filter>Header Files\include\hardware</Filter>
     </ClInclude>
     <ClInclude Include="..\kernel\include\hardware\miniUart.h">
+      <Filter>Header Files\include\hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\arch\bcm2835\include\bcm2835_mmu.h">
+      <Filter>Header Files\arch\bcm2835\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\include\hardware\mmu.h">
       <Filter>Header Files\include\hardware</Filter>
     </ClInclude>
   </ItemGroup>

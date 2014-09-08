@@ -1,7 +1,7 @@
 #include "mem.h"
 #include "thread.h"
 #include "stddef.h"
-#include "paging.h"
+#include "hardware/mmu.h"
 #include "types/string.h"
 #include "process.h"
 #include "scheduler.h"
@@ -23,11 +23,9 @@ static bool thread_initStack(thread* t, Process* owner)
 
     //printf("Initializing thread stack at 0x%h (phys: 0x%h)\n", THREAD_STACK_VA_START, freePage);
 
-    map_page(owner->ttb0, owner->ttb0_size, (unsigned int)freePage0, THREAD_STACK_VA_START - PAGE_SIZE,
-        PAGE_BUFFERABLE | PAGE_CACHEABLE | PAGE_AP_K_RW_U_RW);
+    map_kpage(owner->ttb0, owner->ttb0_size, (unsigned int)freePage0, THREAD_STACK_VA_START - PAGE_SIZE);
 
-    map_page(owner->ttb0, owner->ttb0_size, (unsigned int)freePage1, (THREAD_STACK_VA_START - (PAGE_SIZE * 2)),
-        PAGE_BUFFERABLE | PAGE_CACHEABLE | PAGE_AP_K_RW_U_RW);
+    map_kpage(owner->ttb0, owner->ttb0_size, (unsigned int)freePage1, (THREAD_STACK_VA_START - (PAGE_SIZE * 2)));
 
     t->stackPages = (uint32_t*)pcalloc(THREAD_MAX_PAGES, sizeof(int));
     t->stackPages[0] = freePage0;
