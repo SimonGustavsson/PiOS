@@ -1,4 +1,4 @@
-#include "mailbox.h"
+#include "bcm2835_mailbox.h"
 #include "memory.h"
 #include "memory_map.h"
 #include "types/string.h"

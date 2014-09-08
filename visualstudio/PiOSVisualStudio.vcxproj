@@ -63,9 +63,9 @@
   <ItemGroup>
     <ClInclude Include="..\kernel\arch\bcm2835\include\bcm2835_fb.h" />
     <ClInclude Include="..\kernel\arch\bcm2835\include\bcm2835_gpio.h" />
+    <ClInclude Include="..\kernel\arch\bcm2835\include\bcm2835_mailbox.h" />
     <ClInclude Include="..\kernel\arch\bcm2835\include\emmc.h" />
     <ClInclude Include="..\kernel\arch\bcm2835\include\bcm2835_interrupts.h" />
-    <ClInclude Include="..\kernel\arch\bcm2835\include\mailbox.h" />
     <ClInclude Include="..\kernel\arch\bcm2835\include\miniUart.h" />
     <ClInclude Include="..\kernel\arch\bcm2835\include\paging.h" />
     <ClInclude Include="..\kernel\arch\bcm2835\include\timer.h" />

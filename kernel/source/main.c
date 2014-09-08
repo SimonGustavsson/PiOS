@@ -7,7 +7,6 @@
 #include "util/memutil.h"
 #include "paging.h"
 #include "asm.h"
-#include "mailbox.h"
 #include "syscalls.h"
 #include "memory_map.h"
 

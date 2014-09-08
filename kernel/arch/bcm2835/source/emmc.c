@@ -1,5 +1,5 @@
 #include "emmc.h"
-#include "mailbox.h"
+#include "bcm2835_mailbox.h"
 #include "timer.h"
 #include "types/string.h"
 #include "util/utilities.h"

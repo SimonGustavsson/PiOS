@@ -1,6 +1,6 @@
 #include "bcm2835_fb.h"
+#include "bcm2835_mailbox.h"
 #include "hardware/fb.h"
-#include "mailbox.h"
 #include "memory_map.h"
 #include "myfont.h"
 #include "types/string.h"

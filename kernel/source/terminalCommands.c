@@ -4,7 +4,6 @@
 #include "terminal.h"
 #include "types/string.h"
 #include "types/types.h"
-#include "mailbox.h"
 #include "emmc.h"
 
 extern char gPrompt[TERMINAL_PROMPT_MAX_LENGTH]; // Defined in terminal.c
@@ -181,60 +180,6 @@ unsigned int Command_SdControl0_Execute(char** args, unsigned int argCount)
 	return 0;
 }
 
-unsigned int Command_SetPower_Execute(char** args, unsigned int argCount)
-{
-	if(argCount != 3)
-	{
-		printf("Unexpected amount of parameters, type 'help setpower' for help.\n");
-		return -1;
-	}
-	
-	unsigned int deviceId = *args[1] - '0'; // Note: Just uses the first character
-	if(deviceId < 0 || deviceId > 8)
-	{
-		printf("Invalid device id, expected values between 0 - 8.\n");
-		return -1;
-	}
-	
-	unsigned int powerState = *args[2] - '0'; // Note: Just uses the first character
-	if(powerState < 0 || powerState > 1)
-	{
-		printf("Invalid power state, expected 0 (Off) or 1 (On).\n");
-		return -1;
-	}
-	
-	unsigned int res = 0;
-	if((res = Mailbox_SetDevicePowerState(deviceId, powerState)) != 0)
-		printf("Failed to set power for device '%d' to '%d'", deviceId, powerState);
-	else
-		printf("Sucess setting power of device '%d' to '%d'", deviceId, powerState);
-	
-	return res;	
-}
-
-unsigned int Command_GetPower_Execute(char** args, unsigned int argCount)
-{
-	if(argCount != 2)
-	{
-		printf("Unexpected amount of arguments, type 'help getpower' for help.\n");
-		return -1;
-	}
-	
-	unsigned int deviceId = *args[1] - '0';
-	
-	unsigned int powerState = Mailbox_GetPowerState(deviceId);
-	
-	if(powerState == -1)
-	{
-		printf("Failed to retrieve power state.\n");
-		return -1;
-	}
-	
-	printf("The power state of '%d' is '%d'", deviceId, powerState);
-	
-	return 0;
-}
-
 void TerminalCommands_Initialize(void)
 {
 	TerminalCommands_registerCommand("about", "Prints information about PiOS.", &Command_About_Execute);
@@ -243,9 +188,7 @@ void TerminalCommands_Initialize(void)
     TerminalCommands_registerCommand("cls", "Clears the terminal.", &Command_Cls_Execute);
     TerminalCommands_registerCommand("echo", "Prints the given string to the terminal.", &Command_Echo_Execute);
     TerminalCommands_registerCommand("prompt", "Changes the system prompt text.", &Command_Prompt_Execute);
-    TerminalCommands_registerCommand("setpower", "Changes the power state(1 or 0) of the given device(0-8).", &Command_SetPower_Execute);
-    TerminalCommands_registerCommand("getpower", "Retrieves the power state of the given device (0-8).", &Command_GetPower_Execute);
-
+    
 	// Sd cards for debugging
     TerminalCommands_registerCommand("dbgsd", "Prints the mmc struct", &Command_DbgSd_Execute);
     TerminalCommands_registerCommand("sdstatus", "Prints the status of the external mass media controller", &Command_SdStatus_Execute);

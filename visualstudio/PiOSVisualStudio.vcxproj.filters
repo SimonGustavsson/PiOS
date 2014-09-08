@@ -191,9 +191,6 @@
     <ClInclude Include="..\kernel\arch\bcm2835\include\emmc.h">
       <Filter>Header Files\arch\bcm2835\include</Filter>
     </ClInclude>
-    <ClInclude Include="..\kernel\arch\bcm2835\include\mailbox.h">
-      <Filter>Header Files\arch\bcm2835\include</Filter>
-    </ClInclude>
     <ClInclude Include="..\kernel\arch\bcm2835\include\miniUart.h">
       <Filter>Header Files\arch\bcm2835\include</Filter>
     </ClInclude>
@@ -226,6 +223,9 @@
     </ClInclude>
     <ClInclude Include="..\kernel\include\hardware\arm_interrupts.h">
       <Filter>Header Files\include\hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\kernel\arch\bcm2835\include\bcm2835_mailbox.h">
+      <Filter>Header Files\arch\bcm2835\include</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
