@@ -115,7 +115,6 @@
     <ClCompile Include="..\kernel\arch\bcm2835\source\interrupts.c" />
     <ClCompile Include="..\kernel\arch\bcm2835\source\mailbox.c" />
     <ClCompile Include="..\kernel\arch\bcm2835\source\miniUart.c" />
-    <ClCompile Include="..\kernel\arch\bcm2835\source\mmu_c.c" />
     <ClCompile Include="..\kernel\arch\bcm2835\source\paging.c" />
     <ClCompile Include="..\kernel\arch\bcm2835\source\timer.c" />
     <ClCompile Include="..\kernel\arch\bcm2835\source\uart.c" />

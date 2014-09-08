@@ -274,9 +274,6 @@
     <ClCompile Include="..\kernel\arch\bcm2835\source\miniUart.c">
       <Filter>Source Files\arch\bcm2835\source</Filter>
     </ClCompile>
-    <ClCompile Include="..\kernel\arch\bcm2835\source\mmu_c.c">
-      <Filter>Source Files\arch\bcm2835\source</Filter>
-    </ClCompile>
     <ClCompile Include="..\kernel\arch\bcm2835\source\paging.c">
       <Filter>Source Files\arch\bcm2835\source</Filter>
     </ClCompile>
